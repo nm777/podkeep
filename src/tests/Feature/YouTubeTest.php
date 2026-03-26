@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\ProcessYouTubeAudio;
 use App\Models\MediaFile;
 use App\Models\User;
 use Illuminate\Support\Facades\Queue;
@@ -30,7 +31,7 @@ it('can add media file from YouTube URL', function () {
         'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     ]);
 
-    Queue::assertPushed(\App\Jobs\ProcessYouTubeAudio::class);
+    Queue::assertPushed(ProcessYouTubeAudio::class);
 });
 
 it('validates YouTube URL requirements', function () {
@@ -85,5 +86,5 @@ it('reuses existing media file when same YouTube URL is provided', function () {
         'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     ]);
 
-    Queue::assertNotPushed(\App\Jobs\ProcessYouTubeAudio::class);
+    Queue::assertNotPushed(ProcessYouTubeAudio::class);
 });

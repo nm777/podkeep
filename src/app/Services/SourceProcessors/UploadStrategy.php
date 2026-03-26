@@ -2,6 +2,8 @@
 
 namespace App\Services\SourceProcessors;
 
+use App\Models\LibraryItem;
+
 class UploadStrategy implements SourceStrategyInterface
 {
     public function validate(?string $sourceUrl): void
@@ -9,7 +11,7 @@ class UploadStrategy implements SourceStrategyInterface
         // No validation needed for uploads
     }
 
-    public function processNewSource(\App\Models\LibraryItem $libraryItem, ?string $sourceUrl): void
+    public function processNewSource(LibraryItem $libraryItem, ?string $sourceUrl): void
     {
         // Uploads are processed immediately in the main processor
         // No additional processing needed

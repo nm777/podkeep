@@ -1,11 +1,12 @@
 <?php
 
+use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use App\Services\SourceProcessors\FileUploadProcessor;
 use App\Services\SourceProcessors\LibraryItemFactory;
 
 describe('FileUploadProcessor', function () {
     it('can be instantiated with dependencies', function () {
-        $duplicateProcessor = Mockery::mock(\App\Services\MediaProcessing\UnifiedDuplicateProcessor::class);
+        $duplicateProcessor = Mockery::mock(UnifiedDuplicateProcessor::class);
         $libraryItemFactory = new LibraryItemFactory;
 
         $processor = new FileUploadProcessor($duplicateProcessor, $libraryItemFactory);
@@ -14,7 +15,7 @@ describe('FileUploadProcessor', function () {
     });
 
     it('has correct success message for new files', function () {
-        $duplicateProcessor = Mockery::mock(\App\Services\MediaProcessing\UnifiedDuplicateProcessor::class);
+        $duplicateProcessor = Mockery::mock(UnifiedDuplicateProcessor::class);
         $libraryItemFactory = new LibraryItemFactory;
 
         $processor = new FileUploadProcessor($duplicateProcessor, $libraryItemFactory);
@@ -30,7 +31,7 @@ describe('FileUploadProcessor', function () {
     });
 
     it('has correct success message for duplicates', function () {
-        $duplicateProcessor = Mockery::mock(\App\Services\MediaProcessing\UnifiedDuplicateProcessor::class);
+        $duplicateProcessor = Mockery::mock(UnifiedDuplicateProcessor::class);
         $libraryItemFactory = new LibraryItemFactory;
 
         $processor = new FileUploadProcessor($duplicateProcessor, $libraryItemFactory);

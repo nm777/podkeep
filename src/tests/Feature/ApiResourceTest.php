@@ -8,6 +8,7 @@ use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Resources\MissingValue;
 
 uses(RefreshDatabase::class);
 
@@ -96,6 +97,6 @@ describe('API Resources', function () {
         // The when() method should handle null relationships gracefully
         // MissingValue objects are converted to null during JSON serialization
         expect($array)->toHaveKey('media_file');
-        expect($array['media_file'])->toBeInstanceOf(\Illuminate\Http\Resources\MissingValue::class);
+        expect($array['media_file'])->toBeInstanceOf(MissingValue::class);
     });
 });

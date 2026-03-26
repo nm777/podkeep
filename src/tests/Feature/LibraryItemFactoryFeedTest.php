@@ -1,7 +1,10 @@
 <?php
 
+use App\Jobs\AddLibraryItemToFeedsJob;
 use App\Models\Feed;
+use App\Models\MediaFile;
 use App\Models\User;
+use App\ProcessingStatusType;
 use App\Services\SourceProcessors\LibraryItemFactory;
 use Illuminate\Support\Facades\Queue;
 
@@ -30,7 +33,7 @@ it('dispatches feed job when creating library item with feed ids', function () {
     ]);
 
     // Assert job was dispatched
-    Queue::assertPushed(\App\Jobs\AddLibraryItemToFeedsJob::class, function ($job) use ($libraryItem, $feeds) {
+    Queue::assertPushed(AddLibraryItemToFeedsJob::class, function ($job) use ($libraryItem, $feeds) {
         return $job->libraryItem->id === $libraryItem->id &&
                $job->feedIds === [$feeds[0]->id, $feeds[1]->id];
     });
@@ -56,7 +59,7 @@ it('does not dispatch feed job when no feed ids provided', function () {
     ]);
 
     // Assert no job was dispatched
-    Queue::assertNotPushed(\App\Jobs\AddLibraryItemToFeedsJob::class);
+    Queue::assertNotPushed(AddLibraryItemToFeedsJob::class);
 });
 
 it('dispatches job synchronously for completed items', function () {
@@ -64,7 +67,7 @@ it('dispatches job synchronously for completed items', function () {
     $feed = Feed::factory()->create(['user_id' => $user->id]);
 
     $factory = new LibraryItemFactory;
-    $mediaFile = \App\Models\MediaFile::factory()->create(['user_id' => $user->id]);
+    $mediaFile = MediaFile::factory()->create(['user_id' => $user->id]);
 
     $validated = [
         'title' => 'Test Item',
@@ -75,7 +78,7 @@ it('dispatches job synchronously for completed items', function () {
     $libraryItem = $factory->createFromValidatedWithMediaFile($mediaFile, $validated, 'upload', null, $user->id);
 
     // Debug: check library item status
-    $this->assertEquals(\App\ProcessingStatusType::COMPLETED, $libraryItem->processing_status);
+    $this->assertEquals(ProcessingStatusType::COMPLETED, $libraryItem->processing_status);
     $this->assertTrue($libraryItem->hasCompleted());
 
     // Since this creates a completed item, job should be dispatched synchronously

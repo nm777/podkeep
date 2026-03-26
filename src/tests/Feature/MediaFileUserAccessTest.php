@@ -3,6 +3,7 @@
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\ProcessingStatusType;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -188,7 +189,7 @@ it('correctly sets is_duplicate flag for true duplicate file uploads', function 
         'media_file_id' => $existingMediaFile->id,
         'title' => 'Original File',
         'source_type' => 'upload',
-        'processing_status' => \App\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     // Now upload the same file content again

@@ -2,6 +2,8 @@
 
 namespace App\Services\SourceProcessors;
 
+use App\Models\LibraryItem;
+
 interface SourceStrategyInterface
 {
     /**
@@ -12,7 +14,7 @@ interface SourceStrategyInterface
     /**
      * Process a new source using strategy-specific logic.
      */
-    public function processNewSource(\App\Models\LibraryItem $libraryItem, ?string $sourceUrl): void;
+    public function processNewSource(LibraryItem $libraryItem, ?string $sourceUrl): void;
 
     /**
      * Get success message based on whether it was a duplicate.

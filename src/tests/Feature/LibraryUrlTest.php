@@ -1,8 +1,11 @@
 <?php
 
+use App\Jobs\CleanupDuplicateLibraryItem;
+use App\Jobs\ProcessMediaFile;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\ProcessingStatusType;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -30,7 +33,7 @@ it('can add media file from URL', function () {
         'source_url' => 'https://example.com/test-audio.mp3',
     ]);
 
-    Queue::assertPushed(\App\Jobs\ProcessMediaFile::class);
+    Queue::assertPushed(ProcessMediaFile::class);
 });
 
 it('validates URL requirements', function () {
@@ -69,7 +72,7 @@ it('processes media file from URL correctly', function () {
         ]),
     ]);
 
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://example.com/test-audio.mp3', null);
+    $job = new ProcessMediaFile($libraryItem, 'https://example.com/test-audio.mp3', null);
     $job->handle();
 
     $libraryItem->refresh();
@@ -98,13 +101,13 @@ it('handles URL download failures gracefully', function () {
         'https://example.com/not-found.mp3' => Http::response('Not Found', 404),
     ]);
 
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://example.com/not-found.mp3', null);
+    $job = new ProcessMediaFile($libraryItem, 'https://example.com/not-found.mp3', null);
     $job->handle();
 
     // Library item should be marked as failed
     $this->assertDatabaseHas('library_items', [
         'id' => $libraryItem->id,
-        'processing_status' => \App\ProcessingStatusType::FAILED->value,
+        'processing_status' => ProcessingStatusType::FAILED->value,
     ]);
 });
 
@@ -129,12 +132,12 @@ it('handles JavaScript redirect pages correctly', function () {
         ]),
     ]);
 
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
+    $job = new ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
     $job->handle();
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
+    expect($libraryItem->processing_status)->toBe(ProcessingStatusType::COMPLETED);
     expect($libraryItem->media_file_id)->not->toBeNull();
 
     $mediaFile = $libraryItem->mediaFile;
@@ -159,12 +162,12 @@ it('fails when JavaScript redirect cannot be resolved', function () {
         'https://example.com/final.mp3' => Http::response('Not Found', 404),
     ]);
 
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://example.com/redirect.mp3', null);
+    $job = new ProcessMediaFile($libraryItem, 'https://example.com/redirect.mp3', null);
     $job->handle();
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::FAILED);
+    expect($libraryItem->processing_status)->toBe(ProcessingStatusType::FAILED);
     expect($libraryItem->processing_error)->toContain('Got HTML redirect page instead of media file');
 });
 
@@ -191,12 +194,12 @@ it('handles file-examples.com JavaScript redirect pattern correctly', function (
         ]),
     ]);
 
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
+    $job = new ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
     $job->handle();
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
+    expect($libraryItem->processing_status)->toBe(ProcessingStatusType::COMPLETED);
     expect($libraryItem->media_file_id)->not->toBeNull();
 
     $mediaFile = $libraryItem->mediaFile;
@@ -239,7 +242,7 @@ it('reuses existing media file when same URL is provided', function () {
     ]);
 
     // Should not schedule cleanup - duplicates are now linked immediately
-    Queue::assertNotPushed(\App\Jobs\CleanupDuplicateLibraryItem::class);
+    Queue::assertNotPushed(CleanupDuplicateLibraryItem::class);
 });
 
 it('does not reuse files when URLs are different', function () {
@@ -268,7 +271,7 @@ it('does not reuse files when URLs are different', function () {
     ]);
 
     // Job should be dispatched since URL is different
-    Queue::assertPushed(\App\Jobs\ProcessMediaFile::class);
+    Queue::assertPushed(ProcessMediaFile::class);
 });
 
 it('stores source URL when downloading new file', function () {
@@ -288,7 +291,7 @@ it('stores source URL when downloading new file', function () {
         ]),
     ]);
 
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://example.com/new-audio.mp3', null);
+    $job = new ProcessMediaFile($libraryItem, 'https://example.com/new-audio.mp3', null);
     $job->handle();
 
     $libraryItem->refresh();
@@ -318,11 +321,11 @@ it('multiple users can reuse same file from same URL', function () {
     ]);
 
     $response1->assertRedirect('/library');
-    Queue::assertPushed(\App\Jobs\ProcessMediaFile::class);
+    Queue::assertPushed(ProcessMediaFile::class);
 
     // Process the job manually to create the media file
     $libraryItem = LibraryItem::where('title', 'User 1 Copy')->first();
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://example.com/shared-audio.mp3', null);
+    $job = new ProcessMediaFile($libraryItem, 'https://example.com/shared-audio.mp3', null);
     $job->handle();
 
     $mediaFile = MediaFile::where('source_url', 'https://example.com/shared-audio.mp3')->first();
@@ -339,7 +342,7 @@ it('multiple users can reuse same file from same URL', function () {
     $response2->assertSessionHas('success', 'This URL has already been processed. The existing media file has been linked to this library item.');
 
     // No new job should be dispatched since we reuse the existing media file
-    Queue::assertNotPushed(\App\Jobs\ProcessMediaFile::class);
+    Queue::assertNotPushed(ProcessMediaFile::class);
 
     // User1 should have library item pointing to their media file
     $this->assertDatabaseHas('library_items', [
@@ -348,7 +351,7 @@ it('multiple users can reuse same file from same URL', function () {
     ]);
 
     // User2 should have their own library item with their own media file (cross-user deduplication)
-    $user2LibraryItem = \App\Models\LibraryItem::where('user_id', $user2->id)
+    $user2LibraryItem = LibraryItem::where('user_id', $user2->id)
         ->where('title', 'User 2 Copy')
         ->first();
     expect($user2LibraryItem)->not->toBeNull();

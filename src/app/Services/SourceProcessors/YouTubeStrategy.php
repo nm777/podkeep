@@ -3,6 +3,7 @@
 namespace App\Services\SourceProcessors;
 
 use App\Jobs\ProcessYouTubeAudio;
+use App\Models\LibraryItem;
 use App\Services\YouTubeUrlValidator;
 
 class YouTubeStrategy implements SourceStrategyInterface
@@ -14,7 +15,7 @@ class YouTubeStrategy implements SourceStrategyInterface
         }
     }
 
-    public function processNewSource(\App\Models\LibraryItem $libraryItem, ?string $sourceUrl): void
+    public function processNewSource(LibraryItem $libraryItem, ?string $sourceUrl): void
     {
         // Process new YouTube URL
         ProcessYouTubeAudio::dispatch($libraryItem, $sourceUrl);

@@ -4,6 +4,7 @@ namespace App\Services\SourceProcessors;
 
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use App\Services\YouTubeUrlValidator;
+use Illuminate\Http\RedirectResponse;
 
 class SourceProcessorFactory
 {
@@ -26,7 +27,7 @@ class SourceProcessorFactory
         return new UnifiedSourceProcessor($fileUploadProcessor, $urlSourceProcessor, $strategy);
     }
 
-    public static function validate(string $sourceType, ?string $sourceUrl): ?\Illuminate\Http\RedirectResponse
+    public static function validate(string $sourceType, ?string $sourceUrl): ?RedirectResponse
     {
         if ($sourceType === 'youtube' && ! YouTubeUrlValidator::isValidYouTubeUrl($sourceUrl)) {
             return redirect()->back()

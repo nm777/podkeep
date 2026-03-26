@@ -2,6 +2,7 @@
 
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use App\Services\SourceProcessors\UnifiedSourceProcessor;
+use App\Services\YouTubeUrlValidator;
 
 it('creates unified processor with upload strategy', function () {
     $processor = SourceProcessorFactory::create('upload');
@@ -46,7 +47,7 @@ it('validates upload successfully', function () {
 
 it('detects invalid youtube url', function () {
     // Test the actual YouTubeUrlValidator logic directly
-    $isValid = \App\Services\YouTubeUrlValidator::isValidYouTubeUrl('invalid-url');
+    $isValid = YouTubeUrlValidator::isValidYouTubeUrl('invalid-url');
 
     expect($isValid)->toBeFalse();
 });

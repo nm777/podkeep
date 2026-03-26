@@ -6,7 +6,7 @@ use App\Models\MediaFile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MediaFile>
+ * @extends Factory<MediaFile>
  */
 class MediaFileFactory extends Factory
 {

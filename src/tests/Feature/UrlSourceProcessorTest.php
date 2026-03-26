@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Services\SourceProcessors\LibraryItemFactory;
+use App\Services\SourceProcessors\SourceStrategyInterface;
 use App\Services\SourceProcessors\UrlSourceProcessor;
 
 describe('UrlSourceProcessor', function () {
@@ -12,7 +13,7 @@ describe('UrlSourceProcessor', function () {
 
     it('can be instantiated with dependencies', function () {
         $libraryItemFactory = new LibraryItemFactory;
-        $strategy = Mockery::mock(\App\Services\SourceProcessors\SourceStrategyInterface::class);
+        $strategy = Mockery::mock(SourceStrategyInterface::class);
 
         $processor = new UrlSourceProcessor($libraryItemFactory, $strategy);
 
@@ -21,7 +22,7 @@ describe('UrlSourceProcessor', function () {
 
     it('has correct method signatures', function () {
         $libraryItemFactory = new LibraryItemFactory;
-        $strategy = Mockery::mock(\App\Services\SourceProcessors\SourceStrategyInterface::class);
+        $strategy = Mockery::mock(SourceStrategyInterface::class);
 
         $processor = new UrlSourceProcessor($libraryItemFactory, $strategy);
 

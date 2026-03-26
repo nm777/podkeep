@@ -48,12 +48,12 @@ describe('LibraryItemFactory', function () {
     describe('parameter validation', function () {
         it('requires validated array', function () {
             expect(fn () => $this->factory->createFromValidated('invalid', 'upload'))
-                ->toThrow(\TypeError::class);
+                ->toThrow(TypeError::class);
         });
 
         it('requires source type string', function () {
             expect(fn () => $this->factory->createFromValidated([], 123))
-                ->toThrow(\Exception::class);
+                ->toThrow(Exception::class);
         });
 
         it('accepts optional source URL', function () {

@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Requests\LibraryItemRequest;
+use App\Jobs\CleanupDuplicateLibraryItem;
+use App\Jobs\ProcessMediaFile;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\ProcessingStatusType;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -69,7 +73,7 @@ it('can upload a media file', function () {
         'source_type' => 'upload',
     ]);
 
-    Queue::assertPushed(\App\Jobs\ProcessMediaFile::class);
+    Queue::assertPushed(ProcessMediaFile::class);
 });
 
 it('validates file upload requirements', function () {
@@ -107,7 +111,7 @@ it('validates source_type field for web requests', function () {
 });
 
 it('uses consolidated validation rules from web form request', function () {
-    $request = new \App\Http\Requests\LibraryItemRequest;
+    $request = new LibraryItemRequest;
 
     $rules = $request->rules();
 
@@ -183,7 +187,7 @@ it('detects duplicate file uploads by hash', function () {
         'media_file_id' => $mediaFile->id,
         'title' => 'Original File',
         'source_type' => 'upload',
-        'processing_status' => \App\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     // Create actual file in storage so duplicate detection works
@@ -215,7 +219,7 @@ it('detects duplicate file uploads by hash', function () {
     ]);
 
     // Should schedule cleanup for duplicate
-    Queue::assertPushed(\App\Jobs\CleanupDuplicateLibraryItem::class);
+    Queue::assertPushed(CleanupDuplicateLibraryItem::class);
 });
 
 it('processes non-duplicate file uploads normally', function () {
@@ -251,7 +255,7 @@ it('processes non-duplicate file uploads normally', function () {
     ]);
 
     // Job should be dispatched for new files
-    Queue::assertPushed(\App\Jobs\ProcessMediaFile::class);
+    Queue::assertPushed(ProcessMediaFile::class);
 });
 
 it('MediaFile model can find duplicates by hash', function () {
@@ -319,7 +323,7 @@ it('marks duplicate library items and schedules cleanup', function () {
         'media_file_id' => $mediaFile->id,
         'title' => 'Original File',
         'source_type' => 'upload',
-        'processing_status' => \App\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     // Create library item for duplicate upload
@@ -334,7 +338,7 @@ it('marks duplicate library items and schedules cleanup', function () {
     Storage::disk('public')->put($tempPath, 'duplicate content');
 
     // Process the file
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, null, $tempPath);
+    $job = new ProcessMediaFile($libraryItem, null, $tempPath);
     $job->handle();
 
     $libraryItem->refresh();
@@ -345,7 +349,7 @@ it('marks duplicate library items and schedules cleanup', function () {
     expect($libraryItem->media_file_id)->toBe($mediaFile->id);
 
     // Should schedule cleanup job
-    Queue::assertPushed(\App\Jobs\CleanupDuplicateLibraryItem::class, function ($job) use ($libraryItem) {
+    Queue::assertPushed(CleanupDuplicateLibraryItem::class, function ($job) use ($libraryItem) {
         return $job->libraryItem->id === $libraryItem->id;
     });
 });

@@ -1,9 +1,13 @@
 <?php
 
+use App\Jobs\CleanupDuplicateLibraryItem;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\Services\MediaProcessing\MediaDownloader;
 use App\Services\MediaProcessing\MediaProcessingService;
+use App\Services\MediaProcessing\MediaStorageManager;
+use App\Services\MediaProcessing\MediaValidator;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -17,9 +21,9 @@ describe('UnifiedDuplicateProcessor Integration', function () {
     beforeEach(function () {
         $this->processor = new UnifiedDuplicateProcessor;
         $this->mediaProcessingService = new MediaProcessingService(
-            new \App\Services\MediaProcessing\MediaDownloader,
-            new \App\Services\MediaProcessing\MediaValidator,
-            new \App\Services\MediaProcessing\MediaStorageManager,
+            new MediaDownloader,
+            new MediaValidator,
+            new MediaStorageManager,
             $this->processor
         );
         $this->user = User::factory()->create();
@@ -88,7 +92,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
 
             // Mock downloader to return fake content
             $fakeContent = 'fake audio content';
-            $mockDownloader = $this->mock(\App\Services\MediaProcessing\MediaDownloader::class, function ($mock) use ($fakeContent) {
+            $mockDownloader = $this->mock(MediaDownloader::class, function ($mock) use ($fakeContent) {
                 $mock->shouldReceive('downloadFromUrl')
                     ->with('https://example.com/new-audio.mp3')
                     ->once()
@@ -98,8 +102,8 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             // Create new service with mocked downloader
             $mockedService = new MediaProcessingService(
                 $mockDownloader,
-                new \App\Services\MediaProcessing\MediaValidator,
-                new \App\Services\MediaProcessing\MediaStorageManager,
+                new MediaValidator,
+                new MediaStorageManager,
                 $this->processor
             );
 
@@ -245,7 +249,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
 
             $this->processor->processUrlDuplicate($libraryItem, 'https://example.com/cleanup-test.mp3');
 
-            Queue::assertPushed(\App\Jobs\CleanupDuplicateLibraryItem::class, function ($job) use ($libraryItem) {
+            Queue::assertPushed(CleanupDuplicateLibraryItem::class, function ($job) use ($libraryItem) {
                 return $job->libraryItem->id === $libraryItem->id;
             });
         });
@@ -264,7 +268,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
 
             $this->processor->processUrlDuplicate($libraryItem, 'https://example.com/no-cleanup.mp3');
 
-            Queue::assertNotPushed(\App\Jobs\CleanupDuplicateLibraryItem::class);
+            Queue::assertNotPushed(CleanupDuplicateLibraryItem::class);
         });
     });
 });

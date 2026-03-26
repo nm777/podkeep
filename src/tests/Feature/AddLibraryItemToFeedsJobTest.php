@@ -5,6 +5,7 @@ use App\Models\Feed;
 use App\Models\FeedItem;
 use App\Models\LibraryItem;
 use App\Models\User;
+use App\ProcessingStatusType;
 use Illuminate\Support\Facades\Queue;
 
 it('can add library item to multiple feeds after processing', function () {
@@ -12,7 +13,7 @@ it('can add library item to multiple feeds after processing', function () {
     $feeds = Feed::factory()->count(3)->create(['user_id' => $user->id]);
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
-        'processing_status' => App\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     Queue::fake();
@@ -49,7 +50,7 @@ it('creates feed items with correct sequence numbers', function () {
 
     $newLibraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
-        'processing_status' => App\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     // Dispatch the job synchronously for testing
@@ -73,7 +74,7 @@ it('only adds items to feeds owned by the same user', function () {
 
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user1->id,
-        'processing_status' => App\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     // Try to add to both feeds
@@ -94,7 +95,7 @@ it('only adds items to feeds owned by the same user', function () {
 
 it('handles empty feed ids array gracefully', function () {
     $libraryItem = LibraryItem::factory()->create([
-        'processing_status' => App\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     // Should not throw any errors

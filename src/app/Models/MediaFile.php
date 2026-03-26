@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\DuplicateDetectionService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -58,7 +59,7 @@ class MediaFile extends Model
      */
     public static function isDuplicate(string $filePath): ?static
     {
-        return \App\Services\DuplicateDetectionService::findGlobalDuplicate($filePath);
+        return DuplicateDetectionService::findGlobalDuplicate($filePath);
     }
 
     /**
@@ -66,6 +67,6 @@ class MediaFile extends Model
      */
     public static function isDuplicateForUser(string $filePath, int $userId): ?static
     {
-        return \App\Services\DuplicateDetectionService::findUserDuplicate($filePath, $userId);
+        return DuplicateDetectionService::findUserDuplicate($filePath, $userId);
     }
 }

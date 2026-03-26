@@ -1,14 +1,17 @@
 <?php
 
+use App\Jobs\CleanupDuplicateLibraryItem;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\ProcessingStatusType;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class);
+uses(TestCase::class);
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
@@ -64,10 +67,10 @@ describe('UnifiedDuplicateProcessor', function () {
             $newLibraryItem->refresh();
             expect($newLibraryItem->is_duplicate)->toBeTrue();
             expect($newLibraryItem->media_file_id)->toBe($mediaFile->id);
-            expect($newLibraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
+            expect($newLibraryItem->processing_status)->toBe(ProcessingStatusType::COMPLETED);
 
             // Verify cleanup job was dispatched
-            Queue::assertPushed(\App\Jobs\CleanupDuplicateLibraryItem::class);
+            Queue::assertPushed(CleanupDuplicateLibraryItem::class);
         });
 
         it('handles global duplicate for URL sources', function () {
@@ -93,7 +96,7 @@ describe('UnifiedDuplicateProcessor', function () {
             $libraryItem->refresh();
             expect($libraryItem->is_duplicate)->toBeFalse();
             expect($libraryItem->media_file_id)->toBe($mediaFile->id);
-            expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
+            expect($libraryItem->processing_status)->toBe(ProcessingStatusType::COMPLETED);
         });
 
         it('handles user media file only scenario', function () {
@@ -167,10 +170,10 @@ describe('UnifiedDuplicateProcessor', function () {
             $newLibraryItem->refresh();
             expect($newLibraryItem->is_duplicate)->toBeTrue();
             expect($newLibraryItem->media_file_id)->toBe($existingMediaFile->id);
-            expect($newLibraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
+            expect($newLibraryItem->processing_status)->toBe(ProcessingStatusType::COMPLETED);
 
             // Verify cleanup job was dispatched
-            Queue::assertPushed(\App\Jobs\CleanupDuplicateLibraryItem::class);
+            Queue::assertPushed(CleanupDuplicateLibraryItem::class);
         });
 
         it('handles global duplicate for file uploads', function () {
@@ -202,7 +205,7 @@ describe('UnifiedDuplicateProcessor', function () {
             $libraryItem->refresh();
             expect($libraryItem->is_duplicate)->toBeFalse();
             expect($libraryItem->media_file_id)->toBe($existingMediaFile->id);
-            expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
+            expect($libraryItem->processing_status)->toBe(ProcessingStatusType::COMPLETED);
         });
 
         it('updates source URL when processing duplicate file upload with URL', function () {

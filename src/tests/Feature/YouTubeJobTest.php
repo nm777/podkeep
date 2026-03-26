@@ -27,7 +27,7 @@ it('processes YouTube audio job with logging', function () {
     $processingService = mock(YouTubeProcessingService::class);
     $processingService->shouldReceive('processYouTubeUrl')
         ->once()
-        ->andThrow(new \Exception('Test error'));
+        ->andThrow(new Exception('Test error'));
 
     // Mock the yt-dlp command to fail so we can test error logging
     $job->handle($processingService);

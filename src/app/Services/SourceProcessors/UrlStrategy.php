@@ -3,6 +3,7 @@
 namespace App\Services\SourceProcessors;
 
 use App\Jobs\ProcessMediaFile;
+use App\Models\LibraryItem;
 
 class UrlStrategy implements SourceStrategyInterface
 {
@@ -14,7 +15,7 @@ class UrlStrategy implements SourceStrategyInterface
         }
     }
 
-    public function processNewSource(\App\Models\LibraryItem $libraryItem, ?string $sourceUrl): void
+    public function processNewSource(LibraryItem $libraryItem, ?string $sourceUrl): void
     {
         // Process new URL
         ProcessMediaFile::dispatch($libraryItem, $sourceUrl);

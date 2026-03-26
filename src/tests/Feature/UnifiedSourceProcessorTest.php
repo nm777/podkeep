@@ -177,7 +177,7 @@ describe('UnifiedSourceProcessor', function () {
                 $validated,
                 'youtube',
                 'invalid-url'
-            ))->toThrow(\InvalidArgumentException::class, 'Invalid YouTube URL provided.');
+            ))->toThrow(InvalidArgumentException::class, 'Invalid YouTube URL provided.');
         });
 
         it('processes new YouTube URL without duplicates', function () {

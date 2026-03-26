@@ -2,10 +2,16 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -84,42 +90,42 @@ class Handler extends ExceptionHandler
         ];
 
         // Handle specific exception types
-        if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+        if ($e instanceof AuthenticationException) {
             $status = 401;
             $error = [
                 'error' => 'Unauthenticated',
                 'message' => 'Authentication is required to access this resource.',
                 'code' => 'UNAUTHENTICATED',
             ];
-        } elseif ($e instanceof \Illuminate\Auth\Access\AuthorizationException) {
+        } elseif ($e instanceof AuthorizationException) {
             $status = 403;
             $error = [
                 'error' => 'Forbidden',
                 'message' => 'You do not have permission to perform this action.',
                 'code' => 'FORBIDDEN',
             ];
-        } elseif ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } elseif ($e instanceof ModelNotFoundException) {
             $status = 404;
             $error = [
                 'error' => 'Not Found',
                 'message' => 'The requested resource was not found.',
                 'code' => 'NOT_FOUND',
             ];
-        } elseif ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+        } elseif ($e instanceof NotFoundHttpException) {
             $status = 404;
             $error = [
                 'error' => 'Not Found',
                 'message' => 'The requested endpoint was not found.',
                 'code' => 'ENDPOINT_NOT_FOUND',
             ];
-        } elseif ($e instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
+        } elseif ($e instanceof MethodNotAllowedHttpException) {
             $status = 405;
             $error = [
                 'error' => 'Method Not Allowed',
                 'message' => 'The HTTP method is not allowed for this endpoint.',
                 'code' => 'METHOD_NOT_ALLOWED',
             ];
-        } elseif ($e instanceof \Illuminate\Http\Exceptions\ThrottleRequestsException) {
+        } elseif ($e instanceof ThrottleRequestsException) {
             $status = 429;
             $error = [
                 'error' => 'Too Many Requests',

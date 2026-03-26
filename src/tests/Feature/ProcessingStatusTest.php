@@ -1,7 +1,9 @@
 <?php
 
+use App\Jobs\ProcessMediaFile;
 use App\Models\LibraryItem;
 use App\Models\User;
+use App\ProcessingStatusType;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,7 +17,7 @@ it('shows processing status for media items', function () {
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
         'title' => 'Test Processing Item',
-        'processing_status' => \App\ProcessingStatusType::PROCESSING,
+        'processing_status' => ProcessingStatusType::PROCESSING,
         'processing_started_at' => now(),
     ]);
 
@@ -25,7 +27,7 @@ it('shows processing status for media items', function () {
     $response->assertInertia(
         fn ($page) => $page
             ->has('libraryItems', 1)
-            ->where('libraryItems.0.processing_status', \App\ProcessingStatusType::PROCESSING->value)
+            ->where('libraryItems.0.processing_status', ProcessingStatusType::PROCESSING->value)
     );
 });
 
@@ -40,7 +42,7 @@ it('updates processing status when job completes', function () {
         'title' => 'Test URL Audio',
         'source_type' => 'url',
         'source_url' => 'https://example.com/test-audio.mp3',
-        'processing_status' => \App\ProcessingStatusType::PENDING,
+        'processing_status' => ProcessingStatusType::PENDING,
     ]);
 
     // Mock HTTP response
@@ -50,12 +52,12 @@ it('updates processing status when job completes', function () {
         ]),
     ]);
 
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://example.com/test-audio.mp3', null);
+    $job = new ProcessMediaFile($libraryItem, 'https://example.com/test-audio.mp3', null);
     $job->handle();
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
+    expect($libraryItem->processing_status)->toBe(ProcessingStatusType::COMPLETED);
     expect($libraryItem->processing_completed_at)->not->toBeNull();
     expect($libraryItem->media_file_id)->not->toBeNull();
 });
@@ -71,7 +73,7 @@ it('updates processing status when job fails', function () {
         'title' => 'Test Failed Item',
         'source_type' => 'url',
         'source_url' => 'https://example.com/missing-file.mp3',
-        'processing_status' => \App\ProcessingStatusType::PENDING,
+        'processing_status' => ProcessingStatusType::PENDING,
     ]);
 
     // Mock failed HTTP response
@@ -79,12 +81,12 @@ it('updates processing status when job fails', function () {
         'https://example.com/missing-file.mp3' => Http::response('Not Found', 404),
     ]);
 
-    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://example.com/missing-file.mp3', null);
+    $job = new ProcessMediaFile($libraryItem, 'https://example.com/missing-file.mp3', null);
     $job->handle();
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::FAILED);
+    expect($libraryItem->processing_status)->toBe(ProcessingStatusType::FAILED);
     expect($libraryItem->processing_completed_at)->not->toBeNull();
     expect($libraryItem->processing_error)->toContain('Failed to download file');
 });

@@ -3,6 +3,7 @@
 use App\Http\Requests\LibraryItemRequest;
 use App\Models\User;
 use App\Services\SourceProcessors\SourceProcessorFactory;
+use App\Services\SourceProcessors\UnifiedSourceProcessor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -18,9 +19,9 @@ describe('UnifiedSourceProcessor Edge Cases', function () {
         $urlProcessor = SourceProcessorFactory::create('url');
         $youtubeProcessor = SourceProcessorFactory::create('youtube');
 
-        expect($uploadProcessor)->toBeInstanceOf(\App\Services\SourceProcessors\UnifiedSourceProcessor::class);
-        expect($urlProcessor)->toBeInstanceOf(\App\Services\SourceProcessors\UnifiedSourceProcessor::class);
-        expect($youtubeProcessor)->toBeInstanceOf(\App\Services\SourceProcessors\UnifiedSourceProcessor::class);
+        expect($uploadProcessor)->toBeInstanceOf(UnifiedSourceProcessor::class);
+        expect($urlProcessor)->toBeInstanceOf(UnifiedSourceProcessor::class);
+        expect($youtubeProcessor)->toBeInstanceOf(UnifiedSourceProcessor::class);
     });
 
     it('handles unauthenticated user gracefully', function () {
@@ -40,7 +41,7 @@ describe('UnifiedSourceProcessor Edge Cases', function () {
             $validated,
             'url',
             'https://example.com/test.mp3'
-        ))->toThrow(\TypeError::class);
+        ))->toThrow(TypeError::class);
     });
 
     it('validates input data structure', function () {

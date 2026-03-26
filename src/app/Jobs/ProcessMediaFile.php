@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\LibraryItem;
+use App\ProcessingStatusType;
 use App\Services\MediaProcessing\MediaProcessingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -39,7 +40,7 @@ class ProcessMediaFile implements ShouldQueue
             $mediaProcessing->processFromFile($this->libraryItem, $this->filePath, $this->sourceUrl);
         } else {
             $this->libraryItem->update([
-                'processing_status' => \App\ProcessingStatusType::FAILED,
+                'processing_status' => ProcessingStatusType::FAILED,
                 'processing_completed_at' => now(),
                 'processing_error' => 'No source URL or file path provided',
             ]);
