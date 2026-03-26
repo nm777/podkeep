@@ -10,141 +10,113 @@ A Laravel-based podcast feed management application with React frontend.
 - User authentication
 - Modern React frontend with Inertia.js
 
-## Docker Setup
+## Quick Start
 
-This application includes Docker support for easy development and deployment.
+### Development
 
-### Prerequisites
-
-- Docker and Docker Compose installed on your system
-
-### Quick Start
-
-The easiest way to get started is using the build script:
+The fastest way to start development:
 
 ```bash
-./build.sh dev
+./dev.sh
 ```
 
-This will:
-- Build and start all containers
-- Create the environment file if needed
-- Set up the development environment
+This script:
+- Creates `.env` file if needed
+- Sets up proper permissions
+- Builds and starts containers
+- Runs migrations
+- Optimizes the application
 
-Then run migrations:
-```bash
-./build.sh migrate
-```
-
-Access the application at `http://localhost:8000`
-
-### Manual Setup
-
-If you prefer to set up manually:
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd podcast-feed
-```
-
-2. Copy the environment file:
-```bash
-cp src/.env.example src/.env
-```
-
-3. Update the database configuration in `src/.env`:
-```env
-DB_CONNECTION=mysql
-DB_HOST=database
-DB_PORT=3306
-DB_DATABASE=podcast_feed
-DB_USERNAME=podcast_user
-DB_PASSWORD=secret
-```
-
-4. Build and start the containers:
-```bash
-docker-compose up -d --build
-```
-
-5. Run the database migrations:
-```bash
-docker-compose exec app php artisan migrate
-```
-
-6. Install and build frontend assets:
-```bash
-docker-compose exec app npm install
-docker-compose exec app npm run build
-```
-
-7. Access the application at `http://localhost:8000`
+**Access at:** http://localhost:8000
 
 ### Development Commands
 
-Using the build script (recommended):
-- Start development: `./build.sh dev`
-- Stop services: `./build.sh stop`
-- View logs: `./build.sh logs -f`
-- Run migrations: `./build.sh migrate`
-- Run tests: `./build.sh test`
-- Access shell: `./build.sh shell`
-- Build production image: `./build.sh prod`
-- Clean everything: `./build.sh clean`
-
-Manual Docker commands:
-- Start all services: `docker-compose up -d`
-- Stop all services: `docker-compose down`
-- View logs: `docker-compose logs -f`
-- Run artisan commands: `docker-compose exec app php artisan <command>`
-- Access container shell: `docker-compose exec app sh`
-
-### Services
-
-The Docker setup includes:
-
-- **app**: PHP-FPM service with Laravel application
-- **webserver**: Nginx web server (port 8000)
-- **database**: MySQL 8.0 database (port 3306)
-- **redis**: Redis cache service (port 6379)
+```bash
+./dev.sh              # Start development environment
+./dev.sh logs         # View logs
+./dev.sh down         # Stop services
+./dev.sh shell        # Access container shell
+./dev.sh migrate      # Run migrations
+./dev.sh test         # Run tests
+./dev.sh restart      # Restart containers
+```
 
 ### Production Deployment
 
-For production deployment, use the build script to create an optimized production image:
+Build and deploy to production:
 
 ```bash
-./build.sh prod
+# Build the production image
+./docker-compose-wrapper.sh prod build
+
+# Deploy
+./docker-compose-wrapper.sh prod up -d
+
+# Run migrations
+./docker-compose-wrapper.sh prod exec app php artisan migrate --force
+
+# View logs
+./docker-compose-wrapper.sh prod logs -f
 ```
 
-This creates a multi-stage build with:
-- Optimized frontend assets
-- Production PHP configuration
-- Cached Laravel configurations
-- Minimal image size
+See [DOCKER_COMPOSE.md](DOCKER_COMPOSE.md) for detailed production deployment options.
 
-Then run with your preferred orchestration method, ensuring you set the appropriate environment variables.
+## Docker Architecture
 
-Example production run:
+This project uses a modular Docker Compose structure:
+
+- **docker-compose.base.yml** - Common configuration
+- **docker-compose.dev.yml** - Development overrides (source mounts, port 8000)
+- **docker-compose.prod.yml** - Production overrides (Traefik, named volumes, SSL)
+- **dev.sh** - Development startup script
+- **docker-compose-wrapper.sh** - Generic Docker Compose wrapper
+
+### Development vs Production
+
+| Aspect | Development | Production |
+|--------|-------------|------------|
+| Source Code | Mounted from `./src` | Baked into image |
+| Access | http://localhost:8000 | Via Traefik/SSL |
+| Volumes | Bind mounts | Named volumes |
+| File Watching | Live reload | Static |
+
+See [DOCKER_COMPOSE.md](DOCKER_COMPOSE.md) for complete documentation.
+
+## Container Security
+
+This application runs containers as a non-root user (`www-data`, UID 82) for improved security.
+
+**Development:** Permissions are automatically handled by `./dev.sh`
+
+**Production:** Code is baked into the image with correct permissions. No host permissions needed.
+
+## Prerequisites
+
+- Docker and Docker Compose installed
+- Port 8000 available (development)
+
+## Manual Docker Commands
+
+If you prefer not to use the convenience scripts:
+
 ```bash
-docker run -d \
-  --name podcast-feed \
-  -p 9000:9000 \
-  -e APP_ENV=production \
-  -e DB_CONNECTION=mysql \
-  -e DB_HOST=your-db-host \
-  -e DB_DATABASE=your-db \
-  -e DB_USERNAME=your-user \
-  -e DB_PASSWORD=your-password \
-  podcast-feed:prod
+# Development
+docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up -d --build
+docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml logs -f
+docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml down
+
+# Production
+docker-compose -f docker-compose.base.yml -f docker-compose.prod.yml build
+docker-compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+docker-compose -f docker-compose.base.yml -f docker-compose.prod.yml down
 ```
 
 ## Local Development (Without Docker)
 
-If you prefer to develop locally:
+If you prefer to develop locally without Docker:
 
-1. Install PHP 8.2+, Node.js, and Composer
-2. Clone the repository and navigate to the `src/` directory
+1. Install PHP 8.4+, Node.js, and Composer
+2. Navigate to the `src/` directory
 3. Install dependencies:
    ```bash
    composer install
@@ -166,17 +138,67 @@ If you prefer to develop locally:
 
 ## Testing
 
-Run tests using Docker:
-
+Run tests using the development script:
 ```bash
-docker-compose exec app php artisan test
+./dev.sh test
 ```
 
-Or locally:
-
+Or manually:
 ```bash
-cd src
-php artisan test
+docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml exec app php artisan test
+```
+
+## Troubleshooting
+
+### Permission Issues (Development)
+
+If you see permission errors:
+```bash
+sudo chown -R 82:82 ./src/storage ./src/bootstrap/cache
+chmod -R 755 ./src/storage ./src/bootstrap/cache
+```
+
+### Container Won't Start
+
+Check container logs:
+```bash
+./dev.sh logs
+```
+
+Common issues:
+- Missing `src/.env` file (auto-created by `./dev.sh`)
+- Port 8000 already in use
+- Docker daemon not running
+
+### Assets Not Loading
+
+If frontend assets aren't loading:
+```bash
+./dev.sh shell
+npm run build
+exit
+```
+
+## File Structure
+
+```
+.
+├── src/                          # Application code
+│   ├── app/                      # Laravel application
+│   ├── public/                   # Public assets
+│   ├── storage/                  # Application storage
+│   └── ...
+├── docker/
+│   └── nginx/
+│       └── default.conf          # Nginx configuration
+├── docker-compose.base.yml       # Base Docker configuration
+├── docker-compose.dev.yml        # Development overrides
+├── docker-compose.prod.yml       # Production overrides
+├── dev.sh                        # Development startup script
+├── docker-compose-wrapper.sh     # Docker Compose wrapper
+├── Dockerfile                    # Container build definition
+├── docker-entrypoint.sh          # Container entrypoint
+└── README.md                     # This file
 ```
 
 ## License

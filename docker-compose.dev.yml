@@ -1,0 +1,13 @@
+# Development overrides - use with: docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up
+services:
+  app:
+    volumes:
+      - ./src:/var/www/html
+      - ./src/storage:/var/www/html/storage
+
+  webserver:
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/var/www/html
+    container_name: podcast-feed-webserver-dev
