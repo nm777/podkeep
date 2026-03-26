@@ -152,8 +152,9 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit Feed: ${feed.title}`} />
 
-            <div className="space-y-6">
-                <div className="flex items-center gap-4">
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+                <div className="space-y-6">
+                    <div className="flex items-center gap-4">
                     <Link href="/dashboard">
                         <Button variant="outline" size="sm">
                             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -308,6 +309,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                             )}
                         </CardContent>
                     </Card>
+                </div>
                 </div>
             </div>
         </AppLayout>
