@@ -8,7 +8,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}=== Personal Podcast Development Setup ===${NC}\n"
+echo -e "${GREEN}=== PodKeep Development Setup ===${NC}\n"
 
 # Check if .env exists
 if [ ! -f "src/.env" ]; then

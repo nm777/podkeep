@@ -1,4 +1,4 @@
-# Personal Podcasts
+# PodKeep
 
 A Laravel-based podcast feed management application with React frontend.
 

@@ -6,7 +6,7 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title="Personal Podcasts - Create Custom Podcast Feeds">
+            <Head title="PodKeep - Create Custom Podcast Feeds">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
             </Head>
@@ -15,7 +15,7 @@ export default function Welcome() {
                 {/* Header */}
                 <header className="border-b border-white/10 p-5">
                     <div className="mx-auto flex max-w-7xl items-center justify-between">
-                        <div className="text-2xl font-semibold text-blue-400">🎙️ Personal Podcasts</div>
+                        <div className="text-2xl font-semibold text-blue-400">🎙️ PodKeep</div>
                         <nav className="flex gap-5">
                             {auth.user ? (
                                 <Link
@@ -47,7 +47,7 @@ export default function Welcome() {
                         {/* Hero Section */}
                         <section className="mb-20 text-center">
                             <h1 className="mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-5xl font-bold text-transparent md:text-7xl">
-                                Personal Podcast
+                                PodKeep
                             </h1>
                             <p className="mx-auto mb-12 max-w-3xl text-xl text-gray-400 md:text-2xl">
                                 Build personalized podcast feeds. Simple, fast, and reliable.
