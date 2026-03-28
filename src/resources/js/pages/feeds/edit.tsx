@@ -152,7 +152,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit Feed: ${feed.title}`} />
 
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="space-y-6">
                     <div className="flex items-center gap-4">
                         <Link href="/dashboard">
@@ -243,9 +243,9 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                                     onDragStart={() => handleDragStart(index)}
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, index)}
-                                                    className="flex cursor-move items-center gap-3 rounded-lg border p-3 hover:bg-muted/50"
+                                                    className="flex cursor-move items-start gap-3 rounded-lg border p-3 hover:bg-muted/50"
                                                 >
-                                                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                                    <GripVertical className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                                                     <div className="min-w-0 flex-1">
                                                         <p className="truncate font-medium">{libraryItem.title}</p>
                                                         <p className="text-sm text-muted-foreground">
@@ -263,7 +263,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => removeItem(index)}
-                                                        className="text-destructive hover:text-destructive"
+                                                        className="shrink-0 text-destructive hover:text-destructive"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
@@ -279,7 +279,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                         <Label className="text-sm font-medium">Add Library Items</Label>
                                         <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
                                             {availableLibraryItems.map((libraryItem) => (
-                                                <div key={libraryItem.id} className="flex items-center justify-between rounded-lg border p-2">
+                                                <div key={libraryItem.id} className="flex items-start gap-2 rounded-lg border p-2">
                                                     <div className="min-w-0 flex-1">
                                                         <p className="truncate text-sm font-medium">{libraryItem.title}</p>
                                                         <p className="text-xs text-muted-foreground">
@@ -293,7 +293,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                                             )}
                                                         </p>
                                                     </div>
-                                                    <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)}>
+                                                    <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)} className="shrink-0">
                                                         <Plus className="h-4 w-4" />
                                                     </Button>
                                                 </div>
