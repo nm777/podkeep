@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { ProcessingStatusHelper, ProcessingStatusType } from '@/lib/processing-status';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type Feed } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { AlertCircle, FileAudio, FileVideo, Play, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -40,15 +40,6 @@ interface LibraryItem {
     created_at: string;
     updated_at: string;
     media_file?: MediaFile;
-}
-
-interface Feed {
-    id: number;
-    title: string;
-    description?: string;
-    is_public: boolean;
-    created_at: string;
-    updated_at: string;
 }
 
 interface LibraryIndexProps {

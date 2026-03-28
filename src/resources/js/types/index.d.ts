@@ -28,7 +28,17 @@ export interface SharedData {
     auth: Auth;
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
+    feeds: Feed[];
     [key: string]: unknown;
+}
+
+export interface Feed {
+    id: number;
+    title: string;
+    description?: string;
+    is_public: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface User {
