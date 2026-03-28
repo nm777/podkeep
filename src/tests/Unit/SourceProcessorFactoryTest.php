@@ -51,3 +51,15 @@ it('detects invalid youtube url', function () {
 
     expect($isValid)->toBeFalse();
 });
+
+it('validates mobile youtube url successfully', function () {
+    $result = SourceProcessorFactory::validate('youtube', 'https://m.youtube.com/watch?v=test123');
+
+    expect($result)->toBeNull();
+});
+
+it('validates youtube url with mobile subdomain', function () {
+    $isValid = YouTubeUrlValidator::isValidYouTubeUrl('https://m.youtube.com/watch?v=test123');
+
+    expect($isValid)->toBeTrue();
+});
