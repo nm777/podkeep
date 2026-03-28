@@ -1,20 +1,16 @@
 # Production overrides - use with: docker-compose -f docker-compose.base.yml -f docker-compose.prod.yml up
 services:
   app:
-    image: podkeep:prod
+    image: podkeep-app:latest
     volumes:
       - podcast-storage:/var/www/html/storage
       - podcast-logs:/var/www/html/storage/logs
-    expose:
-      - "9000"
-    networks:
-      - traefik_web
 
-  webserver:
-    image: podkeep:webserver
+  web:
+    image: podkeep-web:latest
     networks:
       - traefik_web
-      - podcast-network
+      - app
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.podcast.rule=Host(`podkeep.app`)"
@@ -36,10 +32,9 @@ services:
       - "traefik.http.routers.podcast-http.entrypoints=web"
       - "traefik.http.routers.podcast-http.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-    container_name: podcast-feed-webserver
 
   worker:
-    image: podkeep:prod
+    image: podkeep-app:latest
     volumes:
       - podcast-storage:/var/www/html/storage
       - podcast-logs:/var/www/html/storage/logs

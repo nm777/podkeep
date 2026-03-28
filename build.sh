@@ -217,7 +217,7 @@ EXPOSE 9000
 CMD ["php-fpm"]
 
 # Production Nginx image
-FROM nginx:alpine AS webserver
+FROM nginx:alpine AS web
 
 # Copy nginx configuration
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
@@ -230,12 +230,12 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 EOF
 
-    docker build -f Dockerfile.prod --target production -t podkeep:prod .
-    docker build -f Dockerfile.prod --target webserver -t podkeep:webserver .
+    docker build -f Dockerfile.prod --target production -t podkeep-app:latest .
+    docker build -f Dockerfile.prod --target web -t podkeep-web:latest .
 
     if [ $? -eq 0 ]; then
         print_success "Production image built successfully!"
-        print_status "Tag: podkeep:prod"
+        print_status "Tag: podkeep-app:latest"
     else
         print_error "Failed to build production image"
         exit 1
