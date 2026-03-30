@@ -4,7 +4,7 @@
 /public/build
 /public/hot
 /public/storage
-/Dockerfile.prod
+
 /storage/*.key
 /storage/pail
 /vendor
