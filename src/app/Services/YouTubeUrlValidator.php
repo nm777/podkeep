@@ -10,10 +10,10 @@ class YouTubeUrlValidator
     public static function isValidYouTubeUrl(string $url): bool
     {
         $patterns = [
-            '#https?://(?:www\.)?youtube\.com/watch\?v=[\w-]+#',
-            '#https?://(?:www\.)?youtube\.com/embed/[\w-]+#',
+            '#https?://(?:www\.|m\.)?youtube\.com/watch\?v=[\w-]+#',
+            '#https?://(?:www\.|m\.)?youtube\.com/embed/[\w-]+#',
             '#https?://youtu\.be/[\w-]+#',
-            '#https?://(?:www\.)?youtube\.com/shorts/[\w-]+#',
+            '#https?://(?:www\.|m\.)?youtube\.com/shorts/[\w-]+#',
         ];
 
         foreach ($patterns as $pattern) {
@@ -31,10 +31,10 @@ class YouTubeUrlValidator
     public static function extractVideoId(string $url): ?string
     {
         $patterns = [
-            '#https?://(?:www\.)?youtube\.com/watch\?v=([\w-]+)#',
-            '#https?://(?:www\.)?youtube\.com/embed/([\w-]+)#',
+            '#https?://(?:www\.|m\.)?youtube\.com/watch\?v=([\w-]+)#',
+            '#https?://(?:www\.|m\.)?youtube\.com/embed/([\w-]+)#',
             '#https?://youtu\.be/([\w-]+)#',
-            '#https?://(?:www\.)?youtube\.com/shorts/([\w-]+)#',
+            '#https?://(?:www\.|m\.)?youtube\.com/shorts/([\w-]+)#',
         ];
 
         foreach ($patterns as $pattern) {

@@ -4,16 +4,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { type Feed } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { AlertCircle, Globe, Loader2, Plus, Upload, Youtube } from 'lucide-react';
 import { useCallback, useState } from 'react';
-
-interface Feed {
-    id: number;
-    title: string;
-    description?: string;
-    is_public: boolean;
-}
 
 interface MediaUploadButtonProps {
     onUploadSuccess?: () => void;

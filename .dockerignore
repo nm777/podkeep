@@ -1,60 +1,40 @@
-# Git
 .git
+.github
 .gitignore
-.gitattributes
-
-# Docker
-Dockerfile
-docker-compose.yml
 .dockerignore
-docker/
 
-# Documentation
+docker-compose.yml
+docker-compose.prod.yml
+
 README.md
 AGENTS.md
+LICENSE
 
-# Dependencies
 node_modules
 vendor
 
-# Environment files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# Logs and runtime
 logs
 *.log
-storage/logs/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/views/*
-storage/framework/testing/*
 
-# Testing
 tests
 phpunit.xml
 pest.php
 
-# IDE and editor files
 .vscode
 .idea
 *.swp
 *.swo
-*~
 
-# OS files
 .DS_Store
 Thumbs.db
 
-# Build artifacts
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 dist
 build
-
-# Cache
 .cache
 .parcel-cache
 

@@ -16,19 +16,17 @@
             href="{{ route('rss.show', ['user_guid' => $feed->user_guid, 'feed_slug' => $feed->slug]) }}"
             rel="self" type="application/rss+xml" />
         @foreach ($feed->items as $item)
+            @if($item->libraryItem->mediaFile)
         <item>
             <title>{{ $item->libraryItem->title }}</title>
             <description>{{ $item->libraryItem->description }}</description>
             <pubDate>{{ $item->created_at->toRfc822String() }}</pubDate>
             <guid isPermaLink="false">{{ $item->id }}</guid>
-            @if($item->libraryItem->source_type === 'youtube')
-            <enclosure url="{{ $item->libraryItem->source_url }}" type="text/html" />
-            @else
             <enclosure url="{{ $item->libraryItem->mediaFile->public_url }}"
                 length="{{ $item->libraryItem->mediaFile->filesize }}"
                 type="{{ $item->libraryItem->mediaFile->mime_type }}" />
-            @endif
         </item>
+            @endif
         @endforeach
     </channel>
 </rss>

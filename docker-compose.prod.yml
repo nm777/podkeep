@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      target: app
+    image: podkeep-app:latest
+    hostname: podkeep-app
+    restart: unless-stopped
+    environment:
+      - PHP_FPM_LISTEN=0.0.0.0:9000
+    volumes:
+      - podcast-storage:/var/www/html/storage
+    networks:
+      - app
+
+  web:
+    build:
+      context: .
+      target: web
+    image: podkeep-web:latest
+    restart: unless-stopped
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - app
+      - traefik_web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.podcast.rule=Host(`${APP_HOST:-podkeep.app}`)"
+      - "traefik.http.routers.podcast.entrypoints=websecure"
+      - "traefik.http.routers.podcast.tls=true"
+      - "traefik.http.routers.podcast.tls.certresolver=leresolver"
+      - "traefik.http.services.podcast.loadbalancer.server.port=80"
+      - "traefik.http.routers.podcast-http.rule=Host(`${APP_HOST:-podkeep.app}`)"
+      - "traefik.http.routers.podcast-http.entrypoints=web"
+      - "traefik.http.routers.podcast-http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+  worker:
+    image: podkeep-app:latest
+    hostname: podkeep-worker
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    volumes:
+      - podcast-storage:/var/www/html/storage
+    networks:
+      - app
+
+networks:
+  app:
+    driver: bridge
+  traefik_web:
+    external: true
+
+volumes:
+  podcast-storage:
+    driver: local
