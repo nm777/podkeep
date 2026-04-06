@@ -61,3 +61,8 @@ build
 # Temporary files
 *.tmp
 *.temp
+
+# Data files
+*.sqlite
+database/
+
