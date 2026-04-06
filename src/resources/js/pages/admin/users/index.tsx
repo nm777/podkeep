@@ -170,7 +170,11 @@ export default function UserManagement() {
                                                             onClick={() => handleToggleAdmin(user)}
                                                             disabled={toggleAdminForm.processing}
                                                         >
-                                                            {toggleAdminForm.processing ? 'Updating...' : user.is_admin ? 'Remove Admin' : 'Make Admin'}
+                                                            {toggleAdminForm.processing
+                                                                ? 'Updating...'
+                                                                : user.is_admin
+                                                                  ? 'Remove Admin'
+                                                                  : 'Make Admin'}
                                                         </Button>
                                                     )}
                                                 </div>
