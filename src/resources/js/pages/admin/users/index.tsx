@@ -163,14 +163,16 @@ export default function UserManagement() {
                                                             </Dialog>
                                                         </>
                                                     )}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => handleToggleAdmin(user)}
-                                                        disabled={toggleAdminForm.processing}
-                                                    >
-                                                        {toggleAdminForm.processing ? 'Updating...' : user.is_admin ? 'Remove Admin' : 'Make Admin'}
-                                                    </Button>
+                                                    {user.approval_status !== 'rejected' && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => handleToggleAdmin(user)}
+                                                            disabled={toggleAdminForm.processing}
+                                                        >
+                                                            {toggleAdminForm.processing ? 'Updating...' : user.is_admin ? 'Remove Admin' : 'Make Admin'}
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
