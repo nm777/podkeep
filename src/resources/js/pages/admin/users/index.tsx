@@ -69,7 +69,7 @@ export default function UserManagement() {
         <AdminLayout>
             <Head title="User Management" />
 
-            <div className="container mx-auto py-6">
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold">User Management</h1>
                     <p className="text-muted-foreground">Manage user registrations and permissions</p>
