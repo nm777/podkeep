@@ -1,13 +1,25 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import MediaUploadButton from '@/components/media-upload-button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import { type BreadcrumbItem as BreadcrumbItemType, type Feed, type SharedData } from '@/types';
+import { router, usePage } from '@inertiajs/react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
+    const page = usePage<SharedData>();
+    const { feeds } = page.props;
+
+    const handleUploadSuccess = () => {
+        router.reload({ only: ['feeds'] });
+    };
+
     return (
         <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
+            </div>
+            <div className="ml-auto">
+                <MediaUploadButton onUploadSuccess={handleUploadSuccess} feeds={feeds} variant="default" size="sm" />
             </div>
         </header>
     );

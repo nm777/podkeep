@@ -1,12 +1,11 @@
 import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
 import MediaPlayer from '@/components/media-player';
-import MediaUploadButton from '@/components/media-upload-button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { ProcessingStatusHelper, ProcessingStatusType } from '@/lib/processing-status';
-import { type BreadcrumbItem, type Feed } from '@/types';
+import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { AlertCircle, FileAudio, FileVideo, Play, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -44,7 +43,6 @@ interface LibraryItem {
 
 interface LibraryIndexProps {
     libraryItems: LibraryItem[];
-    feeds: Feed[];
     flash?: {
         success?: string;
         warning?: string;
@@ -58,7 +56,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function LibraryIndex({ libraryItems, feeds, flash }: LibraryIndexProps) {
+export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<number | null>(null);
     const [playingItem, setPlayingItem] = useState<LibraryItem | null>(null);
@@ -79,11 +77,6 @@ export default function LibraryIndex({ libraryItems, feeds, flash }: LibraryInde
 
         return () => clearInterval(interval);
     }, [libraryItems]);
-
-    const handleUploadSuccess = () => {
-        // Reload the page to show new items
-        router.reload({ only: ['libraryItems'] });
-    };
 
     const handleDeleteClick = (itemId: number) => {
         setItemToDelete(itemId);
@@ -136,10 +129,7 @@ export default function LibraryIndex({ libraryItems, feeds, flash }: LibraryInde
             )}
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Media Library</h1>
-                    <MediaUploadButton onUploadSuccess={handleUploadSuccess} feeds={feeds} />
-                </div>
+                <h1 className="text-2xl font-bold">Media Library</h1>
 
                 {libraryItems.length === 0 ? (
                     <Card className="flex items-center justify-center p-12">
