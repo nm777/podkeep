@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useEffect, useRef } from 'react';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -29,6 +29,30 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
         remember: false,
     });
 
+    const emailRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const emailInput = emailRef.current;
+        const passwordInput = passwordRef.current;
+
+        if (!emailInput || !passwordInput) return;
+
+        const observer = new MutationObserver(() => {
+            if (emailInput.value !== data.email) {
+                setData('email', emailInput.value);
+            }
+            if (passwordInput.value !== data.password) {
+                setData('password', passwordInput.value);
+            }
+        });
+
+        observer.observe(emailInput, { attributes: true, attributeFilter: ['value'] });
+        observer.observe(passwordInput, { attributes: true, attributeFilter: ['value'] });
+
+        return () => observer.disconnect();
+    }, [data.email, data.password, setData]);
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('login'), {
@@ -45,6 +69,7 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                     <div className="grid gap-2">
                         <Label htmlFor="email">Email address</Label>
                         <Input
+                            ref={emailRef}
                             id="email"
                             name="email"
                             type="email"
@@ -54,7 +79,6 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            onInput={(e) => setData('email', (e.target as HTMLInputElement).value)}
                             placeholder="email@example.com"
                         />
                         <InputError message={errors.email} />
@@ -70,6 +94,7 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                             )}
                         </div>
                         <Input
+                            ref={passwordRef}
                             id="password"
                             name="password"
                             type="password"
@@ -78,7 +103,6 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                             autoComplete="current-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            onInput={(e) => setData('password', (e.target as HTMLInputElement).value)}
                             placeholder="Password"
                         />
                         <InputError message={errors.password} />

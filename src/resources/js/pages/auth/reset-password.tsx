@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useEffect, useRef } from 'react';
 
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,30 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
         password: '',
         password_confirmation: '',
     });
+
+    const passwordRef = useRef<HTMLInputElement>(null);
+    const passwordConfirmationRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const passwordInput = passwordRef.current;
+        const passwordConfirmationInput = passwordConfirmationRef.current;
+
+        if (!passwordInput || !passwordConfirmationInput) return;
+
+        const observer = new MutationObserver(() => {
+            if (passwordInput.value !== data.password) {
+                setData('password', passwordInput.value);
+            }
+            if (passwordConfirmationInput.value !== data.password_confirmation) {
+                setData('password_confirmation', passwordConfirmationInput.value);
+            }
+        });
+
+        observer.observe(passwordInput, { attributes: true, attributeFilter: ['value'] });
+        observer.observe(passwordConfirmationInput, { attributes: true, attributeFilter: ['value'] });
+
+        return () => observer.disconnect();
+    }, [data.password, data.password_confirmation, setData]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -59,6 +83,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                     <div className="grid gap-2">
                         <Label htmlFor="password">Password</Label>
                         <Input
+                            ref={passwordRef}
                             id="password"
                             type="password"
                             name="password"
@@ -67,7 +92,6 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                             className="mt-1 block w-full"
                             autoFocus
                             onChange={(e) => setData('password', e.target.value)}
-                            onInput={(e) => setData('password', (e.target as HTMLInputElement).value)}
                             placeholder="Password"
                         />
                         <InputError message={errors.password} />
@@ -76,6 +100,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                     <div className="grid gap-2">
                         <Label htmlFor="password_confirmation">Confirm password</Label>
                         <Input
+                            ref={passwordConfirmationRef}
                             id="password_confirmation"
                             type="password"
                             name="password_confirmation"
@@ -83,7 +108,6 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                             value={data.password_confirmation}
                             className="mt-1 block w-full"
                             onChange={(e) => setData('password_confirmation', e.target.value)}
-                            onInput={(e) => setData('password_confirmation', (e.target as HTMLInputElement).value)}
                             placeholder="Confirm password"
                         />
                         <InputError message={errors.password_confirmation} className="mt-2" />
