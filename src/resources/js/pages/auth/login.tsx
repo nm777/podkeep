@@ -46,6 +46,7 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                         <Label htmlFor="email">Email address</Label>
                         <Input
                             id="email"
+                            name="email"
                             type="email"
                             required
                             autoFocus
@@ -53,6 +54,7 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
+                            onInput={(e) => setData('email', (e.target as HTMLInputElement).value)}
                             placeholder="email@example.com"
                         />
                         <InputError message={errors.email} />
@@ -69,12 +71,14 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                         </div>
                         <Input
                             id="password"
+                            name="password"
                             type="password"
                             required
                             tabIndex={2}
                             autoComplete="current-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
+                            onInput={(e) => setData('password', (e.target as HTMLInputElement).value)}
                             placeholder="Password"
                         />
                         <InputError message={errors.password} />

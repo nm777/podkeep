@@ -40,6 +40,7 @@ export default function Register() {
                         <Label htmlFor="name">Name</Label>
                         <Input
                             id="name"
+                            name="name"
                             type="text"
                             required
                             autoFocus
@@ -47,6 +48,7 @@ export default function Register() {
                             autoComplete="name"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
+                            onInput={(e) => setData('name', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="Full name"
                         />
@@ -57,12 +59,14 @@ export default function Register() {
                         <Label htmlFor="email">Email address</Label>
                         <Input
                             id="email"
+                            name="email"
                             type="email"
                             required
                             tabIndex={2}
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
+                            onInput={(e) => setData('email', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="email@example.com"
                         />
@@ -73,12 +77,14 @@ export default function Register() {
                         <Label htmlFor="password">Password</Label>
                         <Input
                             id="password"
+                            name="password"
                             type="password"
                             required
                             tabIndex={3}
                             autoComplete="new-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
+                            onInput={(e) => setData('password', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="Password"
                         />
@@ -89,12 +95,14 @@ export default function Register() {
                         <Label htmlFor="password_confirmation">Confirm password</Label>
                         <Input
                             id="password_confirmation"
+                            name="password_confirmation"
                             type="password"
                             required
                             tabIndex={4}
                             autoComplete="new-password"
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
+                            onInput={(e) => setData('password_confirmation', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="Confirm password"
                         />
