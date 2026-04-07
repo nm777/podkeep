@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
-import { FormEventHandler, useEffect, useRef } from 'react';
+import { FormEventHandler } from 'react';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -24,42 +24,6 @@ export default function Register() {
         password_confirmation: '',
     });
 
-    const nameRef = useRef<HTMLInputElement>(null);
-    const emailRef = useRef<HTMLInputElement>(null);
-    const passwordRef = useRef<HTMLInputElement>(null);
-    const passwordConfirmationRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        const nameInput = nameRef.current;
-        const emailInput = emailRef.current;
-        const passwordInput = passwordRef.current;
-        const passwordConfirmationInput = passwordConfirmationRef.current;
-
-        if (!nameInput || !emailInput || !passwordInput || !passwordConfirmationInput) return;
-
-        const observer = new MutationObserver(() => {
-            if (nameInput.value !== data.name) {
-                setData('name', nameInput.value);
-            }
-            if (emailInput.value !== data.email) {
-                setData('email', emailInput.value);
-            }
-            if (passwordInput.value !== data.password) {
-                setData('password', passwordInput.value);
-            }
-            if (passwordConfirmationInput.value !== data.password_confirmation) {
-                setData('password_confirmation', passwordConfirmationInput.value);
-            }
-        });
-
-        observer.observe(nameInput, { attributes: true, attributeFilter: ['value'] });
-        observer.observe(emailInput, { attributes: true, attributeFilter: ['value'] });
-        observer.observe(passwordInput, { attributes: true, attributeFilter: ['value'] });
-        observer.observe(passwordConfirmationInput, { attributes: true, attributeFilter: ['value'] });
-
-        return () => observer.disconnect();
-    }, [data.name, data.email, data.password, data.password_confirmation, setData]);
-
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('register'), {
@@ -75,7 +39,6 @@ export default function Register() {
                     <div className="grid gap-2">
                         <Label htmlFor="name">Name</Label>
                         <Input
-                            ref={nameRef}
                             id="name"
                             name="name"
                             type="text"
@@ -85,6 +48,7 @@ export default function Register() {
                             autoComplete="name"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
+                            onInput={(e) => setData('name', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="Full name"
                         />
@@ -94,7 +58,6 @@ export default function Register() {
                     <div className="grid gap-2">
                         <Label htmlFor="email">Email address</Label>
                         <Input
-                            ref={emailRef}
                             id="email"
                             name="email"
                             type="email"
@@ -103,6 +66,7 @@ export default function Register() {
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
+                            onInput={(e) => setData('email', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="email@example.com"
                         />
@@ -112,7 +76,6 @@ export default function Register() {
                     <div className="grid gap-2">
                         <Label htmlFor="password">Password</Label>
                         <Input
-                            ref={passwordRef}
                             id="password"
                             name="password"
                             type="password"
@@ -121,6 +84,7 @@ export default function Register() {
                             autoComplete="new-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
+                            onInput={(e) => setData('password', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="Password"
                         />
@@ -130,7 +94,6 @@ export default function Register() {
                     <div className="grid gap-2">
                         <Label htmlFor="password_confirmation">Confirm password</Label>
                         <Input
-                            ref={passwordConfirmationRef}
                             id="password_confirmation"
                             name="password_confirmation"
                             type="password"
@@ -139,6 +102,7 @@ export default function Register() {
                             autoComplete="new-password"
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
+                            onInput={(e) => setData('password_confirmation', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="Confirm password"
                         />
