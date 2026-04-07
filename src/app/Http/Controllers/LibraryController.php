@@ -72,6 +72,38 @@ class LibraryController extends Controller
             ->with('success', 'Media file removed from your library.');
     }
 
+    public function retry($id)
+    {
+        $libraryItem = LibraryItem::findOrFail($id);
+
+        // Ensure user can only retry their own library items
+        if ($libraryItem->user_id !== Auth::user()->id) {
+            abort(403);
+        }
+
+        // Only allow retry for failed items
+        if (! $libraryItem->hasFailed()) {
+            return redirect()->route('library.index')
+                ->with('warning', 'Only failed items can be retried.');
+        }
+
+        // Reset status to pending and clear error
+        $libraryItem->update([
+            'processing_status' => \App\ProcessingStatusType::PENDING,
+            'processing_error' => null,
+            'processing_started_at' => null,
+            'processing_completed_at' => null,
+        ]);
+
+        // Re-dispatch the processing job based on source type
+        $sourceType = $libraryItem->source_type;
+        $processor = \App\Services\SourceProcessors\SourceProcessorFactory::create($sourceType);
+        $processor->retry($libraryItem);
+
+        return redirect()->route('library.index')
+            ->with('success', 'Processing has been restarted.');
+    }
+
     /**
      * Get source type and URL from request, handling backward compatibility.
      */

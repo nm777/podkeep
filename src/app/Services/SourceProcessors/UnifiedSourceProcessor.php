@@ -28,4 +28,12 @@ class UnifiedSourceProcessor
         // Handle URL sources (YouTube, regular URL)
         return $this->urlSourceProcessor->process($validated, $sourceType, $sourceUrl);
     }
+
+    /**
+     * Retry processing a failed library item.
+     */
+    public function retry(\App\Models\LibraryItem $libraryItem): void
+    {
+        $this->strategy->processNewSource($libraryItem, $libraryItem->source_url);
+    }
 }

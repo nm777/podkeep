@@ -43,6 +43,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('feeds/{feed}/edit', [FeedController::class, 'edit'])->name('feeds.edit');
 
     Route::resource('library', LibraryController::class)->only(['index', 'store', 'destroy']);
+    Route::post('library/{id}/retry', [LibraryController::class, 'retry'])->name('library.retry');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

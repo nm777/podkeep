@@ -3,11 +3,12 @@ import MediaPlayer from '@/components/media-player';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { ProcessingStatusHelper, ProcessingStatusType } from '@/lib/processing-status';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { AlertCircle, FileAudio, FileVideo, Play, Trash2 } from 'lucide-react';
+import { AlertCircle, FileAudio, FileVideo, Play, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface MediaFile {
@@ -60,7 +61,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<number | null>(null);
     const [playingItem, setPlayingItem] = useState<LibraryItem | null>(null);
-    const { delete: destroyForm } = useForm();
+    const { delete: destroyForm, post: retryForm } = useForm();
 
     // Auto-refresh for processing items using custom polling
     useEffect(() => {
@@ -92,6 +93,15 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                 },
             });
         }
+    };
+
+    const handleRetry = (itemId: number) => {
+        retryForm(route('library.retry', itemId), {
+            onSuccess: () => {
+                // Item retry initiated
+                router.reload({ only: ['libraryItems'] });
+            },
+        });
     };
 
     const formatFileSize = (bytes: number) => {
@@ -186,6 +196,32 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                             {ProcessingStatusHelper.from(item.processing_status).getIcon()}
                                             <span>{ProcessingStatusHelper.from(item.processing_status).getDisplayName()}...</span>
                                         </div>
+                                    ) : null}
+                                    {ProcessingStatusHelper.from(item.processing_status).hasFailed() ? (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div
+                                                    className={`flex items-center gap-2 text-xs ${ProcessingStatusHelper.from(item.processing_status).getColor()} cursor-help`}
+                                                >
+                                                    {ProcessingStatusHelper.from(item.processing_status).getIcon()}
+                                                    <span>{ProcessingStatusHelper.from(item.processing_status).getDisplayName()}</span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-5 w-5 p-0"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRetry(item.id);
+                                                        }}
+                                                    >
+                                                        <RefreshCw className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{item.processing_error || 'Processing failed. Click retry to try again.'}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
                                     ) : null}
                                 </CardHeader>
                                 <CardContent className="overflow-hidden">
