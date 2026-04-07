@@ -32,7 +32,7 @@ class YouTubeVideoInfoService
                 'thumbnail_url' => $data['thumbnail_url'] ?? null,
             ];
         } catch (Exception $e) {
-            \Log::error('Failed to fetch YouTube video info: '.$e->getMessage());
+            \Log::error('Failed to fetch YouTube video info: ' . $e->getMessage());
 
             return null;
         }

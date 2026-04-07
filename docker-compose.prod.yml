@@ -12,6 +12,9 @@ services:
       - podcast-storage:/var/www/html/storage
     networks:
       - app
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   web:
     build:
@@ -26,6 +29,9 @@ services:
     networks:
       - app
       - traefik_web
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.podcast.rule=Host(`${APP_HOST:-podkeep.app}`)"
@@ -48,6 +54,9 @@ services:
       - podcast-storage:/var/www/html/storage
     networks:
       - app
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
 networks:
   app:

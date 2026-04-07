@@ -130,8 +130,8 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
         setData('source_url', inputType === 'youtube' ? url : '');
         setSelectedFile(null);
 
-        // For YouTube URLs, try to fetch the video title
-        if (inputType === 'youtube' && url && !data.title) {
+        // For YouTube URLs, always fetch and update the video title
+        if (inputType === 'youtube' && url) {
             const videoId = extractYouTubeVideoId(url);
             if (videoId) {
                 const title = await fetchYouTubeVideoTitle(videoId);
@@ -141,7 +141,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
             }
         }
 
-        // For non-YouTube URLs or if title fetching fails, use filename fallback
+        // For non-YouTube URLs, use filename fallback only if title is empty
         if (!data.title && url && inputType !== 'youtube') {
             try {
                 const filename = new URL(url).pathname.split('/').pop() || '';
