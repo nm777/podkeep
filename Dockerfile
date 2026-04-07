@@ -40,6 +40,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY custom-www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY src/php.ini /usr/local/etc/php/conf.d/custom.ini
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
