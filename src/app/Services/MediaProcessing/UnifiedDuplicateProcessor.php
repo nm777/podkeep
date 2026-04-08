@@ -80,9 +80,6 @@ class UnifiedDuplicateProcessor
         // Schedule cleanup of this duplicate entry
         CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
 
-        // Store flash message for user notification
-        session()->flash('warning', 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.');
-
         return [
             'success' => true,
             'is_duplicate' => true,
@@ -140,9 +137,6 @@ class UnifiedDuplicateProcessor
             'processing_completed_at' => now(),
         ]);
 
-        // Store flash message for user notification
-        session()->flash('info', 'Linked to existing media file.');
-
         return [
             'success' => true,
             'is_duplicate' => false,
@@ -176,9 +170,6 @@ class UnifiedDuplicateProcessor
         // Schedule cleanup of this duplicate entry
         CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
 
-        // Store flash message for user notification
-        session()->flash('warning', 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.');
-
         return [
             'success' => true,
             'is_duplicate' => true,
@@ -200,9 +191,6 @@ class UnifiedDuplicateProcessor
             'processing_status' => ProcessingStatusType::COMPLETED,
             'processing_completed_at' => now(),
         ]);
-
-        // Store flash message for user notification
-        session()->flash('info', 'File already exists in system. Linked to existing media file.');
 
         return [
             'success' => true,
