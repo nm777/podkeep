@@ -13,43 +13,11 @@ class MediaDownloader
     public function downloadFromUrl(string $url): ?string
     {
         try {
-            $response = Http::timeout(60)->withOptions([
-                'allow_redirects' => [
-                    'max' => 5,
-                    'strict' => true,
-                    'referer' => true,
-                    'protocols' => ['http', 'https'],
-                    'track_redirects' => true,
-                ],
-            ])->get($url);
-
-            if (! $response->successful()) {
-                throw new \Exception('Failed to download file: HTTP '.$response->status());
-            }
-
+            $response = $this->executeDownload($url);
             $contents = $response->body();
 
-            if (empty($contents)) {
-                throw new \Exception('Downloaded file is empty');
-            }
-
-            // Handle JavaScript redirect pages
-            if ($this->isHtmlContent($contents)) {
-                $redirectUrl = $this->extractRedirectUrl($contents, $url);
-
-                if ($redirectUrl) {
-                    try {
-                        return $this->downloadFromUrl($redirectUrl);
-                    } catch (\Exception $e) {
-                        // If redirect fails, return the original HTML error
-                        throw new \Exception('Download failed: Got HTML redirect page instead of media file');
-                    }
-                }
-
-                throw new \Exception('Download failed: Got HTML content instead of media file');
-            }
-
-            // Validate media content
+            $this->validateResponse($response, $contents);
+            $contents = $this->handleHtmlRedirect($contents, $url);
             $this->validateMediaContent($contents);
 
             return $contents;
@@ -61,6 +29,58 @@ class MediaDownloader
 
             throw $e;
         }
+    }
+
+    /**
+     * Execute HTTP download with redirect options.
+     */
+    private function executeDownload(string $url): \Illuminate\Http\Client\Response
+    {
+        return Http::timeout(60)->withOptions([
+            'allow_redirects' => [
+                'max' => 5,
+                'strict' => true,
+                'referer' => true,
+                'protocols' => ['http', 'https'],
+                'track_redirects' => true,
+            ],
+        ])->get($url);
+    }
+
+    /**
+     * Validate HTTP response and content.
+     */
+    private function validateResponse(\Illuminate\Http\Client\Response $response, string $contents): void
+    {
+        if (! $response->successful()) {
+            throw new \Exception('Failed to download file: HTTP '.$response->status());
+        }
+
+        if (empty($contents)) {
+            throw new \Exception('Downloaded file is empty');
+        }
+    }
+
+    /**
+     * Handle HTML JavaScript redirects.
+     */
+    private function handleHtmlRedirect(string $contents, string $originalUrl): string
+    {
+        if (! $this->isHtmlContent($contents)) {
+            return $contents;
+        }
+
+        $redirectUrl = $this->extractRedirectUrl($contents, $originalUrl);
+
+        if ($redirectUrl) {
+            try {
+                return $this->downloadFromUrl($redirectUrl);
+            } catch (\Exception $e) {
+                throw new \Exception('Download failed: Got HTML redirect page instead of media file');
+            }
+        }
+
+        throw new \Exception('Download failed: Got HTML content instead of media file');
     }
 
     /**
