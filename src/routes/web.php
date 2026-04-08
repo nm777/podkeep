@@ -19,7 +19,8 @@ Route::get('rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name(
 
 Route::get('files/{file_path}', [MediaController::class, 'show'])->name('files.show')->where('file_path', '.*');
 
-Route::post('check-url-duplicate', [UrlDuplicateCheckController::class, 'check'])->middleware(['auth', 'verified']);
+Route::post('check-url-duplicate', [UrlDuplicateCheckController::class, 'check'])
+    ->middleware(['auth', 'verified', 'throttle:30,1']);
 Route::get('youtube/video-info/{videoId}', [YouTubeController::class, 'getVideoInfo'])->middleware(['auth', 'verified']);
 
 Route::middleware(['auth', 'verified', 'approved'])->group(function () {
@@ -43,7 +44,14 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('feeds/{feed}/edit', [FeedController::class, 'edit'])->name('feeds.edit');
 
     Route::resource('library', LibraryController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::post('library/{id}/retry', [LibraryController::class, 'retry'])->name('library.retry');
+
+    // Apply rate limiting to library store (uploads/downloads)
+    Route::post('library', [LibraryController::class, 'store'])
+        ->middleware('throttle:10,1');
+
+    Route::post('library/{id}/retry', [LibraryController::class, 'retry'])
+        ->name('library.retry')
+        ->middleware('throttle:10,1');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
