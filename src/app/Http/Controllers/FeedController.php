@@ -78,14 +78,7 @@ class FeedController extends Controller
         ]);
 
         if (isset($validated['items'])) {
-            $feed->items()->delete();
-
-            foreach ($validated['items'] as $index => $item) {
-                $feed->items()->create([
-                    'library_item_id' => $item['library_item_id'],
-                    'sequence' => $index,
-                ]);
-            }
+            $this->syncFeedItems($feed, $validated['items']);
         }
 
         return redirect()->route('dashboard')->with('success', 'Feed updated successfully!');
@@ -105,5 +98,28 @@ class FeedController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', 'Feed deleted successfully!');
+    }
+
+    private function syncFeedItems(Feed $feed, array $items): void
+    {
+        $currentItems = $feed->items->keyBy('library_item_id');
+        $newItemIds = collect($items)->pluck('library_item_id');
+
+        // Delete items that are no longer in the list
+        $feed->items()
+            ->whereNotIn('library_item_id', $newItemIds)
+            ->delete();
+
+        // Update or create items
+        foreach ($items as $index => $item) {
+            $feed->items()->updateOrCreate(
+                [
+                    'library_item_id' => $item['library_item_id'],
+                ],
+                [
+                    'sequence' => $index,
+                ]
+            );
+        }
     }
 }
