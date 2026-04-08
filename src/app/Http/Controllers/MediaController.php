@@ -7,6 +7,7 @@ use App\Models\MediaFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MediaController extends Controller
 {
@@ -55,7 +56,7 @@ class MediaController extends Controller
         return $this->serveMediaFile($file_path, $mediaFile);
     }
 
-    private function serveMediaFile(string $file_path, MediaFile $mediaFile): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    private function serveMediaFile(string $file_path, MediaFile $mediaFile): BinaryFileResponse
     {
         if (! Storage::disk('public')->exists($file_path)) {
             abort(404);
