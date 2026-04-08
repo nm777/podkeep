@@ -65,7 +65,7 @@ class LibraryController extends Controller
         $mediaFile = $libraryItem->mediaFile;
         
         // Clear RSS cache for feeds that contain this item
-        $feedIds = $libraryItem->feeds()->pluck('id');
+        $feedIds = $libraryItem->feedItems()->pluck('feed_id');
         foreach ($feedIds as $feedId) {
             Cache::forget("rss.{$feedId}");
         }
