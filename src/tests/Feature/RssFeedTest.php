@@ -51,7 +51,7 @@ test('rss feed includes items with proper enclosure', function () {
 
     expect($content)->toContain('<title>Test Episode</title>');
     expect($content)->toContain('<description>Test Description</description>');
-    expect($content)->toContain('/storage/media/test-audio.mp3');
+    expect($content)->toContain('/files/media/test-audio.mp3');
     expect($content)->toContain('audio/mpeg');
 });
 
@@ -95,7 +95,7 @@ test('rss feed requires proper enclosure for podcast apps', function () {
     $content = $response->getContent();
 
     expect($content)->toContain('<enclosure');
-    expect($content)->toContain('url="/storage/media/test-audio.mp3"');
+    expect($content)->toContain('url="/files/media/test-audio.mp3"');
     expect($content)->toContain('type="audio/mpeg"');
     expect($content)->toContain('length="1234567"');
 });
@@ -142,7 +142,7 @@ test('rss feed includes youtube items with converted audio', function () {
 
     expect($content)->toContain('YouTube Video');
     expect($content)->toContain('<enclosure');
-    expect($content)->toContain('url="/storage/media/youtube-audio.mp3"');
+    expect($content)->toContain('url="/files/media/youtube-audio.mp3"');
     expect($content)->toContain('type="audio/mpeg"');
     expect($content)->toContain('length="5432100"');
 });

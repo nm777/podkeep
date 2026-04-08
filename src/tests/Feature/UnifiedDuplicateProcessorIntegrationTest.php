@@ -177,8 +177,8 @@ describe('UnifiedDuplicateProcessor Integration', function () {
         });
     });
 
-    describe('Flash Messages', function () {
-        it('sets correct flash message for user duplicates', function () {
+    describe('Response Messages', function () {
+        it('returns correct message for user duplicates', function () {
             $mediaFile = MediaFile::factory()->create([
                 'user_id' => $this->user->id,
                 'source_url' => 'https://example.com/duplicate-audio.mp3',
@@ -196,13 +196,13 @@ describe('UnifiedDuplicateProcessor Integration', function () {
                 'source_url' => 'https://example.com/duplicate-audio.mp3',
             ]);
 
-            $this->processor->processUrlDuplicate($libraryItem, 'https://example.com/duplicate-audio.mp3');
+            $result = $this->processor->processUrlDuplicate($libraryItem, 'https://example.com/duplicate-audio.mp3');
 
-            expect(session()->has('warning'))->toBeTrue();
-            expect(session('warning'))->toContain('Duplicate file detected');
+            expect($result['message'])->toContain('Duplicate file detected');
+            expect($result['is_duplicate'])->toBeTrue();
         });
 
-        it('sets correct flash message for global duplicates', function () {
+        it('returns correct message for global duplicates', function () {
             $otherUser = User::factory()->create();
             $mediaFile = MediaFile::factory()->create([
                 'user_id' => $otherUser->id,
@@ -221,10 +221,10 @@ describe('UnifiedDuplicateProcessor Integration', function () {
                 'source_url' => 'https://example.com/global-audio.mp3',
             ]);
 
-            $this->processor->processUrlDuplicate($libraryItem, 'https://example.com/global-audio.mp3');
+            $result = $this->processor->processUrlDuplicate($libraryItem, 'https://example.com/global-audio.mp3');
 
-            expect(session()->has('info'))->toBeTrue();
-            expect(session('info'))->toContain('Linked to existing media file');
+            expect($result['message'])->toContain('Linked to existing media file');
+            expect($result['is_duplicate'])->toBeFalse();
         });
     });
 
