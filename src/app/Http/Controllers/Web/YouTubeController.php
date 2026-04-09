@@ -21,7 +21,7 @@ class YouTubeController extends Controller
         $cacheKey = "youtube.{$videoId}";
         $cacheDuration = config('constants.cache.youtube_info_duration_seconds');
 
-        $videoInfo = Cache::remember($cacheKey, $cacheDuration, function() use ($videoId) {
+        $videoInfo = Cache::remember($cacheKey, $cacheDuration, function () use ($videoId) {
             return $this->youTubeVideoInfoService->getVideoInfo($videoId);
         });
 

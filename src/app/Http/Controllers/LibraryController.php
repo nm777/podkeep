@@ -63,13 +63,13 @@ class LibraryController extends Controller
         }
 
         $mediaFile = $libraryItem->mediaFile;
-        
+
         // Clear RSS cache for feeds that contain this item
         $feedIds = $libraryItem->feedItems()->pluck('feed_id');
         foreach ($feedIds as $feedId) {
             Cache::forget("rss.{$feedId}");
         }
-        
+
         $libraryItem->delete();
 
         // Check if this was the last reference to the media file

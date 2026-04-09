@@ -2,8 +2,9 @@
 
 use App\Services\MediaProcessing\MediaDownloader;
 use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
-uses(\Tests\TestCase::class);
+uses(TestCase::class);
 
 test('downloads media file successfully', function () {
     $url = 'https://example.com/audio.mp3';
@@ -11,7 +12,7 @@ test('downloads media file successfully', function () {
 
     Http::fake([$url => Http::response($content, 200)]);
 
-    $result = (new MediaDownloader())->downloadFromUrl($url);
+    $result = (new MediaDownloader)->downloadFromUrl($url);
 
     expect($result)->toBe($content);
 });
@@ -21,8 +22,8 @@ test('throws exception for failed http request', function () {
 
     Http::fake([$url => Http::response('Not Found', 404)]);
 
-    expect(fn () => (new MediaDownloader())->downloadFromUrl($url))
-        ->toThrow(\Exception::class, 'Failed to download file: HTTP 404');
+    expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
+        ->toThrow(Exception::class, 'Failed to download file: HTTP 404');
 });
 
 test('throws exception for empty content', function () {
@@ -30,8 +31,8 @@ test('throws exception for empty content', function () {
 
     Http::fake([$url => Http::response('', 200)]);
 
-    expect(fn () => (new MediaDownloader())->downloadFromUrl($url))
-        ->toThrow(\Exception::class, 'Downloaded file is empty');
+    expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
+        ->toThrow(Exception::class, 'Downloaded file is empty');
 });
 
 test('throws exception for html content without redirect', function () {
@@ -39,8 +40,8 @@ test('throws exception for html content without redirect', function () {
 
     Http::fake([$url => Http::response('<!DOCTYPE html><html><body>Error</body></html>', 200)]);
 
-    expect(fn () => (new MediaDownloader())->downloadFromUrl($url))
-        ->toThrow(\Exception::class, 'Download failed: Got HTML content instead of media file');
+    expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
+        ->toThrow(Exception::class, 'Download failed: Got HTML content instead of media file');
 });
 
 test('handles javascript redirect', function () {
@@ -53,7 +54,7 @@ test('handles javascript redirect', function () {
         $redirectUrl => Http::response($audioContent, 200),
     ]);
 
-    $result = (new MediaDownloader())->downloadFromUrl($url);
+    $result = (new MediaDownloader)->downloadFromUrl($url);
 
     expect($result)->toBe($audioContent);
 });
@@ -68,7 +69,7 @@ test('converts relative redirect url to absolute', function () {
         $absoluteUrl => Http::response($audioContent, 200),
     ]);
 
-    $result = (new MediaDownloader())->downloadFromUrl($url);
+    $result = (new MediaDownloader)->downloadFromUrl($url);
 
     expect($result)->toBe($audioContent);
 });
@@ -79,7 +80,7 @@ test('validates mp3 with id3 tag', function () {
 
     Http::fake([$url => Http::response($content, 200)]);
 
-    $result = (new MediaDownloader())->downloadFromUrl($url);
+    $result = (new MediaDownloader)->downloadFromUrl($url);
 
     expect($result)->toBe($content);
 });
@@ -89,6 +90,6 @@ test('throws exception for invalid media content', function () {
 
     Http::fake([$url => Http::response(str_repeat('invalid text content', 100), 200)]);
 
-    expect(fn () => (new MediaDownloader())->downloadFromUrl($url))
-        ->toThrow(\Exception::class);
+    expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
+        ->toThrow(Exception::class);
 });
