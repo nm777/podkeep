@@ -208,10 +208,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Jobs/CleanupOrphanedMediaFiles.php:22`
 - Replaced `->get()` with `->chunkById(100, ...)` to process orphaned files in batches, preventing memory exhaustion on large libraries.
 
-### 3.12 [ ] LOW — ProcessingStatusHelper instantiated 5-6 times per item render
-- **File:** `src/resources/js/pages/Library/Index.tsx:245-279`
-- `ProcessingStatusHelper.from(item.processing_status)` is called repeatedly within the same item's render block.
-- **Fix:** Compute the helper once per item and reuse the reference.
+### 3.12 [x] LOW — ProcessingStatusHelper instantiated 5-6 times per item render
+- **File:** `src/resources/js/pages/Library/Index.tsx:219-235`
+- Extracted `const status = ProcessingStatusHelper.from(item.processing_status)` once at the top of the map callback. Replaced 8 inline instantiations with the single `status` variable.
 
 ### 3.13 [x] LOW — useIsMobile starts with undefined state (layout flash)
 - **File:** `src/resources/js/hooks/use-mobile.tsx:6`

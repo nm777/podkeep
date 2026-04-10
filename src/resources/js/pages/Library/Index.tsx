@@ -168,7 +168,9 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                     </Card>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {libraryItems.map((item) => (
+                        {libraryItems.map((item) => {
+                            const status = ProcessingStatusHelper.from(item.processing_status);
+                            return (
                             <Card
                                 key={item.id}
                                 className={`relative overflow-hidden ${item.is_duplicate ? 'border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/10' : ''}`}
@@ -216,23 +218,18 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                             <span>Duplicate file - will be removed automatically</span>
                                         </div>
                                     )}
-                                    {ProcessingStatusHelper.from(item.processing_status).isPending() ||
-                                    ProcessingStatusHelper.from(item.processing_status).isProcessing() ? (
-                                        <div
-                                            className={`flex items-center gap-2 text-xs ${ProcessingStatusHelper.from(item.processing_status).getColor()}`}
-                                        >
-                                            {ProcessingStatusHelper.from(item.processing_status).getIcon()}
-                                            <span>{ProcessingStatusHelper.from(item.processing_status).getDisplayName()}...</span>
+                                    {status.isPending() || status.isProcessing() ? (
+                                        <div className={`flex items-center gap-2 text-xs ${status.getColor()}`}>
+                                            {status.getIcon()}
+                                            <span>{status.getDisplayName()}...</span>
                                         </div>
                                     ) : null}
-                                    {ProcessingStatusHelper.from(item.processing_status).hasFailed() ? (
+                                    {status.hasFailed() ? (
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <div
-                                                    className={`flex items-center gap-2 text-xs ${ProcessingStatusHelper.from(item.processing_status).getColor()} cursor-help`}
-                                                >
-                                                    {ProcessingStatusHelper.from(item.processing_status).getIcon()}
-                                                    <span>{ProcessingStatusHelper.from(item.processing_status).getDisplayName()}</span>
+                                                <div className={`flex items-center gap-2 text-xs ${status.getColor()} cursor-help`}>
+                                                    {status.getIcon()}
+                                                    <span>{status.getDisplayName()}</span>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -272,7 +269,8 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                     )}
                                 </CardContent>
                             </Card>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
