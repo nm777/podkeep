@@ -400,10 +400,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Already applied by `Pest.php` for Feature tests.
 - **Fix:** Remove redundant `uses(RefreshDatabase::class)`.
 
-### 7.10 [ ] LOW — Unused `something()` helper in Pest.php
+### 7.10 [x] LOW — Unused `something()` helper in Pest.php
 - **File:** `src/tests/Pest.php:47-49`
-- Empty stub that serves no purpose.
-- **Fix:** Remove the unused function.
+- Removed the empty stub function.
 
 ---
 
