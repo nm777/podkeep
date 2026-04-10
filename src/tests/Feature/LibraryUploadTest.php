@@ -311,12 +311,11 @@ it('MediaFile model can check file duplicates', function () {
     ]);
 
     // Test duplicate detection
-    $duplicate = MediaFile::isDuplicate($tempPath);
+    $duplicate = MediaFile::findDuplicateByFile($tempPath);
     expect($duplicate)->not->toBeNull();
     expect($duplicate->id)->toBe($mediaFile->id);
 
-    // Test with non-existent file
-    $nonDuplicate = MediaFile::isDuplicate('/non/existent/file.mp3');
+    $nonDuplicate = MediaFile::findDuplicateByFile('/non/existent/file.mp3');
     expect($nonDuplicate)->toBeNull();
 
     // Clean up

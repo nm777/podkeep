@@ -59,19 +59,29 @@ class MediaFile extends Model
         return static::where('file_hash', $fileHash)->first();
     }
 
-    /**
-     * Check if a file is a duplicate by calculating its hash.
-     */
-    public static function isDuplicate(string $filePath): ?static
+    public static function findDuplicateByFile(string $filePath): ?static
     {
         return DuplicateDetectionService::findGlobalDuplicate($filePath);
     }
 
+    public static function findDuplicateByFileForUser(string $filePath, int $userId): ?static
+    {
+        return DuplicateDetectionService::findUserDuplicate($filePath, $userId);
+    }
+
     /**
-     * Check if a file is a duplicate for a specific user by calculating its hash.
+     * @deprecated Use findDuplicateByFile() instead
+     */
+    public static function isDuplicate(string $filePath): ?static
+    {
+        return static::findDuplicateByFile($filePath);
+    }
+
+    /**
+     * @deprecated Use findDuplicateByFileForUser() instead
      */
     public static function isDuplicateForUser(string $filePath, int $userId): ?static
     {
-        return DuplicateDetectionService::findUserDuplicate($filePath, $userId);
+        return static::findDuplicateByFileForUser($filePath, $userId);
     }
 }

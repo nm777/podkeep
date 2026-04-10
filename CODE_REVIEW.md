@@ -331,10 +331,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/pages/admin/users/index.tsx:33`
 - Changed from `usePage().props as PageProps` to `usePage<PageProps>().props` for proper compile-time type checking.
 
-### 6.6 [ ] LOW — `isDuplicate()` returns `?MediaFile`, not `bool`
-- **File:** `src/app/Models/MediaFile.php:65-76`
-- Method name implies boolean, violates principle of least surprise.
-- **Fix:** Rename to `findDuplicateByFile()`.
+### 6.6 [x] LOW — `isDuplicate()` returns `?MediaFile`, not `bool`
+- **File:** `src/app/Models/MediaFile.php`
+- Added `findDuplicateByFile()` and `findDuplicateByFileForUser()` with descriptive names. Deprecated old `isDuplicate()` and `isDuplicateForUser()` as backward-compatible aliases. Updated callers in `LibraryUploadTest`.
 
 ### 6.7 [ ] LOW — ProcessingStatusType enum at root namespace
 - **File:** `src/app/ProcessingStatusType.php`
