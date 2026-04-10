@@ -5,6 +5,7 @@ import { type Feed } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { router, Link } from '@inertiajs/react';
 import { Copy, Edit, Eye, EyeOff, FileAudio, Rss, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface FeedListProps {
     feeds: Feed[];
@@ -13,6 +14,7 @@ interface FeedListProps {
 
 export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
     const { toast } = useToast();
+    const [revealedFeeds, setRevealedFeeds] = useState<Set<number>>(new Set());
 
     const handleDelete = (feedId: number) => {
         if (confirm('Are you sure you want to delete this feed?')) {
@@ -86,6 +88,26 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
         return baseUrl;
     };
 
+    const getDisplayUrl = (feed: Feed) => {
+        const baseUrl = `/rss/${feed.user_guid}/${feed.slug}`;
+        if (!feed.is_public && feed.token && !revealedFeeds.has(feed.id)) {
+            return `${baseUrl}?token=••••••••`;
+        }
+        return getFeedUrl(feed);
+    };
+
+    const toggleReveal = (feedId: number) => {
+        setRevealedFeeds((prev) => {
+            const next = new Set(prev);
+            if (next.has(feedId)) {
+                next.delete(feedId);
+            } else {
+                next.add(feedId);
+            }
+            return next;
+        });
+    };
+
     if (feeds.length === 0) {
         return (
             <Card>
@@ -133,10 +155,15 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                         <div className="space-y-3">
                             <div className="text-sm break-all text-muted-foreground">
                                 <a href={getFeedUrl(feed)} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
-                                    {getFeedUrl(feed)}
+                                    {getDisplayUrl(feed)}
                                 </a>
                             </div>
                             <div className="flex items-center gap-2">
+                                {!feed.is_public && feed.token && (
+                                    <Button variant="outline" size="sm" onClick={() => toggleReveal(feed.id)}>
+                                        {revealedFeeds.has(feed.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </Button>
+                                )}
                                 <Button variant="outline" size="sm" onClick={() => handleCopyUrl(feed)}>
                                     <Copy className="h-4 w-4" />
                                 </Button>

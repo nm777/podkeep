@@ -262,10 +262,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Http/Controllers/MediaController.php:66`
 - Changed from `Storage::download()` to `Storage::response()` with proper Content-Type header. Podcast clients can now stream audio.
 
-### 4.11 [ ] LOW — Private feed tokens always visible in UI
-- **File:** `src/resources/js/components/feed-list.tsx:89-95,143-145`
-- Tokens are rendered in the page HTML at all times, not just on user action.
-- **Fix:** Render the token only on explicit user action (e.g., "Reveal URL" button).
+### 4.11 [x] LOW — Private feed tokens now hidden behind Reveal button
+- **File:** `src/resources/js/components/feed-list.tsx:134-137`
+- Private feed tokens are now masked with `••••••••` by default. Added Eye/EyeOff toggle button per feed card. The actual URL (with real token) is only used for the link href and copy action; display shows the masked version until revealed.
 
 ---
 
