@@ -342,10 +342,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - The enum is at `App\` namespace instead of `App\Enums\`.
 - **Fix:** Move to `App\Enums\ProcessingStatusType`.
 
-### 6.8 [ ] LOW — CleanupDuplicateLibraryItem not using constructor promotion
+### 6.8 [x] LOW — CleanupDuplicateLibraryItem not using constructor promotion
 - **File:** `src/app/Jobs/CleanupDuplicateLibraryItem.php:16`
-- Uses `public $libraryItem;` with manual assignment instead of PHP 8 constructor property promotion.
-- **Fix:** `public function __construct(public LibraryItem $libraryItem) {}`
+- Replaced manual property declaration and assignment with PHP 8 constructor property promotion.
 
 ### 6.9 [ ] LOW — Unsafe localStorage cast in useAppearance
 - **File:** `src/resources/js/hooks/use-appearance.tsx:37`
