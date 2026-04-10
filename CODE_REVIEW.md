@@ -335,10 +335,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Jobs/CleanupDuplicateLibraryItem.php:16`
 - Replaced manual property declaration and assignment with PHP 8 constructor property promotion.
 
-### 6.9 [ ] LOW — Unsafe localStorage cast in useAppearance
-- **File:** `src/resources/js/hooks/use-appearance.tsx:37`
-- `localStorage.getItem('appearance') as Appearance` assumes stored value is valid.
-- **Fix:** Validate against `['light', 'dark', 'system']`.
+### 6.9 [x] LOW — Unsafe localStorage cast in useAppearance
+- **File:** `src/resources/js/hooks/use-appearance.tsx:37,42,66`
+- Added `isValidAppearance()` type guard and `getStoredAppearance()` helper. All three `as Appearance` casts replaced with validated reads. Invalid stored values default to `'system'`.
 
 ### 6.10 [ ] LOW — `ProcessingStatusHelper.from()` accepts any string
 - **File:** `src/resources/js/lib/processing-status.tsx:83`
