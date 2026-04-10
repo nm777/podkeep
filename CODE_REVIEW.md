@@ -191,10 +191,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Services/DuplicateDetectionService.php:90-104`
 - `analyzeFileUpload()` called both `findUserDuplicate()` and `findGlobalDuplicate()`, each computing the hash independently plus a third call for the result array. Refactored to compute hash once and pass it as `$precomputedHash` to both lookup methods.
 
-### 3.8 [ ] MEDIUM — FeedController::syncFeedItems executes N queries in a loop
-- **File:** `src/app/Http/Controllers/FeedController.php:121-130`
-- `updateOrCreate()` is called per-item in a foreach loop.
-- **Fix:** Use `upsert()` for batch operations.
+### 3.8 [x] MEDIUM — FeedController::syncFeedItems executes N queries in a loop
+- **File:** `src/app/Http/Controllers/FeedController.php:114-135`
+- Replaced `foreach` + `updateOrCreate()` loop with a single `upsert()` call using the unique `(feed_id, library_item_id)` constraint.
 
 ### 3.9 [x] MEDIUM — Polling effect tears down/recreates interval on every reload
 - **File:** `src/resources/js/pages/Library/Index.tsx:55-68`

@@ -113,25 +113,25 @@ class FeedController extends Controller
 
     private function syncFeedItems(Feed $feed, array $items): void
     {
-        $currentItems = $feed->items->keyBy('library_item_id');
         $newItemIds = collect($items)->pluck('library_item_id');
 
-        // Delete items that are no longer in the list
         $feed->items()
             ->whereNotIn('library_item_id', $newItemIds)
             ->delete();
 
-        // Update or create items
-        foreach ($items as $index => $item) {
-            $feed->items()->updateOrCreate(
-                [
-                    'library_item_id' => $item['library_item_id'],
-                ],
-                [
-                    'sequence' => $index,
-                ]
-            );
+        if (empty($items)) {
+            return;
         }
+
+        $feed->items()->upsert(
+            collect($items)->map(fn ($item, $index) => [
+                'feed_id' => $feed->id,
+                'library_item_id' => $item['library_item_id'],
+                'sequence' => $index,
+            ])->values()->all(),
+            ['feed_id', 'library_item_id'],
+            ['sequence'],
+        );
     }
 
     private function generateUniqueSlug(string $title, ?int $excludeId = null): string
