@@ -5,23 +5,36 @@ namespace App\Services\MediaProcessing;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class MediaDownloader
 {
     /**
-     * Download media from URL with redirect handling.
+     * Download media from URL and stream to a temp file.
+     * Returns the storage path of the downloaded temp file.
      */
-    public function downloadFromUrl(string $url, int $maxRedirects = 5): ?string
+    public function downloadFromUrl(string $url, int $maxRedirects = 5): string
     {
         try {
-            $response = $this->executeDownload($url);
-            $contents = $response->body();
+            $tempPath = $this->streamToTempFile($url);
 
-            $this->validateResponse($response, $contents);
-            $contents = $this->handleHtmlRedirect($contents, $url, $maxRedirects);
-            $this->validateMediaContent($contents);
+            $disk = Storage::disk('public');
+            $fullPath = $disk->path($tempPath);
+            $header = file_get_contents($fullPath, false, null, 0, 4096);
 
-            return $contents;
+            if (empty($header)) {
+                $disk->delete($tempPath);
+                throw new \Exception('Downloaded file is empty');
+            }
+
+            $resolvedPath = $this->handleHtmlRedirect($header, $url, $tempPath, $maxRedirects);
+            $finalPath = $resolvedPath ?? $tempPath;
+
+            $finalFullPath = $disk->path($finalPath);
+            $finalHeader = file_get_contents($finalFullPath, false, null, 0, 4096);
+            $this->validateMediaContent($finalHeader);
+
+            return $finalPath;
         } catch (\Exception $e) {
             Log::error('Media download failed', [
                 'url' => $url,
@@ -33,11 +46,21 @@ class MediaDownloader
     }
 
     /**
-     * Execute HTTP download with redirect options.
+     * Stream download directly to a temp file on disk.
      */
-    private function executeDownload(string $url): Response
+    private function streamToTempFile(string $url): string
     {
-        return Http::timeout(60)->withOptions([
+        $tempPath = 'temp-downloads/'.uniqid().'_'.basename(parse_url($url, PHP_URL_PATH) ?: 'download');
+
+        $disk = Storage::disk('public');
+        $directory = dirname($tempPath);
+        if (! $disk->directoryExists($directory)) {
+            $disk->makeDirectory($directory);
+        }
+
+        $sinkPath = $disk->path($tempPath);
+
+        $response = Http::timeout(60)->withOptions([
             'allow_redirects' => [
                 'max' => 5,
                 'strict' => true,
@@ -45,49 +68,51 @@ class MediaDownloader
                 'protocols' => ['http', 'https'],
                 'track_redirects' => true,
             ],
+            'sink' => $sinkPath,
         ])->get($url);
-    }
 
-    /**
-     * Validate HTTP response and content.
-     */
-    private function validateResponse(Response $response, string $contents): void
-    {
         if (! $response->successful()) {
+            $disk->delete($tempPath);
             throw new \Exception('Failed to download file: HTTP '.$response->status());
         }
 
-        if (empty($contents)) {
-            throw new \Exception('Downloaded file is empty');
-        }
+        return $tempPath;
     }
 
     /**
      * Handle HTML JavaScript redirects.
      */
-    private function handleHtmlRedirect(string $contents, string $originalUrl, int $maxRedirects): string
+    private function handleHtmlRedirect(string $header, string $originalUrl, string $currentTempPath, int $maxRedirects): ?string
     {
-        if (! $this->isHtmlContent($contents)) {
-            return $contents;
+        if (! $this->isHtmlContent($header)) {
+            return null;
         }
 
+        $disk = Storage::disk('public');
+
         if ($maxRedirects <= 0) {
+            $disk->delete($currentTempPath);
             throw new \Exception('Download failed: Maximum HTML redirect limit reached');
         }
 
-        $redirectUrl = $this->extractRedirectUrl($contents, $originalUrl);
+        $redirectUrl = $this->extractRedirectUrl($header, $originalUrl);
 
         if ($redirectUrl) {
+            $disk->delete($currentTempPath);
             try {
                 return $this->downloadFromUrl($redirectUrl, $maxRedirects - 1);
             } catch (\Exception $e) {
                 if (str_contains($e->getMessage(), 'Maximum HTML redirect limit')) {
                     throw $e;
                 }
+                if (str_contains($e->getMessage(), 'Got HTML redirect page')) {
+                    throw $e;
+                }
                 throw new \Exception('Download failed: Got HTML redirect page instead of media file');
             }
         }
 
+        $disk->delete($currentTempPath);
         throw new \Exception('Download failed: Got HTML content instead of media file');
     }
 
@@ -104,12 +129,10 @@ class MediaDownloader
      */
     private function extractRedirectUrl(string $html, string $originalUrl): ?string
     {
-        // Pattern 1: window.location.replace('url')
         if (preg_match('/window\.location\.replace\([\'"]([^\'"]+)[\'"]\)/', $html, $matches)) {
             return $this->makeAbsoluteUrl($matches[1], $originalUrl);
         }
 
-        // Pattern 2: window.location.href.replace('pattern', 'replacement')
         if (preg_match('/window\.location\.href\.replace\([\'"]([^\'"]+)[\'"],\s*[\'"]([^\'"]+)[\'"]\)/', $html, $matches)) {
             $pattern = $matches[1];
             $replacement = $matches[2];
@@ -143,26 +166,26 @@ class MediaDownloader
     }
 
     /**
-     * Validate that content is valid media.
+     * Validate that content is valid media based on file signature.
      */
-    private function validateMediaContent(string $content): void
+    private function validateMediaContent(string $header): void
     {
         $validMediaSignatures = [
-            'RIFF' => true, // WAV/AVI
-            'OggS' => true, // OGG
-            'fLaC' => true, // FLAC
-            'MP4' => true,  // M4A/MP4
-            "\xFF\xFB" => true, // MP3
-            "\xFF\xF3" => true, // MP3
-            "\xFF\xF2" => true, // MP3
+            'RIFF' => true,
+            'OggS' => true,
+            'fLaC' => true,
+            'MP4' => true,
+            "\xFF\xFB" => true,
+            "\xFF\xF3" => true,
+            "\xFF\xF2" => true,
         ];
 
-        $fileSignature = substr($content, 0, 4);
+        $fileSignature = substr($header, 0, 4);
         $isValidMedia = isset($validMediaSignatures[$fileSignature]) ||
-                       isset($validMediaSignatures[substr($content, 0, 2)]) ||
-                       str_starts_with($fileSignature, 'ID3'); // MP3 with ID3 tag
+                       isset($validMediaSignatures[substr($header, 0, 2)]) ||
+                       str_starts_with($fileSignature, 'ID3');
 
-        if (! $isValidMedia && strlen($content) > 100) {
+        if (! $isValidMedia && strlen($header) > 100) {
             throw new \Exception('Content does not appear to be a valid audio file');
         }
     }

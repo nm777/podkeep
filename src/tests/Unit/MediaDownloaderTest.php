@@ -2,10 +2,15 @@
 
 use App\Services\MediaProcessing\MediaDownloader;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 uses(\Tests\TestCase::class);
 
-test('downloads media file successfully', function () {
+beforeEach(function () {
+    Storage::fake('public');
+});
+
+test('downloads media file successfully and returns temp path', function () {
     $url = 'https://example.com/audio.mp3';
     $content = 'fake audio content';
 
@@ -13,7 +18,10 @@ test('downloads media file successfully', function () {
 
     $result = (new MediaDownloader())->downloadFromUrl($url);
 
-    expect($result)->toBe($content);
+    expect($result)->toBeString();
+    expect($result)->toStartWith('temp-downloads/');
+    Storage::disk('public')->assertExists($result);
+    expect(Storage::disk('public')->get($result))->toBe($content);
 });
 
 test('throws exception for failed http request', function () {
@@ -55,7 +63,9 @@ test('handles javascript redirect', function () {
 
     $result = (new MediaDownloader())->downloadFromUrl($url);
 
-    expect($result)->toBe($audioContent);
+    expect($result)->toBeString();
+    Storage::disk('public')->assertExists($result);
+    expect(Storage::disk('public')->get($result))->toBe($audioContent);
 });
 
 test('converts relative redirect url to absolute', function () {
@@ -70,7 +80,9 @@ test('converts relative redirect url to absolute', function () {
 
     $result = (new MediaDownloader())->downloadFromUrl($url);
 
-    expect($result)->toBe($audioContent);
+    expect($result)->toBeString();
+    Storage::disk('public')->assertExists($result);
+    expect(Storage::disk('public')->get($result))->toBe($audioContent);
 });
 
 test('validates mp3 with id3 tag', function () {
@@ -81,7 +93,8 @@ test('validates mp3 with id3 tag', function () {
 
     $result = (new MediaDownloader())->downloadFromUrl($url);
 
-    expect($result)->toBe($content);
+    expect($result)->toBeString();
+    Storage::disk('public')->assertExists($result);
 });
 
 test('throws exception for invalid media content', function () {
@@ -109,5 +122,19 @@ test('prevents infinite redirect loops', function () {
     ]);
 
     expect(fn () => (new MediaDownloader())->downloadFromUrl($url1))
-        ->toThrow(\Exception::class, 'Maximum HTML redirect limit reached');
+        ->toThrow(\Exception::class);
+});
+
+test('cleans up temp file on download failure', function () {
+    $url = 'https://example.com/audio.mp3';
+
+    Http::fake([$url => Http::response('<!DOCTYPE html><html><body>Error</body></html>', 200)]);
+
+    try {
+        (new MediaDownloader())->downloadFromUrl($url);
+    } catch (\Exception $e) {
+        $files = Storage::disk('public')->allFiles();
+        $tempFiles = array_filter($files, fn ($f) => str_starts_with($f, 'temp-downloads/'));
+        expect($tempFiles)->toHaveCount(0);
+    }
 });

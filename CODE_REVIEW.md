@@ -69,10 +69,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Each table row renders its own `<Dialog>` component. Multiple Dialog instances compete for the same state. The "Cancel" button clears `rejectingUser` but doesn't actually close the Dialog.
 - **Fix:** Use a single controlled Dialog outside the table, controlled by `rejectingUser` state.
 
-### 1.14 [ ] MEDIUM — Library delete dialog never closes on success
+### 1.14 [x] MEDIUM — Library delete dialog closes on success
 - **File:** `src/resources/js/pages/Library/Index.tsx:104-113`
-- `handleDeleteConfirm` calls `destroyForm(...)` with `onSuccess` that reloads data but never calls `setDeleteDialogOpen(false)`.
-- **Fix:** Add `setDeleteDialogOpen(false)` and `setItemToDelete(null)` in the `onSuccess` callback.
+- Added `setDeleteDialogOpen(false)` and `setItemToDelete(null)` to the `onSuccess` callback.
 
 ### 1.15 [ ] MEDIUM — Shared Inertia form for delete, update, and retry operations
 - **File:** `src/resources/js/pages/Library/Index.tsx:70-81`
@@ -169,20 +168,17 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 
 ## 3. Performance
 
-### 3.1 [ ] HIGH — MediaDownloader loads entire files into memory
-- **File:** `src/app/Services/MediaProcessing/MediaDownloader.php:14-32`
-- `$response->body()` loads the entire download into a PHP string. Combined with `MediaValidator::validate()` and `MediaStorageManager::moveTempFile()`, a 500MB file is loaded into memory 3+ times.
-- **Fix:** Stream to disk: `Http::sink($tempFilePath)->get($url)`. Use `hash_file()` and `filesize()` instead of loading content.
+### 3.1 [x] HIGH — MediaDownloader streams to disk instead of loading into memory
+- **File:** `src/app/Services/MediaProcessing/MediaDownloader.php`
+- `downloadFromUrl()` now streams directly to a temp file via Guzzle's `sink` option and returns the storage path. Only reads first 4096 bytes for header/redirect checks. Full file never loaded into PHP memory.
 
-### 3.2 [ ] HIGH — MediaValidator loads entire files for signature check
-- **File:** `src/app/Services/MediaProcessing/MediaValidator.php:14-15`
-- `file_get_contents($filePath)` loads the entire file but only the first ~4 bytes are needed for signature validation.
-- **Fix:** `file_get_contents($filePath, false, null, 0, 100)`.
+### 3.2 [x] HIGH — MediaValidator only reads file header for signature check
+- **File:** `src/app/Services/MediaProcessing/MediaValidator.php`
+- `validate()` now reads only the first 4096 bytes via `file_get_contents($path, false, null, 0, 4096)` for signature validation. Uses `filesize()` instead of `strlen($content)`.
 
-### 3.3 [ ] HIGH — MediaStorageManager::moveTempFile loads entire file into memory
-- **File:** `src/app/Services/MediaProcessing/MediaStorageManager.php:40`
-- `file_get_contents($fullPath)` loads the entire file just to pass it to `storeFile()`. For large files this causes memory exhaustion.
-- **Fix:** Use `Storage::disk('public')->move($tempPath, $finalPath)` directly. Calculate hash with `hash_file()`.
+### 3.3 [x] HIGH — MediaStorageManager::moveTempFile avoids loading full file
+- **File:** `src/app/Services/MediaProcessing/MediaStorageManager.php`
+- `moveTempFile()` now uses `hash_file()` and `filesize()` on the existing file, then `Storage::move()` to relocate. No `file_get_contents()` call.
 
 ### 3.4 [x] HIGH — All feeds loaded on every Inertia request
 - **File:** `src/app/Http/Middleware/HandleInertiaRequests.php:54-56`
@@ -277,10 +273,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - The duplicate URL check performs a manual `fetch()` with `document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''`. If the meta tag is missing, the fallback is an empty string.
 - **Fix:** Use the configured Axios instance (already includes CSRF) instead of raw `fetch()`.
 
-### 4.10 [ ] MEDIUM — MediaController serves files as downloads instead of streaming
+### 4.10 [x] MEDIUM — MediaController streams files instead of forcing download
 - **File:** `src/app/Http/Controllers/MediaController.php:66`
-- `Storage::disk('public')->download($file_path)` forces download, preventing podcast clients from streaming. Also loads large files into memory.
-- **Fix:** Use `Storage::disk('public')->response($file_path)` or `StreamedResponse`.
+- Changed from `Storage::download()` to `Storage::response()` with proper Content-Type header. Podcast clients can now stream audio.
 
 ### 4.11 [ ] LOW — Private feed tokens always visible in UI
 - **File:** `src/resources/js/components/feed-list.tsx:89-95,143-145`
@@ -311,15 +306,13 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Malformed XML from the Blade template would be cached for 15 minutes.
 - **Fix:** Wrap in try/catch with `libxml_use_internal_errors(true)`.
 
-### 5.5 [ ] MEDIUM — ProcessMediaFile uses nullable service injection anti-pattern
+### 5.5 [x] MEDIUM — ProcessMediaFile uses proper DI injection
 - **File:** `src/app/Jobs/ProcessMediaFile.php:30-35`
-- `handle()` accepts `?MediaProcessingService $mediaProcessing = null` and falls back to `app()`. Laravel's container will always inject the service. The fallback hides configuration problems.
-- **Fix:** Remove nullable type: `public function handle(MediaProcessingService $mediaProcessing): void`.
+- Removed nullable `?MediaProcessingService $mediaProcessing = null` and fallback `app()` call. Now uses proper DI: `handle(MediaProcessingService $mediaProcessing)`.
 
-### 5.6 [ ] MEDIUM — Media player modal has no overlay-click or Escape-to-close
-- **File:** `src/resources/js/components/media-player.tsx:63-98`
-- Only the X button closes the modal. Clicking the overlay or pressing Escape does nothing.
-- **Fix:** Add `onClick` on the overlay div and an `onKeyDown` listener for Escape.
+### 5.6 [x] MEDIUM — Media player modal supports overlay click and Escape
+- **File:** `src/resources/js/components/media-player.tsx`
+- Added overlay click handler (`e.target === e.currentTarget`) and Escape key listener in the `useEffect` cleanup.
 
 ### 5.7 [ ] LOW — RssController error handling for malformed XML
 - **File:** `src/app/Http/Controllers/RssController.php:33-38`
@@ -449,10 +442,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/resources/js/pages/dashboard.tsx:55`, `src/resources/js/components/feed-list.tsx:31,154`, `src/resources/js/pages/admin/users/index.tsx:42,48,57`
 - Replaced all hardcoded route strings with `route()` helper calls. Also replaced `<a>` with Inertia `<Link>` for the feed edit button in feed-list.tsx.
 
-### 8.2 [ ] MEDIUM — feed_items table missing unique constraint
-- **File:** `src/database/migrations/2025_07_14_011057_create_feed_items_table.php`
-- No unique constraint on `(feed_id, library_item_id)`. `AddLibraryItemToFeedsJob` uses `create()` (not `firstOrCreate`), so duplicate dispatches create duplicate feed items.
-- **Fix:** Add unique index and use `upsert()` or `firstOrCreate()` in the job.
+### 8.2 [x] MEDIUM — feed_items unique constraint + firstOrCreate in job
+- **Files:** `src/database/migrations/2026_04_09_202800_add_unique_constraint_to_feed_items.php`, `src/app/Jobs/AddLibraryItemToFeedsJob.php:34`
+- Added unique index on `(feed_id, library_item_id)`. Changed `FeedItem::create()` to `FeedItem::firstOrCreate()` to prevent duplicate feed items from duplicate job dispatches.
 
 ### 8.3 [ ] MEDIUM — Inconsistent auth helper usage
 - **Files:** `src/app/Http/Middleware/AdminMiddleware.php:19`, `src/app/Http/Middleware/ApprovedUserMiddleware.php:18`, `src/app/Http/Controllers/FeedController.php:7`

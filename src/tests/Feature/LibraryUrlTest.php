@@ -73,7 +73,7 @@ it('processes media file from URL correctly', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/test-audio.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -102,7 +102,7 @@ it('handles URL download failures gracefully', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/not-found.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     // Library item should be marked as failed
     $this->assertDatabaseHas('library_items', [
@@ -133,7 +133,7 @@ it('handles JavaScript redirect pages correctly', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -163,7 +163,7 @@ it('fails when JavaScript redirect cannot be resolved', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/redirect.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -195,7 +195,7 @@ it('handles file-examples.com JavaScript redirect pattern correctly', function (
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -292,7 +292,7 @@ it('stores source URL when downloading new file', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/new-audio.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -401,7 +401,7 @@ it('multiple users can reuse same file from same URL', function () {
     // Process the job manually to create the media file
     $libraryItem = LibraryItem::where('title', 'User 1 Copy')->first();
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/shared-audio.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $mediaFile = MediaFile::where('source_url', 'https://example.com/shared-audio.mp3')->first();
     expect($mediaFile)->not->toBeNull();

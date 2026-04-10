@@ -31,11 +31,15 @@ class AddLibraryItemToFeedsJob implements ShouldQueue
             // Get the next sequence number for this feed
             $maxSequence = $feed->items()->max('sequence') ?? 0;
 
-            FeedItem::create([
-                'feed_id' => $feed->id,
-                'library_item_id' => $this->libraryItem->id,
-                'sequence' => $maxSequence + 1,
-            ]);
+            FeedItem::firstOrCreate(
+                [
+                    'feed_id' => $feed->id,
+                    'library_item_id' => $this->libraryItem->id,
+                ],
+                [
+                    'sequence' => $maxSequence + 1,
+                ]
+            );
 
             // Clear RSS cache when item is added to feed
             Cache::forget("rss.{$feed->id}");

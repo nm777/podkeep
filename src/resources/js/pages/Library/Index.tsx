@@ -74,7 +74,8 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
         if (itemToDelete) {
             destroyForm(route('library.destroy', itemToDelete), {
                 onSuccess: () => {
-                    // Item deleted successfully
+                    setDeleteDialogOpen(false);
+                    setItemToDelete(null);
                     router.reload({ only: ['libraryItems'] });
                 },
             });

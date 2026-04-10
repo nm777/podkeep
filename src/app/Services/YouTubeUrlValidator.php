@@ -14,6 +14,7 @@ class YouTubeUrlValidator
             '#https?://(?:www\.|m\.)?youtube\.com/embed/[\w-]+#',
             '#https?://youtu\.be/[\w-]+#',
             '#https?://(?:www\.|m\.)?youtube\.com/shorts/[\w-]+#',
+            '#https?://(?:www\.|m\.)?youtube\.com/live/[\w-]+#',
         ];
 
         foreach ($patterns as $pattern) {
@@ -35,6 +36,7 @@ class YouTubeUrlValidator
             '#https?://(?:www\.|m\.)?youtube\.com/embed/([\w-]+)#',
             '#https?://youtu\.be/([\w-]+)#',
             '#https?://(?:www\.|m\.)?youtube\.com/shorts/([\w-]+)#',
+            '#https?://(?:www\.|m\.)?youtube\.com/live/([\w-]+)#',
         ];
 
         foreach ($patterns as $pattern) {

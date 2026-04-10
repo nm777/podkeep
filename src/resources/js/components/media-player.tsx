@@ -26,18 +26,30 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
             audio.addEventListener('error', handleError);
             audio.addEventListener('canplay', handleCanPlay);
 
+            const handleEscape = (e: KeyboardEvent) => {
+                if (e.key === 'Escape') onClose();
+            };
+            document.addEventListener('keydown', handleEscape);
+
             return () => {
                 audio.removeEventListener('error', handleError);
                 audio.removeEventListener('canplay', handleCanPlay);
+                document.removeEventListener('keydown', handleEscape);
             };
         }
-    }, [isOpen, libraryItem.media_file]);
+    }, [isOpen, libraryItem.media_file, onClose]);
 
     if (!isOpen || !libraryItem.media_file) return null;
 
+    const handleOverlayClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-            <Card className="w-full max-w-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={handleOverlayClick}>
+            <Card className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
                 <CardContent className="p-6">
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="flex-1 truncate text-lg font-semibold">{libraryItem.title}</h3>

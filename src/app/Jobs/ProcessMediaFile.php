@@ -27,12 +27,8 @@ class ProcessMediaFile implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(?MediaProcessingService $mediaProcessing = null): void
+    public function handle(MediaProcessingService $mediaProcessing): void
     {
-        // If no service injected (for backward compatibility), create it manually
-        if (! $mediaProcessing) {
-            $mediaProcessing = app(MediaProcessingService::class);
-        }
 
         if ($this->sourceUrl) {
             $mediaProcessing->processFromUrl($this->libraryItem, $this->sourceUrl);

@@ -339,7 +339,7 @@ it('marks duplicate library items and schedules cleanup', function () {
 
     // Process the file
     $job = new ProcessMediaFile($libraryItem, null, $tempPath);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
