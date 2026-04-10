@@ -22,6 +22,25 @@ it('displays library page for authenticated users', function () {
     );
 });
 
+it('has a named route for library.store', function () {
+    expect(route('library.store'))->toBeUrl(url('/library'));
+});
+
+it('can post to library store endpoint', function () {
+    Storage::fake('public');
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $file = UploadedFile::fake()->create('test.mp3', 100, 'audio/mpeg');
+
+    $response = $this->actingAs($user)->post(route('library.store'), [
+        'title' => 'Test Upload',
+        'file' => $file,
+    ]);
+
+    $response->assertRedirect('/library');
+});
+
 it('shows only authenticated user library items', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();

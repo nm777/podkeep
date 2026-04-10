@@ -47,10 +47,6 @@ Route::get('youtube/video-info/{videoId}', [YouTubeController::class, 'getVideoI
 
     Route::resource('library', LibraryController::class)->only(['index', 'store', 'update', 'destroy']);
 
-    // Apply rate limiting to library store (uploads/downloads)
-    Route::post('library', [LibraryController::class, 'store'])
-        ->middleware('throttle:10,1');
-
     Route::post('library/{id}/retry', [LibraryController::class, 'retry'])
         ->name('library.retry')
         ->middleware('throttle:10,1');
