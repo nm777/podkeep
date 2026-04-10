@@ -4,7 +4,7 @@ namespace App\Services\MediaProcessing;
 
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
-use App\ProcessingStatusType;
+use App\Enums\ProcessingStatusType;
 use Illuminate\Support\Facades\Storage;
 
 class MediaProcessingService

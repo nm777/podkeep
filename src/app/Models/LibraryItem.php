@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\ProcessingStatusType;
+use App\Enums\ProcessingStatusType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

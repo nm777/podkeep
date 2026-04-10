@@ -3,7 +3,7 @@
 namespace App\Services\YouTube;
 
 use App\Models\LibraryItem;
-use App\ProcessingStatusType;
+use App\Enums\ProcessingStatusType;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use App\Services\YouTubeUrlValidator;
 use Illuminate\Support\Facades\Log;

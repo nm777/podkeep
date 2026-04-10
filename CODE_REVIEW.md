@@ -327,10 +327,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Models/MediaFile.php`
 - Added `findDuplicateByFile()` and `findDuplicateByFileForUser()` with descriptive names. Deprecated old `isDuplicate()` and `isDuplicateForUser()` as backward-compatible aliases. Updated callers in `LibraryUploadTest`.
 
-### 6.7 [ ] LOW — ProcessingStatusType enum at root namespace
+### 6.7 [x] LOW — ProcessingStatusType enum at root namespace
 - **File:** `src/app/ProcessingStatusType.php`
-- The enum is at `App\` namespace instead of `App\Enums\`.
-- **Fix:** Move to `App\Enums\ProcessingStatusType`.
+- Moved enum to `App\Enums\ProcessingStatusType`. Old location kept as `class_alias()` for backward compatibility. Updated all source files (non-test) to use the new namespace.
 
 ### 6.8 [x] LOW — CleanupDuplicateLibraryItem not using constructor promotion
 - **File:** `src/app/Jobs/CleanupDuplicateLibraryItem.php:16`
