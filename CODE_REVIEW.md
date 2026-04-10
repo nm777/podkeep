@@ -458,10 +458,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/components/feed-list.tsx`
 - Already fixed in 8.1 — edit button now uses Inertia `<Link>`. The remaining `<a>` tag is for RSS feed URLs with `target="_blank"` which is correct for cross-origin links.
 
-### 8.9 [ ] MEDIUM — UploadStrategy hardcodes cleanup delay
+### 8.9 [x] MEDIUM — UploadStrategy hardcodes cleanup delay
 - **File:** `src/app/Services/SourceProcessors/UploadStrategy.php:23`
-- Message contains hardcoded "5 minutes" instead of using `config('constants.duplicate.cleanup_delay_minutes')`.
-- **Fix:** Use the config value for consistency.
+- Replaced hardcoded "5 minutes" with `config('constants.duplicate.cleanup_delay_minutes')` to stay consistent with other strategies.
 
 ### 8.10 [ ] MEDIUM — Inconsistent success message patterns between strategies
 - **Files:** `src/app/Services/SourceProcessors/UploadStrategy.php:20-27`, `src/app/Services/SourceProcessors/UrlStrategy.php:24-36`, `src/app/Services/SourceProcessors/YouTubeStrategy.php:24-36`, `src/app/Services/SourceProcessors/FileUploadProcessor.php:71-81`
