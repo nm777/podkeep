@@ -23,9 +23,9 @@ class UpdateLibraryItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'published_at' => 'nullable|date',
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'published_at' => ['nullable', 'date'],
         ];
     }
 

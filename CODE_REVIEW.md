@@ -318,10 +318,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/types/index.d.ts`
 - Added `is_admin: boolean` and `approval_status` to `User` interface.
 
-### 6.3 [ ] MEDIUM — Inconsistent validation rule syntax across form requests
-- **Files:** `src/app/Http/Requests/LibraryItemRequest.php` (string syntax), `src/app/Http/Requests/FeedRequest.php` (array syntax)
-- LibraryItemRequest uses `'required|string|max:255'` while FeedRequest uses `['required', 'string', 'max:255']`.
-- **Fix:** Standardize all form requests to array syntax.
+### 6.3 [x] MEDIUM — Inconsistent validation rule syntax across form requests
+- **Files:** `src/app/Http/Requests/LibraryItemRequest.php`, `src/app/Http/Requests/UpdateLibraryItemRequest.php`
+- Converted all pipe-delimited string rules to array format for consistency with `FeedRequest`.
 
 ### 6.4 [x] MEDIUM — `@ts-expect-error` and `as any` in SSR entry
 - **File:** `src/resources/js/ssr.tsx`
