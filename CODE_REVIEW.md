@@ -535,10 +535,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Application exposed directly to the internet with TLS but no rate limiting middleware.
 - **Fix:** Add rate-limiting middleware to Traefik configuration.
 
-### 9.12 [ ] MEDIUM — Worker service missing depends_on
-- **File:** `src/docker-compose.yml:36`
-- Worker has no `depends_on: app`. May start before migrations complete.
-- **Fix:** Add `depends_on: - app` to the worker service.
+### 9.12 [x] MEDIUM — Worker service missing depends_on
+- **File:** `docker-compose.yml:26`
+- Added `depends_on: - app` to worker service so it starts after app (and migrations) complete.
 
 ### 9.13 [ ] LOW — Storage permissions set as executable
 - **File:** `src/Dockerfile:73`
