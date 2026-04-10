@@ -19,20 +19,22 @@ class CleanupOrphanedMediaFiles implements ShouldQueue
      */
     public function handle(): void
     {
-        $orphanedFiles = MediaFile::whereDoesntHave('libraryItems')->get();
+        $totalDeleted = 0;
 
-        foreach ($orphanedFiles as $mediaFile) {
-            // Delete the actual file from storage
-            if ($mediaFile->file_path) {
-                Storage::disk('public')->delete($mediaFile->file_path);
-            }
+        MediaFile::whereDoesntHave('libraryItems')
+            ->chunkById(100, function ($orphanedFiles) use (&$totalDeleted) {
+                foreach ($orphanedFiles as $mediaFile) {
+                    if ($mediaFile->file_path) {
+                        Storage::disk('public')->delete($mediaFile->file_path);
+                    }
 
-            // Delete the database record
-            $mediaFile->delete();
-        }
+                    $mediaFile->delete();
+                    $totalDeleted++;
+                }
+            });
 
-        if ($orphanedFiles->isNotEmpty()) {
-            \Log::info("Cleaned up {$orphanedFiles->count()} orphaned media files");
+        if ($totalDeleted > 0) {
+            \Log::info("Cleaned up {$totalDeleted} orphaned media files");
         }
     }
 }

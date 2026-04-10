@@ -206,10 +206,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/hooks/use-toast.ts:173-181`
 - Changed dependency array from `[state]` to `[]`. Listener now registered once on mount.
 
-### 3.11 [ ] LOW — CleanupOrphanedMediaFiles loads all orphaned files at once
+### 3.11 [x] LOW — CleanupOrphanedMediaFiles loads all orphaned files at once
 - **File:** `src/app/Jobs/CleanupOrphanedMediaFiles.php:22`
-- `MediaFile::whereDoesntHave('libraryItems')->get()` loads ALL orphaned files into memory.
-- **Fix:** Use `chunkById(100, function ($mediaFiles) { ... })`.
+- Replaced `->get()` with `->chunkById(100, ...)` to process orphaned files in batches, preventing memory exhaustion on large libraries.
 
 ### 3.12 [ ] LOW — ProcessingStatusHelper instantiated 5-6 times per item render
 - **File:** `src/resources/js/pages/Library/Index.tsx:245-279`
