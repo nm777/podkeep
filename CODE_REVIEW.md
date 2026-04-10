@@ -242,10 +242,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Http/Resources/MediaFileResource.php`, `src/resources/js/components/media-player.tsx`
 - Removed `file_path` from `MediaFileResource` API response to prevent path traversal exposure. Media player now uses only `public_url`. Updated TypeScript `MediaFile` type to remove `file_path`.
 
-### 4.6 [ ] MEDIUM — Nginx upload limit misaligned with PHP
-- **Files:** `src/docker/nginx/default.conf:7`, `src/php.ini:5-17`
-- Nginx: `client_max_body_size 100M` vs PHP: `upload_max_filesize = 512M`. Nginx rejects uploads >100MB before PHP sees them.
-- **Fix:** Align both to the same value (e.g., 513M).
+### 4.6 [x] MEDIUM — Nginx upload limit misaligned with PHP
+- **Files:** `docker/nginx/default.conf`, `src/php.ini`
+- Nginx `client_max_body_size` was `100M` while PHP `post_max_size` was `513M`. Aligned nginx to `513M` to match.
 
 ### 4.7 [ ] MEDIUM — RSS feed tokens in query parameters
 - **File:** `src/app/Http/Controllers/RssController.php:23`
