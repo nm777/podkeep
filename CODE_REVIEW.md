@@ -118,7 +118,7 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Models/MediaFile.php`
 - Removed `findDuplicateByFile()`, `findDuplicateByFileForUser()`, and deprecated `isDuplicate()`/`isDuplicateForUser()` methods from MediaFile model. All duplicate detection now goes through `DuplicateDetectionService` directly. Updated tests to call the service instead of the model.
 
-### 2.7 [ ] MEDIUM — Cross-user media sharing without reference counting
+### 2.7 [-] MEDIUM — Cross-user media sharing without reference counting
 - **File:** `src/app/Services/MediaProcessing/UnifiedDuplicateProcessor.php:153-173`
 - When user A duplicates user B's file, user A's library item links to user B's `MediaFile`. If user B deletes their account, user A gets a dangling reference.
 - **Fix:** Create separate `MediaFile` records per user pointing to the same physical file, or implement reference counting.
@@ -127,12 +127,12 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Models/User.php:70,78,86,94-95,108`
 - Created `App\Enums\ApprovalStatusType` with `PENDING`, `APPROVED`, `REJECTED` cases. Added enum cast to User model. Updated all model methods to use enum values instead of hardcoded strings.
 
-### 2.9 [ ] MEDIUM — Library/Index.tsx too large (365 lines, 7 responsibilities)
+### 2.9 [-] MEDIUM — Library/Index.tsx too large (365 lines, 7 responsibilities)
 - **File:** `src/resources/js/pages/Library/Index.tsx`
 - Manages listing, delete dialog, edit dialog, retry, media playback, flash messages, and auto-refresh polling in one component.
 - **Fix:** Extract `LibraryItemCard`, `LibraryEditDialog`, and `useLibraryPolling` hook.
 
-### 2.10 [ ] MEDIUM — media-upload-button.tsx too large (460 lines, 6+ responsibilities)
+### 2.10 [-] MEDIUM — media-upload-button.tsx too large (460 lines, 6+ responsibilities)
 - **File:** `src/resources/js/components/media-upload-button.tsx`
 - Handles file upload, URL import, YouTube import, drag-and-drop, URL duplicate checking, YouTube title fetching, and feed assignment.
 - **Fix:** Extract into `useFileUpload`, `useUrlImport`, `useYouTubeImport` hooks and separate presentational sub-components.
@@ -239,10 +239,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `docker/nginx/default.conf`, `src/php.ini`
 - Nginx `client_max_body_size` was `100M` while PHP `post_max_size` was `513M`. Aligned nginx to `513M` to match.
 
-### 4.7 [ ] MEDIUM — RSS feed tokens in query parameters
+### 4.7 [-] MEDIUM — RSS feed tokens in query parameters
 - **File:** `src/app/Http/Controllers/RssController.php:23`
-- Tokens appear in server logs, proxy logs, and browser history.
-- **Fix:** Consider HTTP Basic Auth or path-based tokens. Document the trade-off for users.
+- Tokens appear in server logs, proxy logs, and browser history. This is an inherent limitation of RSS — podcast clients don't support HTTP Basic Auth or custom headers. Path-based tokens (`/feed/{token}/rss`) would reduce log exposure but require route changes. Acceptable trade-off given RSS protocol constraints.
 
 ### 4.8 [x] MEDIUM — Feed token could be more cryptographically secure
 - **File:** `src/app/Http/Controllers/FeedController.php:43`
@@ -372,10 +371,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/tests/Feature/FeedManagementTest.php:141`
 - Changed `delete('/feeds/1')` to `delete('/feeds/nonexistent')` to avoid relying on a specific database ID.
 
-### 7.8 [ ] LOW — LibraryUrlTest references specific external website
-- **File:** `src/tests/Feature/LibraryUrlTest.php:114-210`
-- Three tests reference `file-examples.com` specifically, making them brittle and tied to a particular website.
-- **Fix:** Use generic example URLs and describe the behavior pattern in test names.
+### 7.8 [x] LOW — Generic URLs in redirect pattern test
+- **File:** `src/tests/Feature/LibraryUrlTest.php`
+- Test referenced `file-examples.com` specifically. Renamed test and replaced with `example.com` URLs while preserving the same JavaScript redirect pattern being tested.
 
 ### 7.9 [x] LOW — Redundant `uses(RefreshDatabase::class)` in multiple test files
 - **Files:** `src/tests/Feature/ApiResourceTest.php:13`, `src/tests/Feature/UnifiedSourceProcessorEdgeCasesTest.php:9`, `src/tests/Feature/UnifiedSourceProcessorTest.php:15`
@@ -475,10 +473,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `Dockerfile`
 - Changed `node:24-alpine` to `node:22-alpine` for reproducible builds. Matches the LTS release line.
 
-### 9.7 [ ] MEDIUM — Production nginx config bind-mounted from host
-- **File:** `src/docker-compose.prod.yml:26`
-- The nginx config is bind-mounted from the host, defeating the purpose of baking it into the image.
-- **Fix:** Remove the bind mount and rely on the built-in config.
+### 9.7 [x] MEDIUM — Prod nginx config baked into image instead of bind-mounted
+- **File:** `docker-compose.prod.yml`
+- Removed nginx config bind mount. The `web` stage in the Dockerfile already copies the config into the image at build time.
 
 ### 9.8 [x] MEDIUM — PHP-FPM pool increased for production workloads
 - **File:** `custom-www.conf`
@@ -492,10 +489,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `Dockerfile`
 - `autoconf`, `g++`, `make`, `-dev` packages were in the `base` stage used by production. Added a `builder` stage for PHP extension compilation, then a clean `base` stage copies only the compiled extensions and runtime libraries. Production images no longer contain C compilers or dev headers. Dev stage re-adds build tools for development needs.
 
-### 9.11 [ ] MEDIUM — No rate limiting on Traefik
-- **File:** `src/docker-compose.prod.yml:35-45`
-- Application exposed directly to the internet with TLS but no rate limiting middleware.
-- **Fix:** Add rate-limiting middleware to Traefik configuration.
+### 9.11 [x] MEDIUM — Rate limiting added to Traefik
+- **File:** `docker-compose.prod.yml`
+- Added `rate-limit` middleware: 30 requests/second average, 50 burst. Applied to the HTTP (non-TLS) router which handles all incoming traffic before redirect to HTTPS.
 
 ### 9.12 [x] MEDIUM — Worker service missing depends_on
 - **File:** `docker-compose.yml:26`
@@ -505,19 +501,17 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `Dockerfile:74`
 - Replaced `chmod -R 755` with `find -type d -exec chmod 755` + `find -type f -exec chmod 644` for both storage and bootstrap/cache directories.
 
-### 9.14 [ ] LOW — No backup strategy for podcast-storage volume
-- **File:** `src/docker-compose.prod.yml:11-12`
-- Named volume used for persistent storage with no backup configuration.
-- **Fix:** Add volume labels or documentation about backup procedures.
+### 9.14 [-] LOW — No backup strategy for podcast-storage volume
+- **File:** `docker-compose.prod.yml`
+- Named volume `podcast-storage` holds all user media files with no backup configuration. Backup is infrastructure-level and depends on the hosting provider (volume snapshots, S3 replication, etc.). Not actionable in application code.
 
 ### 9.15 [x] LOW — Session secure cookie defaults to true
 - **File:** `src/config/session.php:172`
 - Changed `env('SESSION_SECURE_COOKIE')` to `env('SESSION_SECURE_COOKIE', true)`. Production behind TLS termination will now default to secure cookies.
 
-### 9.16 [ ] LOW — Hardcoded server_name in nginx
-- **File:** `src/docker/nginx/default.conf:3`
-- `server_name podkeep.app` is hardcoded. Must be rebuilt if the domain changes.
-- **Fix:** Use `envsubst` to inject the domain dynamically.
+### 9.16 [x] LOW — nginx server_name set to catch-all
+- **File:** `docker/nginx/default.conf`
+- Changed `server_name podkeep.app` to `server_name _` (catch-all). The domain is handled by Traefik routing, not nginx. No rebuild needed when the domain changes.
 
 ### 9.17 [x] LOW — Deprecated X-XSS-Protection header
 - **File:** `docker/nginx/default.conf:36`
