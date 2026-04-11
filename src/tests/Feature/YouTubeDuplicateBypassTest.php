@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ProcessingStatusType;
+use App\ProcessingStatusType;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
