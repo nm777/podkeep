@@ -54,7 +54,7 @@ class YouTubeProcessingService
 
         // Check for duplicates first
         $duplicateResult = $this->duplicateProcessor->processUrlDuplicate($libraryItem, $youtubeUrl);
-        if ($duplicateResult['is_duplicate']) {
+        if (isset($duplicateResult['media_file']) && $duplicateResult['media_file']) {
             return $duplicateResult;
         }
 

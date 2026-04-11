@@ -33,7 +33,7 @@
 - **File:** `RssController.php:44-50`
 - When `DOMDocument::loadXML()` fails, raw malformed XML is cached. Return a 500 error or empty feed instead of caching bad XML.
 
-### C7. [ ] CRITICAL — YouTube duplicate check bypasses non-duplicate-but-linked cases
+### C7. [x] CRITICAL — YouTube duplicate check bypasses non-duplicate-but-linked cases
 - **File:** `YouTubeProcessingService.php:62`
 - `if ($duplicateResult['is_duplicate'])` only handles true duplicates, but `processUrlDuplicate` can return `is_duplicate: false` with a valid `media_file` (e.g., `handleUserMediaFileOnly`, `handleGlobalUrlDuplicate`). These fall through to re-download.
 
@@ -355,8 +355,8 @@
 
 | Phase | Total | Completed | Remaining |
 |-------|-------|-----------|-----------|
-| Phase 1 — Critical | 7 | 0 | 7 |
+| Phase 1 — Critical | 7 | 7 | 0 |
 | Phase 2 — High | 14 | 0 | 14 |
 | Phase 3 — Medium | 38 | 0 | 38 |
 | Phase 4 — Low | 23 | 0 | 23 |
-| **Total** | **82** | **0** | **82** |
+| **Total** | **82** | **7** | **75** |
