@@ -69,7 +69,7 @@
 - **File:** `YouTubeMetadataExtractor.php:28`
 - Unlike `YouTubeDownloader` (300s timeout), this process hangs indefinitely. Add `$process->setTimeout(120)`.
 
-### H8. [ ] HIGH — `Carbon::createFromFormat` with no error handling
+### H8. [x] HIGH — `Carbon::createFromFormat` with no error handling — FALSE POSITIVE (code removed in refactor)
 - **File:** `YouTubeFileProcessor.php:96`
 - Unexpected `upload_date` format returns `false`, causing fatal error on `->startOfDay()`. Wrap in try/catch or validate format first.
 
