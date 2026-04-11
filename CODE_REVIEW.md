@@ -350,10 +350,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/tests/Feature/YouTubeTest.php:10,38,60`
 - Removed `$this->withoutMiddleware()` from all 3 tests. They now properly exercise auth/verified/approved middleware. All pass with `actingAs()` + verified+approved factory users.
 
-### 7.2 [ ] HIGH — Edge case tests are trivial non-tests
-- **File:** `src/tests/Feature/UnifiedSourceProcessorEdgeCasesTest.php:59-74`
-- Tests only assert that PHP arrays have keys and strings contain substrings — zero confidence in actual processor behavior.
-- **Fix:** Pass data through the processor and verify database results.
+### 7.2 [x] HIGH — Edge case tests replaced with behavioral tests
+- **File:** `src/tests/Feature/UnifiedSourceProcessorEdgeCasesTest.php`
+- Replaced trivial tests (asserting PHP array keys, string contents) with behavioral tests that exercise the processor end-to-end: minimal data, special characters persisted to DB, complex URLs, and user-media-file-only edge case. All 6 tests now verify database state.
 
 ### 7.3 [x] MEDIUM — FeedEditTest missing authorization test
 - **File:** `src/tests/Feature/FeedEditTest.php:190-213`
