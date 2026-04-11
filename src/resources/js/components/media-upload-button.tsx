@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { type Feed } from '@/types';
@@ -304,7 +305,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                                     Browse Files
                                 </Label>
                             </div>
-                            {errors.file && <p className="mt-1 text-sm text-red-600">{errors.file}</p>}
+                            {errors.file && <InputError message={errors.file} />}
                         </div>
                     ) : inputType === 'youtube' ? (
                         <div>
@@ -317,8 +318,8 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                                 placeholder="https://youtube.com/watch?v=..."
                                 required
                             />
-                            {errors.url && <p className="mt-1 text-sm text-red-600">{errors.url}</p>}
-                            {errors.source_url && <p className="mt-1 text-sm text-red-600">{errors.source_url}</p>}
+                            {errors.url && <InputError message={errors.url} />}
+                            {errors.source_url && <InputError message={errors.source_url} />}
                             {isFetchingYouTubeTitle && (
                                 <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -346,7 +347,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                                 placeholder="https://example.com/audio.mp3"
                                 required
                             />
-                            {errors.url && <p className="mt-1 text-sm text-red-600">{errors.url}</p>}
+                            {errors.url && <InputError message={errors.url} />}
                             {urlDuplicateWarning && (
                                 <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
                                     <AlertCircle className="h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
@@ -365,7 +366,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                     <div>
                         <Label htmlFor="title">Title</Label>
                         <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="Enter title" required />
-                        {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+                        {errors.title && <InputError message={errors.title} />}
                     </div>
 
                     <div>
@@ -377,7 +378,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                             placeholder="Enter description (optional)"
                             rows={3}
                         />
-                        {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+                        {errors.description && <InputError message={errors.description} />}
                     </div>
 
                     {feeds.length > 0 && (
@@ -410,7 +411,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                                     </div>
                                 ))}
                             </div>
-                            {errors.feed_ids && <p className="mt-1 text-sm text-red-600">{errors.feed_ids}</p>}
+                            {errors.feed_ids && <InputError message={errors.feed_ids} />}
                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 The item will be added to selected feeds after processing completes.
                             </p>

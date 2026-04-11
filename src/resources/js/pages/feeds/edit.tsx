@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
@@ -127,7 +128,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                             placeholder="Enter feed title"
                                             required
                                         />
-                                        {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+                                        {errors.title && <InputError message={errors.title} />}
                                     </div>
 
                                     <div className="space-y-2">
@@ -139,7 +140,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                             placeholder="Enter feed description (optional)"
                                             rows={3}
                                         />
-                                        {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                                        {errors.description && <InputError message={errors.description} />}
                                     </div>
 
                                     <div className="flex items-center space-x-2">

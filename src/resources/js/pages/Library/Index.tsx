@@ -1,4 +1,5 @@
 import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
+import InputError from '@/components/input-error';
 import MediaPlayer from '@/components/media-player';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -307,7 +308,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                     placeholder="Enter title"
                                     required
                                 />
-                                {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+                                {errors.title && <InputError message={errors.title} />}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="description">Description</Label>
@@ -318,7 +319,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                     placeholder="Enter description (optional)"
                                     rows={3}
                                 />
-                                {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                                {errors.description && <InputError message={errors.description} />}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="published_at">Published Date</Label>
@@ -328,7 +329,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                     value={data.published_at}
                                     onChange={(e) => setData('published_at', e.target.value)}
                                 />
-                                {errors.published_at && <p className="text-sm text-destructive">{errors.published_at}</p>}
+                                {errors.published_at && <InputError message={errors.published_at} />}
                             </div>
                         </div>
                         <DialogFooter>

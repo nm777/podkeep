@@ -412,10 +412,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/resources/js/components/feed-list.tsx`
 - Replaced browser `confirm()` with the existing `DeleteConfirmDialog` component for consistent destructive action confirmation across the app.
 
-### 8.5 [ ] MEDIUM — Inconsistent error styling across forms
-- **Files:** `src/resources/js/pages/dashboard.tsx:109`, `src/resources/js/pages/feeds/edit.tsx:186`, `src/resources/js/components/media-upload-button.tsx:318`, `src/resources/js/pages/admin/users/index.tsx:152`
-- Four different styling patterns for validation errors. The `InputError` component exists but isn't used everywhere.
-- **Fix:** Use `InputError` component consistently.
+### 8.5 [x] MEDIUM — Inconsistent error styling across forms
+- **Files:** `src/resources/js/components/media-upload-button.tsx`, `src/resources/js/pages/Library/Index.tsx`, `src/resources/js/pages/feeds/edit.tsx`, `src/resources/js/components/create-feed-form.tsx`
+- Replaced 14 inline `<p className="text-sm text-red-600">` / `<p className="text-sm text-destructive">` error patterns with `<InputError>` component for consistency with auth forms.
 
 ### 8.6 [ ] MEDIUM — Inconsistent flash message display
 - **Files:** `src/resources/js/pages/dashboard.tsx:74-78` (custom green div), `src/resources/js/pages/Library/Index.tsx:173-183` (Alert component), `src/resources/js/pages/admin/users/index.tsx:92-94` (custom div)
