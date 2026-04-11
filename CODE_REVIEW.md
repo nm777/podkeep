@@ -356,10 +356,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Tests only assert that PHP arrays have keys and strings contain substrings — zero confidence in actual processor behavior.
 - **Fix:** Pass data through the processor and verify database results.
 
-### 7.3 [ ] MEDIUM — FeedEditTest missing authorization test
-- **File:** `src/tests/Feature/FeedEditTest.php:174-188`
-- Tests that invalid `library_item_id` (999) is rejected but doesn't test that another user's valid item is rejected.
-- **Fix:** Add test case with another user's library item.
+### 7.3 [x] MEDIUM — FeedEditTest missing authorization test
+- **File:** `src/tests/Feature/FeedEditTest.php:190-213`
+- Already covered by existing test `it('prevents adding another users library item to own feed')` which uses a valid library item owned by a different user and asserts it's rejected with validation errors.
 
 ### 7.4 [ ] MEDIUM — Reflection-based tests are brittle
 - **Files:** `src/tests/Feature/LibraryItemFactoryTest.php:25-78`, `src/tests/Feature/FileUploadProcessorTest.php`
