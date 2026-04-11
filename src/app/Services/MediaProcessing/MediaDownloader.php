@@ -157,7 +157,7 @@ class MediaDownloader
                        isset($validMediaSignatures[substr($content, 0, 2)]) ||
                        str_starts_with($fileSignature, 'ID3'); // MP3 with ID3 tag
 
-        if (! $isValidMedia && strlen($content) > 100) {
+        if (! $isValidMedia) {
             throw new \Exception('Content does not appear to be a valid audio file');
         }
     }

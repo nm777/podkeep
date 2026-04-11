@@ -61,7 +61,7 @@
 - **File:** `LibraryItemRequest.php:38-39`
 - Validation checks `exists:feeds,id` but not that feeds belong to the user. Add ownership closure like `FeedRequest.php:30-35`.
 
-### H6. [ ] HIGH — Files < 100 bytes pass media validation silently
+### H6. [x] HIGH — Files < 100 bytes pass media validation silently
 - **File:** `MediaValidator.php:46`
 - Short files that don't match any signature pass instead of failing. Change condition to throw on any unrecognized file regardless of size.
 
@@ -356,7 +356,7 @@
 | Phase | Total | Completed | Remaining |
 |-------|-------|-----------|-----------|
 | Phase 1 — Critical | 7 | 7 | 0 |
-| Phase 2 — High | 14 | 0 | 14 |
+| Phase 2 — High | 14 | 9 | 5 |
 | Phase 3 — Medium | 38 | 0 | 38 |
 | Phase 4 — Low | 23 | 0 | 23 |
-| **Total** | **82** | **7** | **75** |
+| **Total** | **82** | **16** | **66** |
