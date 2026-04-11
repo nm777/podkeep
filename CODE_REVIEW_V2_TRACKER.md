@@ -73,7 +73,7 @@
 - **File:** `YouTubeFileProcessor.php:96`
 - Unexpected `upload_date` format returns `false`, causing fatal error on `->startOfDay()`. Wrap in try/catch or validate format first.
 
-### H9. [ ] HIGH — Race condition on sequence number in AddLibraryItemToFeedsJob
+### H9. [x] HIGH — Race condition on sequence number in AddLibraryItemToFeedsJob
 - **File:** `AddLibraryItemToFeedsJob.php:31-42`
 - `max('sequence')` is not atomic. Use `DB::transaction()` with `lockForUpdate()` or atomic increment.
 

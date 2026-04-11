@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class AddLibraryItemToFeedsJob implements ShouldQueue
 {
@@ -28,16 +29,16 @@ class AddLibraryItemToFeedsJob implements ShouldQueue
             ->get();
 
         foreach ($feeds as $feed) {
-            // Get the next sequence number for this feed
-            $maxSequence = $feed->items()->max('sequence') ?? 0;
+            DB::transaction(function () use ($feed) {
+                $maxSequence = $feed->items()->lockForUpdate()->max('sequence') ?? 0;
 
-            FeedItem::create([
-                'feed_id' => $feed->id,
-                'library_item_id' => $this->libraryItem->id,
-                'sequence' => $maxSequence + 1,
-            ]);
+                FeedItem::create([
+                    'feed_id' => $feed->id,
+                    'library_item_id' => $this->libraryItem->id,
+                    'sequence' => $maxSequence + 1,
+                ]);
+            });
 
-            // Clear RSS cache when item is added to feed
             Cache::forget("rss.{$feed->id}");
         }
     }
