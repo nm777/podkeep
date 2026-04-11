@@ -512,10 +512,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `docker-compose.yml:26`
 - Added `depends_on: - app` to worker service so it starts after app (and migrations) complete.
 
-### 9.13 [ ] LOW — Storage permissions set as executable
-- **File:** `src/Dockerfile:73`
-- `chmod -R 755 /var/www/html/storage` sets all files (not just directories) as executable.
-- **Fix:** Use `find` to set directories to 755 and files to 644.
+### 9.13 [x] LOW — Storage permissions set as executable
+- **File:** `Dockerfile:74`
+- Replaced `chmod -R 755` with `find -type d -exec chmod 755` + `find -type f -exec chmod 644` for both storage and bootstrap/cache directories.
 
 ### 9.14 [ ] LOW — No backup strategy for podcast-storage volume
 - **File:** `src/docker-compose.prod.yml:11-12`

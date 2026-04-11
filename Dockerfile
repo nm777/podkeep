@@ -71,8 +71,10 @@ COPY --from=frontend /app/public/build /var/www/html/public/build
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache \
+    && find /var/www/html/storage -type d -exec chmod 755 {} \; \
+    && find /var/www/html/storage -type f -exec chmod 644 {} \; \
+    && find /var/www/html/bootstrap/cache -type d -exec chmod 755 {} \; \
+    && find /var/www/html/bootstrap/cache -type f -exec chmod 644 {} \; \
     && mkdir -p /var/www/html/storage/app/public/temp-youtube \
     && chown -R www-data:www-data /var/www/html/storage/app/public/temp-youtube \
     && chmod -R 775 /var/www/html/storage/app/public/temp-youtube
