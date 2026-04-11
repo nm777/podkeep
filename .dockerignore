@@ -46,3 +46,6 @@ build
 *.sqlite
 database/
 
+# Runtime directories (created fresh in container)
+src/storage
+

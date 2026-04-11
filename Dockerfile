@@ -70,14 +70,21 @@ COPY src/ .
 COPY --from=frontend /app/public/build /var/www/html/public/build
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache \
-    && mkdir -p /var/www/html/storage/app/public/temp-youtube \
-    && chown -R www-data:www-data /var/www/html/storage/app/public/temp-youtube \
-    && chmod -R 775 /var/www/html/storage/app/public/temp-youtube
+    && mkdir -p storage/app/public/temp-youtube \
+    && mkdir -p storage/framework/cache/data \
+    && mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/testing \
+    && mkdir -p storage/framework/views \
+    && mkdir -p storage/logs \
+    && mkdir -p database \
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/database \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/database
 
-USER www-data
+RUN apk add --no-cache su-exec
 
 FROM nginx:alpine AS web
 
