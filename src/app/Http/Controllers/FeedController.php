@@ -112,7 +112,12 @@ class FeedController extends Controller
         $currentItems = $feed->items->keyBy('library_item_id');
         $newItemIds = collect($items)->pluck('library_item_id');
 
-        // Delete items that are no longer in the list
+        if ($newItemIds->isEmpty()) {
+            $feed->items()->delete();
+
+            return;
+        }
+
         $feed->items()
             ->whereNotIn('library_item_id', $newItemIds)
             ->delete();
@@ -129,4 +134,3 @@ class FeedController extends Controller
             );
         }
     }
-}

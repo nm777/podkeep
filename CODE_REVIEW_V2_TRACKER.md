@@ -25,7 +25,7 @@
 - **File:** `Exceptions/Handler.php:49-51`
 - The `renderable` callback fires for every exception, not just API routes. Scope it to `$request->is('api/*')` by checking inside the callback or moving it to an API-specific middleware.
 
-### C5. [ ] CRITICAL — FeedController cannot clear feed items with empty array
+### C5. [x] CRITICAL — FeedController cannot clear feed items with empty array
 - **File:** `FeedController.php:120-128`
 - `whereNotIn('library_item_id', [])` generates `WHERE 0 = 1`, deleting nothing. Handle empty array case: `if (empty($newItemIds)) { $feed->items()->delete(); }`.
 
