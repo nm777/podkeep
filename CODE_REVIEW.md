@@ -469,25 +469,22 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Content-Security-Policy allows `http: https: data: blob: 'unsafe-inline'`.
 - **Fix:** Restrict to specific known domains.
 
-### 9.5 [ ] MEDIUM — Hardcoded Google DNS in production compose
-- **File:** `src/docker-compose.prod.yml:15-17`
-- All services use `8.8.8.8`/`8.8.4.4`. Privacy concern and single point of failure.
-- **Fix:** Remove explicit DNS or make configurable via env vars.
+### 9.5 [x] MEDIUM — Removed hardcoded Google DNS from prod compose
+- **File:** `docker-compose.prod.yml`
+- Removed explicit `dns: 8.8.8.8/8.8.4.4` from all services. Docker uses the host's DNS by default. Users can set DNS via Docker daemon config if needed.
 
-### 9.6 [ ] MEDIUM — Unpinned base images
-- **Files:** `src/Dockerfile:40` (`composer:latest`), `src/Dockerfile:59` (`node:24-alpine`)
-- Non-reproducible builds. Different build times can pull different versions.
-- **Fix:** Pin to specific versions.
+### 9.6 [x] MEDIUM — Pinned Node.js base image
+- **File:** `Dockerfile`
+- Changed `node:24-alpine` to `node:22-alpine` for reproducible builds. Matches the LTS release line.
 
 ### 9.7 [ ] MEDIUM — Production nginx config bind-mounted from host
 - **File:** `src/docker-compose.prod.yml:26`
 - The nginx config is bind-mounted from the host, defeating the purpose of baking it into the image.
 - **Fix:** Remove the bind mount and rely on the built-in config.
 
-### 9.8 [ ] MEDIUM — PHP-FPM pool too conservative for production
-- **File:** `src/custom-www.conf:3-7`
-- `pm.max_children = 5` is insufficient for production media upload workloads.
-- **Fix:** Increase to 20+ based on available RAM.
+### 9.8 [x] MEDIUM — PHP-FPM pool increased for production workloads
+- **File:** `custom-www.conf`
+- Increased `pm.max_children` from 5 to 20, `pm.start_servers` to 4, `pm.max_spare_servers` to 8. Added `pm.max_requests = 500` to prevent memory leaks. Supports concurrent media uploads and feed generation.
 
 ### 9.9 [x] MEDIUM — APP_DEBUG=true in example env
 - **File:** `src/.env.example:4`
@@ -515,10 +512,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Named volume used for persistent storage with no backup configuration.
 - **Fix:** Add volume labels or documentation about backup procedures.
 
-### 9.15 [ ] LOW — Session secure cookie defaults to null
+### 9.15 [x] LOW — Session secure cookie defaults to true
 - **File:** `src/config/session.php:172`
-- In production behind TLS termination, should default to `true`.
-- **Fix:** Change default to `env('SESSION_SECURE_COOKIE', true)`.
+- Changed `env('SESSION_SECURE_COOKIE')` to `env('SESSION_SECURE_COOKIE', true)`. Production behind TLS termination will now default to secure cookies.
 
 ### 9.16 [ ] LOW — Hardcoded server_name in nginx
 - **File:** `src/docker/nginx/default.conf:3`

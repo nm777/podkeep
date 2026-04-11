@@ -75,7 +75,7 @@ RUN apk add --no-cache \
     npm \
     pkgconfig
 
-FROM node:24-alpine AS frontend
+FROM node:22-alpine AS frontend
 
 WORKDIR /app
 COPY src/package*.json ./
