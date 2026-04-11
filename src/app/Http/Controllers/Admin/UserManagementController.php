@@ -11,12 +11,6 @@ use Inertia\Response;
 
 class UserManagementController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('admin');
-    }
-
     /**
      * Display the user management page.
      */

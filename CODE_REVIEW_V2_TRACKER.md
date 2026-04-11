@@ -81,7 +81,7 @@
 - **Files:** `CleanupOrphanedMediaFiles.php:24-34`, `LibraryController.php:73-76`
 - Re-check orphan status inside a transaction with lock before deleting. For `LibraryController`, use `DB::transaction()`.
 
-### H11. [ ] HIGH — Middleware applied twice in UserManagementController
+### H11. [x] HIGH — Middleware applied twice in UserManagementController
 - **File:** `UserManagementController.php:14-18`
 - Constructor registers `auth` + `admin` middleware, but routes already apply them. Remove constructor middleware.
 
