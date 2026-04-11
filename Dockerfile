@@ -1,15 +1,11 @@
-FROM php:8.4-fpm-alpine AS base
+FROM php:8.4-fpm-alpine AS builder
 
 WORKDIR /var/www/html
 
 RUN apk add --no-cache \
     autoconf \
-    curl \
     freetype-dev \
     g++ \
-    git \
-    gosu \
-    icu-data-full \
     icu-dev \
     libjpeg-turbo-dev \
     libpng-dev \
@@ -18,11 +14,7 @@ RUN apk add --no-cache \
     libzip-dev \
     make \
     oniguruma-dev \
-    sqlite-dev \
-    unzip \
-    wget \
-    yt-dlp \
-    zip
+    sqlite-dev
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-configure intl --enable-intl \
@@ -38,6 +30,28 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     xml \
     zip
 
+FROM php:8.4-fpm-alpine AS base
+
+WORKDIR /var/www/html
+
+RUN apk add --no-cache \
+    curl \
+    gosu \
+    icu-data-full \
+    libpng \
+    libjpeg-turbo \
+    libwebp \
+    libxml2 \
+    libzip \
+    oniguruma \
+    sqlite-libs \
+    unzip \
+    wget \
+    yt-dlp \
+    zip
+
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY custom-www.conf /usr/local/etc/php-fpm.d/www.conf
@@ -53,6 +67,10 @@ CMD ["php-fpm"]
 FROM base AS dev
 
 RUN apk add --no-cache \
+    autoconf \
+    g++ \
+    git \
+    make \
     nodejs \
     npm \
     pkgconfig

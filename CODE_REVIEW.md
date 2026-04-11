@@ -495,10 +495,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/.env.example:4`
 - Changed default to `false`. Production copies won't accidentally expose stack traces.
 
-### 9.10 [ ] MEDIUM — Build packages remain in production image
-- **File:** `src/Dockerfile:4`
-- `autoconf`, `g++`, `make` are only needed for compiling PHP extensions but remain in the `app` stage.
-- **Fix:** Use a separate build stage or `apk del` after compilation.
+### 9.10 [x] MEDIUM — Build packages removed from production image
+- **File:** `Dockerfile`
+- `autoconf`, `g++`, `make`, `-dev` packages were in the `base` stage used by production. Added a `builder` stage for PHP extension compilation, then a clean `base` stage copies only the compiled extensions and runtime libraries. Production images no longer contain C compilers or dev headers. Dev stage re-adds build tools for development needs.
 
 ### 9.11 [ ] MEDIUM — No rate limiting on Traefik
 - **File:** `src/docker-compose.prod.yml:35-45`
