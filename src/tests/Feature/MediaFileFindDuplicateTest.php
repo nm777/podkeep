@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\Services\DuplicateDetectionService;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -13,7 +15,7 @@ afterEach(function () {
     Storage::disk('public')->deleteDirectory('media');
 });
 
-it('findDuplicateByFile returns matching MediaFile', function () {
+it('findGlobalDuplicate returns matching MediaFile via DuplicateDetectionService', function () {
     $user = User::factory()->create();
     $tempPath = 'media/find-dup-test.mp3';
     $content = fake()->regexify('[a-z]{500}');
@@ -24,17 +26,17 @@ it('findDuplicateByFile returns matching MediaFile', function () {
         'file_hash' => hash_file('sha256', Storage::disk('public')->path($tempPath)),
     ]);
 
-    $result = MediaFile::findDuplicateByFile($tempPath);
+    $result = DuplicateDetectionService::findGlobalDuplicate($tempPath);
     expect($result)->not->toBeNull();
     expect($result->id)->toBe($mediaFile->id);
 });
 
-it('findDuplicateByFile returns null for non-existent file', function () {
-    $result = MediaFile::findDuplicateByFile('/non/existent/file.mp3');
+it('findGlobalDuplicate returns null for non-existent file', function () {
+    $result = DuplicateDetectionService::findGlobalDuplicate('/non/existent/file.mp3');
     expect($result)->toBeNull();
 });
 
-it('findDuplicateByFileForUser returns matching MediaFile for correct user', function () {
+it('findUserDuplicate returns matching MediaFile for correct user via DuplicateDetectionService', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
     $tempPath = 'media/find-user-dup-test.mp3';
@@ -46,15 +48,15 @@ it('findDuplicateByFileForUser returns matching MediaFile for correct user', fun
         'file_hash' => hash_file('sha256', Storage::disk('public')->path($tempPath)),
     ]);
 
-    \App\Models\LibraryItem::factory()->create([
+    LibraryItem::factory()->create([
         'user_id' => $user->id,
         'media_file_id' => $mediaFile->id,
     ]);
 
-    $result = MediaFile::findDuplicateByFileForUser($tempPath, $user->id);
+    $result = DuplicateDetectionService::findUserDuplicate($tempPath, $user->id);
     expect($result)->not->toBeNull();
     expect($result->id)->toBe($mediaFile->id);
 
-    $otherResult = MediaFile::findDuplicateByFileForUser($tempPath, $otherUser->id);
+    $otherResult = DuplicateDetectionService::findUserDuplicate($tempPath, $otherUser->id);
     expect($otherResult)->toBeNull();
 });

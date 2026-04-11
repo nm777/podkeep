@@ -7,6 +7,7 @@ use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 use App\ProcessingStatusType;
+use App\Services\DuplicateDetectionService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -311,11 +312,11 @@ it('MediaFile model can check file duplicates', function () {
     ]);
 
     // Test duplicate detection
-    $duplicate = MediaFile::findDuplicateByFile($tempPath);
+    $duplicate = DuplicateDetectionService::findGlobalDuplicate($tempPath);
     expect($duplicate)->not->toBeNull();
     expect($duplicate->id)->toBe($mediaFile->id);
 
-    $nonDuplicate = MediaFile::findDuplicateByFile('/non/existent/file.mp3');
+    $nonDuplicate = DuplicateDetectionService::findGlobalDuplicate('/non/existent/file.mp3');
     expect($nonDuplicate)->toBeNull();
 
     // Clean up

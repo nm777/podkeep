@@ -114,10 +114,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/resources/js/types/index.d.ts`, `src/resources/js/pages/dashboard.tsx`, `src/resources/js/pages/feeds/edit.tsx`, `src/resources/js/components/feed-list.tsx`, `src/resources/js/pages/Library/Index.tsx`, `src/resources/js/components/media-player.tsx`
 - Consolidated `Feed`, `LibraryItem`, `MediaFile`, `FeedItem` interfaces into `types/index.d.ts`. Added `is_admin`, `approval_status` to `User`. Removed `[key: string]: unknown` index signatures. Removed `'use client'` directives from Inertia files.
 
-### 2.6 [ ] MEDIUM — MediaFile model coupled to service layer
-- **File:** `src/app/Models/MediaFile.php:65-76`
-- `MediaFile::isDuplicate()` calls `DuplicateDetectionService`, coupling the model to a service. The method name implies a boolean return but actually returns `?MediaFile`.
-- **Fix:** Move to `DuplicateDetectionService` and rename to `findDuplicateByFile()`.
+### 2.6 [x] MEDIUM — Duplicate detection decoupled from MediaFile model
+- **File:** `src/app/Models/MediaFile.php`
+- Removed `findDuplicateByFile()`, `findDuplicateByFileForUser()`, and deprecated `isDuplicate()`/`isDuplicateForUser()` methods from MediaFile model. All duplicate detection now goes through `DuplicateDetectionService` directly. Updated tests to call the service instead of the model.
 
 ### 2.7 [ ] MEDIUM — Cross-user media sharing without reference counting
 - **File:** `src/app/Services/MediaProcessing/UnifiedDuplicateProcessor.php:153-173`
