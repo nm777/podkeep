@@ -67,7 +67,7 @@ it('processes media file from URL correctly', function () {
 
     // Mock HTTP response
     Http::fake([
-        'https://example.com/test-audio.mp3' => Http::response('fake audio content', 200, [
+        'https://example.com/test-audio.mp3' => Http::response("ID3".str_repeat("\x00", 100)."fake audio content", 200, [
             'Content-Type' => 'audio/mpeg',
         ]),
     ]);
@@ -81,7 +81,7 @@ it('processes media file from URL correctly', function () {
 
     $mediaFile = $libraryItem->mediaFile;
     expect($mediaFile)->not->toBeNull();
-    expect($mediaFile->file_hash)->toBe(hash('sha256', 'fake audio content'));
+    expect($mediaFile->file_hash)->toBe(hash('sha256', "ID3".str_repeat("\x00", 100)."fake audio content"));
     // MIME type is detected from file extension by the system
     expect($mediaFile->mime_type)->toBe('application/octet-stream'); // New validator returns octet-stream for unknown content
 });
@@ -286,7 +286,7 @@ it('stores source URL when downloading new file', function () {
 
     // Mock HTTP response
     Http::fake([
-        'https://example.com/new-audio.mp3' => Http::response('new audio content', 200, [
+        'https://example.com/new-audio.mp3' => Http::response("ID3".str_repeat("\x00", 100)."new audio content", 200, [
             'Content-Type' => 'audio/mpeg',
         ]),
     ]);
@@ -312,7 +312,7 @@ it('multiple users can reuse same file from same URL', function () {
 
     // First user downloads the file
     Http::fake([
-        'https://example.com/shared-audio.mp3' => Http::response('shared audio content', 200),
+        'https://example.com/shared-audio.mp3' => Http::response("ID3".str_repeat("\x00", 100)."shared audio content", 200),
     ]);
 
     $response1 = $this->actingAs($user1)->post('/library', [

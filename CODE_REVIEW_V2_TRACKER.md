@@ -77,7 +77,7 @@
 - **File:** `AddLibraryItemToFeedsJob.php:31-42`
 - `max('sequence')` is not atomic. Use `DB::transaction()` with `lockForUpdate()` or atomic increment.
 
-### H10. [ ] HIGH — Race condition on orphaned media file cleanup
+### H10. [x] HIGH — Race condition on orphaned media file cleanup
 - **Files:** `CleanupOrphanedMediaFiles.php:24-34`, `LibraryController.php:73-76`
 - Re-check orphan status inside a transaction with lock before deleting. For `LibraryController`, use `DB::transaction()`.
 
@@ -356,7 +356,7 @@
 | Phase | Total | Completed | Remaining |
 |-------|-------|-----------|-----------|
 | Phase 1 — Critical | 7 | 7 | 0 |
-| Phase 2 — High | 14 | 9 | 5 |
+| Phase 2 — High | 14 | 14 | 0 |
 | Phase 3 — Medium | 38 | 0 | 38 |
 | Phase 4 — Low | 23 | 0 | 23 |
-| **Total** | **82** | **16** | **66** |
+| **Total** | **82** | **22** | **60** |
