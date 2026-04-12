@@ -25,4 +25,12 @@ describe('YouTube video ID validation', function () {
     it('accepts valid video IDs with underscores and dashes', function () {
         expect(YouTubeUrlValidator::extractVideoId('https://www.youtube.com/watch?v=abc_DEF-GHI'))->toBe('abc_DEF-GHI');
     });
+
+    it('extracts video ID from /live/ URLs', function () {
+        expect(YouTubeUrlValidator::extractVideoId('https://www.youtube.com/live/gbW9_DxgBsE?si=ejJlc2nfkW7Q94w-'))->toBe('gbW9_DxgBsE');
+    });
+
+    it('recognizes /live/ URLs as valid YouTube URLs', function () {
+        expect(YouTubeUrlValidator::isValidYouTubeUrl('https://www.youtube.com/live/gbW9_DxgBsE'))->toBeTrue();
+    });
 });
