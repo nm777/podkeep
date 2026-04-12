@@ -44,9 +44,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('feeds/{feed}/edit', [FeedController::class, 'edit'])->name('feeds.edit');
 
     Route::resource('library', LibraryController::class)->only(['index', 'store', 'update', 'destroy']);
-
-    // Apply rate limiting to library store (uploads/downloads)
     Route::post('library', [LibraryController::class, 'store'])
+        ->name('library.store')
         ->middleware('throttle:10,1');
 
     Route::post('library/{id}/retry', [LibraryController::class, 'retry'])
