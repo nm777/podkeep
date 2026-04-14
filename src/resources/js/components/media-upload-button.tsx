@@ -254,7 +254,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
             {iconOnly ? (
                 <span className="relative">
                     <Volume2 className="h-4 w-4" />
-                    <Plus className="absolute -top-1 -right-1 h-2.5 w-2.5" />
+                    <Plus className="absolute -bottom-0.5 -left-0.5 h-2 w-2" />
                 </span>
             ) : (
                 <>
