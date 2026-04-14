@@ -43,7 +43,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::resource('feeds', FeedController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('feeds/{feed}/edit', [FeedController::class, 'edit'])->name('feeds.edit');
 
-    Route::resource('library', LibraryController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('library', LibraryController::class)->only(['store', 'update', 'destroy']);
     Route::post('library', [LibraryController::class, 'store'])
         ->name('library.store')
         ->middleware('throttle:10,1');

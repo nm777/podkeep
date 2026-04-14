@@ -1,32 +1,20 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type Feed, type FeedItem, type LibraryItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { formatDuration, formatFileSize } from '@/lib/format';
-import { ArrowLeft, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
+import { GripVertical, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface EditFeedProps {
     feed: Feed;
     userLibraryItems: LibraryItem[];
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Edit Feed',
-        href: '',
-    },
-];
 
 export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -35,7 +23,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
         title: feed.title,
         description: feed.description || '',
         is_public: feed.is_public,
-        items: feed.items.map((item) => ({
+        items: (feed.items ?? []).map((item: FeedItem) => ({
             id: item.id,
             library_item_id: item.library_item_id,
             sequence: item.sequence,
@@ -95,170 +83,133 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
     const availableLibraryItems = userLibraryItems.filter((item) => !data.items.some((feedItem) => feedItem.library_item_id === item.id));
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout>
             <Head title={`Edit Feed: ${feed.title}`} />
 
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                        <Link href="/dashboard">
-                            <Button variant="outline" size="sm">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Dashboard
-                            </Button>
-                        </Link>
-                        <h1 className="text-2xl font-semibold">Edit Feed</h1>
+            <div className="space-y-6">
+                <h1 className="text-xl font-semibold">{feed.title}</h1>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input
+                            id="title"
+                            type="text"
+                            value={data.title}
+                            onChange={(e) => setData('title', e.target.value)}
+                            placeholder="Enter feed title"
+                            required
+                        />
+                        {errors.title && <InputError message={errors.title} />}
                     </div>
 
-                    <div className="grid gap-6 lg:grid-cols-2">
-                        {/* Feed Details */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Feed Details</CardTitle>
-                                <CardDescription>Update your feed's basic information</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <form onSubmit={handleSubmit} className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="title">Title</Label>
-                                        <Input
-                                            id="title"
-                                            type="text"
-                                            value={data.title}
-                                            onChange={(e) => setData('title', e.target.value)}
-                                            placeholder="Enter feed title"
-                                            required
-                                        />
-                                        {errors.title && <InputError message={errors.title} />}
-                                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                            id="description"
+                            value={data.description}
+                            onChange={(e) => setData('description', e.target.value)}
+                            placeholder="Enter feed description (optional)"
+                            rows={3}
+                        />
+                        {errors.description && <InputError message={errors.description} />}
+                    </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="description">Description</Label>
-                                        <Textarea
-                                            id="description"
-                                            value={data.description}
-                                            onChange={(e) => setData('description', e.target.value)}
-                                            placeholder="Enter feed description (optional)"
-                                            rows={3}
-                                        />
-                                        {errors.description && <InputError message={errors.description} />}
-                                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="is_public"
+                            checked={data.is_public}
+                            onCheckedChange={(checked) => setData('is_public', checked === true)}
+                        />
+                        <Label htmlFor="is_public">Make this feed public</Label>
+                    </div>
 
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="is_public"
-                                            checked={data.is_public}
-                                            onCheckedChange={(checked) => setData('is_public', checked === true)}
-                                        />
-                                        <Label htmlFor="is_public">Make this feed public</Label>
-                                    </div>
+                    <div>
+                        <Button type="submit" disabled={processing}>
+                            {processing ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                    </div>
+                </form>
 
-                                    <div className="pt-4">
-                                        <Button type="submit" disabled={processing} className="w-full">
-                                            {processing ? 'Saving...' : 'Save Changes'}
+                <div className="space-y-3">
+                    <h2 className="text-base font-medium">Feed Items</h2>
+
+                    {data.items.length === 0 ? (
+                        <p className="py-8 text-center text-sm text-muted-foreground">
+                            No items in this feed yet. Add items from your library below.
+                        </p>
+                    ) : (
+                        <div className="divide-y rounded-lg border">
+                            {data.items.map((item, index) => {
+                                const libraryItem = getLibraryItem(item.library_item_id);
+                                if (!libraryItem) return null;
+
+                                return (
+                                    <div
+                                        key={item.library_item_id}
+                                        draggable
+                                        onDragStart={() => handleDragStart(index)}
+                                        onDragOver={handleDragOver}
+                                        onDrop={(e) => handleDrop(e, index)}
+                                        className="flex cursor-move items-center gap-3 px-4 py-3 hover:bg-muted/50"
+                                    >
+                                        <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-medium">{libraryItem.title}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {libraryItem.media_file ? (
+                                                    <>
+                                                        {formatDuration(libraryItem.media_file.duration)} · {formatFileSize(libraryItem.media_file.filesize)}
+                                                    </>
+                                                ) : (
+                                                    'Processing...'
+                                                )}
+                                            </p>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => removeItem(index)}
+                                            className="shrink-0 text-destructive hover:text-destructive"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                </form>
-                            </CardContent>
-                        </Card>
+                                );
+                            })}
+                        </div>
+                    )}
 
-                        {/* Media Items */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Feed Items</CardTitle>
-                                <CardDescription>Manage the media items in your feed</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {data.items.length === 0 ? (
-                                    <div className="py-8 text-center text-muted-foreground">
-                                        <p>No items in this feed yet</p>
-                                        <p className="text-sm">Add items from your library below</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {data.items.map((item, index) => {
-                                            const libraryItem = getLibraryItem(item.library_item_id);
-                                            if (!libraryItem) return null;
-
-                                            return (
-                                                <div
-                                                    key={item.library_item_id}
-                                                    draggable
-                                                    onDragStart={() => handleDragStart(index)}
-                                                    onDragOver={handleDragOver}
-                                                    onDrop={(e) => handleDrop(e, index)}
-                                                    className="flex cursor-move items-start gap-3 rounded-lg border p-3 hover:bg-muted/50"
-                                                >
-                                                    <GripVertical className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="truncate font-medium">{libraryItem.title}</p>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {libraryItem.media_file ? (
-                                                                <>
-                                                                    {formatDuration(libraryItem.media_file.duration)} •{' '}
-                                                                    {formatFileSize(libraryItem.media_file.filesize)}
-                                                                </>
-                                                            ) : (
-                                                                'Processing...'
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => removeItem(index)}
-                                                        className="shrink-0 text-destructive hover:text-destructive"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-
-                                {/* Add Library Items */}
-                                {availableLibraryItems.length > 0 && (
-                                    <div className="border-t pt-4">
-                                        <Label className="text-sm font-medium">Add Library Items</Label>
-                                        <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
-                                            {availableLibraryItems.map((libraryItem) => (
-                                                <div key={libraryItem.id} className="flex items-start gap-2 rounded-lg border p-2">
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="truncate text-sm font-medium">{libraryItem.title}</p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {libraryItem.media_file ? (
-                                                                <>
-                                                                    {formatDuration(libraryItem.media_file.duration)} •{' '}
-                                                                    {formatFileSize(libraryItem.media_file.filesize)}
-                                                                </>
-                                                            ) : (
-                                                                'Processing...'
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => addLibraryItem(libraryItem.id)}
-                                                        className="shrink-0"
-                                                    >
-                                                        <Plus className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            ))}
+                    {availableLibraryItems.length > 0 && (
+                        <div className="space-y-2 border-t pt-4">
+                            <Label className="text-sm font-medium">Add Library Items</Label>
+                            <div className="max-h-48 space-y-1 overflow-y-auto">
+                                {availableLibraryItems.map((libraryItem) => (
+                                    <div key={libraryItem.id} className="flex items-center gap-2 rounded-md border p-2">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-medium">{libraryItem.title}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {libraryItem.media_file ? (
+                                                    <>
+                                                        {formatDuration(libraryItem.media_file.duration)} · {formatFileSize(libraryItem.media_file.filesize)}
+                                                    </>
+                                                ) : (
+                                                    'Processing...'
+                                                )}
+                                            </p>
                                         </div>
+                                        <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)} className="shrink-0">
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
                                     </div>
-                                )}
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-                                {availableLibraryItems.length === 0 && data.items.length > 0 && (
-                                    <div className="border-t pt-4">
-                                        <p className="text-center text-sm text-muted-foreground">All library items are already in this feed</p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
+                    {availableLibraryItems.length === 0 && data.items.length > 0 && (
+                        <p className="text-center text-sm text-muted-foreground">All library items are already in this feed</p>
+                    )}
                 </div>
             </div>
         </AppLayout>

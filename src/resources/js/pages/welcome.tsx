@@ -6,32 +6,34 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title="PodKeep - Create Custom Podcast Feeds">
+            <Head title="PodKeep - Build Custom Podcast Feeds">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
             </Head>
 
-            <div className="flex min-h-screen flex-col" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
-                {/* Header */}
-                <header className="border-b border-white/10 p-5">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between">
-                        <div className="text-2xl font-semibold text-blue-400">🎙️ PodKeep</div>
-                        <nav className="flex gap-5">
+            <div className="flex min-h-screen flex-col bg-background">
+                <header className="border-b p-5">
+                    <div className="mx-auto flex max-w-3xl items-center justify-between">
+                        <span className="text-lg font-semibold">PodKeep</span>
+                        <nav className="flex gap-3">
                             {auth.user ? (
                                 <Link
                                     href={route('dashboard')}
-                                    className="rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600"
+                                    className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
                                 >
                                     Dashboard
                                 </Link>
                             ) : (
                                 <>
-                                    <Link href={route('login')} className="rounded-lg px-4 py-2 text-gray-300 transition-colors hover:bg-white/10">
+                                    <Link
+                                        href={route('login')}
+                                        className="rounded-md px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                    >
                                         Log in
                                     </Link>
                                     <Link
                                         href={route('register')}
-                                        className="rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600"
+                                        className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
                                     >
                                         Get Started
                                     </Link>
@@ -41,52 +43,40 @@ export default function Welcome() {
                     </div>
                 </header>
 
-                {/* Main Content */}
-                <main className="flex-1 px-5 py-20">
-                    <div className="mx-auto max-w-7xl">
-                        {/* Hero Section */}
-                        <section className="mb-20 text-center">
-                            <h1 className="mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-5xl font-bold text-transparent md:text-7xl">
-                                PodKeep
-                            </h1>
-                            <p className="mx-auto mb-12 max-w-3xl text-xl text-gray-400 md:text-2xl">
-                                Build personalized podcast feeds. Simple, fast, and reliable.
-                            </p>
-                        </section>
-
-                        {/* Features Grid */}
-                        <section className="mb-20 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                            <div className="rounded-xl border border-white/10 bg-slate-800/50 p-8 text-center backdrop-blur-sm">
-                                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 text-2xl">
-                                    📡
-                                </div>
-                                <h3 className="mb-4 text-xl font-semibold text-gray-100">Custom RSS Feeds</h3>
-                                <p className="leading-relaxed text-gray-400">
-                                    Create multiple podcast feeds with different content. Each feed gets its own URL that you can add to your podcast
-                                    app.
-                                </p>
-                            </div>
-
-                            <div className="rounded-xl border border-white/10 bg-slate-800/50 p-8 text-center backdrop-blur-sm">
-                                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 text-2xl">
-                                    🔄
-                                </div>
-                                <h3 className="mb-4 text-xl font-semibold text-gray-100">Auto-Duplicate Detection</h3>
-                                <p className="leading-relaxed text-gray-400">
-                                    Smart detection prevents duplication, saving you storage space and keeping your feeds clean.
-                                </p>
-                            </div>
-
-                            <div className="rounded-xl border border-white/10 bg-slate-800/50 p-8 text-center backdrop-blur-sm">
-                                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 text-2xl">
-                                    ⚡
-                                </div>
-                                <h3 className="mb-4 text-xl font-semibold text-gray-100">Fast Processing</h3>
-                                <p className="leading-relaxed text-gray-400">
-                                    Background processing ensures your files are ready quickly without slowing down your workflow.
-                                </p>
-                            </div>
-                        </section>
+                <main className="flex flex-1 items-center justify-center px-5 py-20">
+                    <div className="mx-auto max-w-xl text-center">
+                        <h1 className="mb-4 text-4xl font-bold tracking-tight">PodKeep</h1>
+                        <p className="mb-8 text-lg text-muted-foreground">
+                            Build custom podcast feeds from your media files.
+                        </p>
+                        <div className="flex items-center justify-center gap-3">
+                            {auth.user ? (
+                                <Link
+                                    href={route('dashboard')}
+                                    className="rounded-md bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+                                >
+                                    Go to Dashboard
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link
+                                        href={route('register')}
+                                        className="rounded-md bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+                                    >
+                                        Get Started
+                                    </Link>
+                                    <Link
+                                        href={route('login')}
+                                        className="rounded-md border px-6 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+                                    >
+                                        Log in
+                                    </Link>
+                                </>
+                            )}
+                        </div>
+                        <p className="mt-12 text-sm text-muted-foreground">
+                            Upload your audio, organize into feeds, subscribe in any podcast app.
+                        </p>
                     </div>
                 </main>
             </div>
