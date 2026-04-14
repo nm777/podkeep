@@ -437,7 +437,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                                     className="text-sm leading-none font-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                 >
                                     {feed.title}
-                                    {feed.is_public && <span className="ml-2 text-xs text-gray-500">(Public)</span>}
+                                    {feed.is_public ? <span className="ml-2 text-xs text-gray-500">(Public)</span> : null}
                                 </Label>
                             </div>
                         ))}
