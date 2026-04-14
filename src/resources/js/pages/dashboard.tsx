@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
 import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
@@ -16,12 +17,13 @@ import { getAbsoluteRssUrl, getApplePodcastsUrl, getGooglePodcastsUrl } from '@/
 import { type Feed, type LibraryItem } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
-import { AlertCircle, Copy, Edit, Eye, EyeOff, FileAudio, Pencil, Play, RefreshCw, Rss, Smartphone, Trash2 } from 'lucide-react';
+import { AlertCircle, Copy, Edit, Eye, EyeOff, FileAudio, FolderPlus, Pencil, Play, RefreshCw, Rss, Smartphone, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type Tab = 'feeds' | 'library';
 
 export default function Dashboard() {
+    const isMobile = useIsMobile();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pageProps = usePage<any>().props;
     const feeds: Feed[] = pageProps.feeds;
@@ -203,24 +205,28 @@ export default function Dashboard() {
                     Library
                 </button>
 
-                <div className="ml-auto">
-                    {activeTab === 'feeds' ? (
-                        <CreateFeedForm
-                            showCard={false}
-                            renderTrigger={(onClick) => (
-                                <Button size="sm" onClick={onClick}>
-                                    New Feed
+                <div className="ml-auto flex items-center gap-2">
+                    <CreateFeedForm
+                        showCard={false}
+                        renderTrigger={(onClick) =>
+                            isMobile ? (
+                                <Button size="icon" className="h-8 w-8" onClick={onClick}>
+                                    <FolderPlus className="h-4 w-4" />
                                 </Button>
-                            )}
-                        />
-                    ) : (
-                        <MediaUploadButton
-                            onUploadSuccess={handleUploadSuccess}
-                            feeds={feeds}
-                            variant="default"
-                            size="sm"
-                        />
-                    )}
+                            ) : (
+                                <Button size="sm" onClick={onClick}>
+                                    + Feed
+                                </Button>
+                            )
+                        }
+                    />
+                    <MediaUploadButton
+                        onUploadSuccess={handleUploadSuccess}
+                        feeds={feeds}
+                        variant="default"
+                        size={isMobile ? 'icon' : 'sm'}
+                        iconOnly={isMobile}
+                    />
                 </div>
             </div>
 
