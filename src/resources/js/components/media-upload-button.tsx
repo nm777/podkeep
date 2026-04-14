@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { type Feed } from '@/types';
@@ -263,39 +263,6 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
 
     const formFields = (
         <>
-            <div>
-                <Label>Source Type</Label>
-                <div className="flex flex-wrap gap-2">
-                    <Button
-                        type="button"
-                        variant={inputType === 'file' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleInputTypeChange('file')}
-                    >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload File
-                    </Button>
-                    <Button
-                        type="button"
-                        variant={inputType === 'url' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleInputTypeChange('url')}
-                    >
-                        <Globe className="mr-2 h-4 w-4" />
-                        From URL
-                    </Button>
-                    <Button
-                        type="button"
-                        variant={inputType === 'youtube' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleInputTypeChange('youtube')}
-                    >
-                        <Youtube className="mr-2 h-4 w-4" />
-                        YouTube
-                    </Button>
-                </div>
-            </div>
-
             {inputType === 'file' ? (
                 <div>
                     <div
@@ -476,6 +443,41 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
         </div>
     );
 
+    const sourceButtons = (
+        <div className="flex gap-1">
+            <Button
+                type="button"
+                variant={inputType === 'file' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 px-2.5 text-xs"
+                onClick={() => handleInputTypeChange('file')}
+            >
+                <Upload className="mr-1 h-3 w-3" />
+                File
+            </Button>
+            <Button
+                type="button"
+                variant={inputType === 'url' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 px-2.5 text-xs"
+                onClick={() => handleInputTypeChange('url')}
+            >
+                <Globe className="mr-1 h-3 w-3" />
+                URL
+            </Button>
+            <Button
+                type="button"
+                variant={inputType === 'youtube' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 px-2.5 text-xs"
+                onClick={() => handleInputTypeChange('youtube')}
+            >
+                <Youtube className="mr-1 h-3 w-3" />
+                YouTube
+            </Button>
+        </div>
+    );
+
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>{trigger}</SheetTrigger>
@@ -484,12 +486,10 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                 className={isMobile ? 'h-[96svh] w-full rounded-t-lg overflow-x-hidden p-0' : 'w-full sm:max-w-md overflow-x-hidden p-0'}
             >
                 <div className="flex h-full max-w-full flex-col overflow-hidden">
-                    <SheetHeader className="px-4 pt-4">
-                        <SheetTitle>Add Media File</SheetTitle>
-                        <SheetDescription>
-                            Upload a file, provide a URL, or add a YouTube video to extract audio. Supported formats: MP3, MP4, M4A, WAV, OGG (Max: 500MB)
-                        </SheetDescription>
-                    </SheetHeader>
+                    <div className="flex items-center justify-between border-b px-4 py-3">
+                        <SheetTitle className="text-base">Add Media</SheetTitle>
+                        {sourceButtons}
+                    </div>
                     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
                         <div className="flex-1 space-y-4 overflow-x-hidden overflow-y-auto px-4 py-4">
                             {formFields}
