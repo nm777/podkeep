@@ -64,7 +64,7 @@ export default function Dashboard() {
         if (!hasProcessingItems) return;
 
         const interval = setInterval(() => {
-            router.reload({ only: ['libraryItems'] });
+            router.reload({ only: ['feeds', 'libraryItems'] });
         }, 5000);
 
         return () => clearInterval(interval);
