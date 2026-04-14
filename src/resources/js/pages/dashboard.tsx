@@ -209,7 +209,6 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
 
                 <div className="ml-auto flex items-center gap-2">
                     <CreateFeedForm
-                        showCard={false}
                         renderTrigger={(onClick) =>
                             isMobile ? (
                                 <Button size="icon" className="h-8 w-8" onClick={onClick}>
