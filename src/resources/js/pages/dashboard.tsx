@@ -243,7 +243,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                             {feeds.map((feed) => (
                                 <div key={feed.id} className="flex items-center gap-4 px-4 py-3">
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate font-medium">{feed.title}</p>
+                                        <p className="font-medium md:truncate">{feed.title}</p>
                                         <p className="text-xs text-muted-foreground">{feed.items_count ?? 0} items</p>
                                     </div>
                                     <span
@@ -338,7 +338,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                                         <Play className="h-4 w-4" />
                                     </Button>
                                     <div className="min-w-0 flex-1">
-                                        <p className={`truncate text-sm font-medium ${!isComplete ? 'text-muted-foreground' : ''}`}>
+                                        <p className={`text-sm font-medium md:truncate ${!isComplete ? 'text-muted-foreground' : ''}`}>
                                             {item.title}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
