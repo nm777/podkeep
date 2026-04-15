@@ -7,7 +7,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/admin-layout';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { ArrowLeft, Users } from 'lucide-react';
 import { useState } from 'react';
 
 interface User {
@@ -78,6 +79,10 @@ export default function UserManagement() {
                 <div className="mb-6">
                     <div className="flex items-center justify-between">
                         <div>
+                            <Link href={route('dashboard')} className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+                                <ArrowLeft className="h-4 w-4" />
+                                Back
+                            </Link>
                             <h1 className="text-3xl font-bold">User Management</h1>
                             <p className="text-muted-foreground">Manage user registrations and permissions</p>
                         </div>
