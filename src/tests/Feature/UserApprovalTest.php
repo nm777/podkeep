@@ -128,6 +128,6 @@ test('approved user can login', function () {
         'password' => 'password',
     ]);
 
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect('/feeds');
     $this->assertAuthenticatedAs($approvedUser);
 });

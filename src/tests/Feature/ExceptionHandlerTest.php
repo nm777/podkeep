@@ -10,7 +10,7 @@ uses(RefreshDatabase::class);
 
 describe('Exception handler', function () {
     it('does not intercept web routes — returns Inertia redirect for auth', function () {
-        $response = $this->get('/dashboard');
+        $response = $this->get('/feeds');
 
         $response->assertRedirect(route('login'));
     });

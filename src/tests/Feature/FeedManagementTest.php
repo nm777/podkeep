@@ -23,7 +23,7 @@ test('dashboard displays user feeds', function () {
         'is_public' => false,
     ]);
 
-    $response = $this->actingAs($user)->get('/dashboard');
+    $response = $this->actingAs($user)->get('/feeds');
 
     $response->assertStatus(200);
     $response->assertInertia(fn ($page) => $page
@@ -103,7 +103,7 @@ test('user can delete their own feed', function () {
 
     $response = $this->actingAs($user)->delete("/feeds/{$feed->id}");
 
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect('/feeds');
     $response->assertSessionHas('success', 'Feed deleted successfully!');
     $this->assertDatabaseMissing('feeds', [
         'id' => $feed->id,
@@ -130,7 +130,7 @@ test('user cannot delete another users feed', function () {
 });
 
 test('unauthenticated user cannot access feed management', function () {
-    $response = $this->get('/dashboard');
+    $response = $this->get('/feeds');
     $response->assertRedirect('/login');
 
     $response = $this->post('/feeds', [

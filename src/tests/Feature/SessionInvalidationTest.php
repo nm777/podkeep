@@ -11,7 +11,7 @@ describe('Session invalidation on forced logout', function () {
 
         $response = $this->actingAs($user)
             ->withSession(['test-key' => 'should-be-cleared'])
-            ->get('/dashboard');
+            ->get('/feeds');
 
         $response->assertRedirect(route('login'));
         $this->assertGuest();
@@ -23,7 +23,7 @@ describe('Session invalidation on forced logout', function () {
 
         $response = $this->actingAs($user)
             ->withSession(['test-key' => 'should-be-cleared'])
-            ->get('/dashboard');
+            ->get('/feeds');
 
         $response->assertRedirect(route('login'));
         $this->assertGuest();

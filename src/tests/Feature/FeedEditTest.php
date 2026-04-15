@@ -40,10 +40,10 @@ it('allows feed owner to update feed details', function () {
         'is_public' => true,
     ]);
 
-    $response->assertRedirect('/dashboard');
-    $this->assertDatabaseHas('feeds', [
-        'id' => $feed->id,
-        'title' => 'Updated Feed Title',
+    $response->assertRedirect('/feeds');
+        $this->assertDatabaseHas('feeds', [
+            'id' => $feed->id,
+            'title' => 'Updated Feed Title',
         'description' => 'Updated description',
         'is_public' => true,
     ]);
@@ -95,7 +95,7 @@ it('allows adding items to feed', function () {
         ],
     ]);
 
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect('/feeds');
     $this->assertDatabaseHas('feed_items', [
         'feed_id' => $feed->id,
         'library_item_id' => $libraryItem->id,
@@ -124,7 +124,7 @@ it('allows removing items from feed', function () {
         'items' => [],
     ]);
 
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect('/feeds');
     $this->assertDatabaseMissing('feed_items', [
         'id' => $feedItem->id,
     ]);
@@ -156,7 +156,7 @@ it('allows reordering items in feed', function () {
         ],
     ]);
 
-    $response->assertRedirect('/dashboard');
+    $response->assertRedirect('/feeds');
 
     $this->assertDatabaseHas('feed_items', [
         'feed_id' => $feed->id,

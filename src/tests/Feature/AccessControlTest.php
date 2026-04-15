@@ -16,7 +16,7 @@ it('prevents pending user from accessing dashboard', function () {
         'approval_status' => 'pending',
     ]);
 
-    $response = $this->actingAs($user)->get('/dashboard');
+    $response = $this->actingAs($user)->get('/feeds');
 
     $response->assertRedirect(route('login'));
 });
@@ -28,7 +28,7 @@ it('prevents rejected user from accessing dashboard', function () {
         'rejection_reason' => 'Not a good fit',
     ]);
 
-    $response = $this->actingAs($user)->get('/dashboard');
+    $response = $this->actingAs($user)->get('/feeds');
 
     $response->assertRedirect(route('login'));
 });
