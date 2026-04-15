@@ -41,6 +41,10 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     };
 
     Route::get('feeds', function () use ($dashboardData) {
+        if (request()->expectsJson()) {
+            return response()->json(Auth::user()->feeds()->latest()->get());
+        }
+
         return Inertia::render('dashboard', array_merge($dashboardData(), ['activeTab' => 'feeds']));
     })->name('dashboard');
 

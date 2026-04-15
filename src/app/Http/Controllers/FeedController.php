@@ -33,12 +33,14 @@ class FeedController extends Controller
     {
         $validated = $request->validated();
 
+        $slug = $this->generateUniqueSlug($validated['title']);
+
         $feed = Auth::user()->feeds()->create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'slug' => Str::slug($validated['title']),
+            'slug' => $slug,
             'user_guid' => Str::uuid(),
-            'token' => Str::random(32),
+            'token' => Str::random(64),
             'is_public' => $validated['is_public'] ?? false,
         ]);
 
@@ -54,7 +56,7 @@ class FeedController extends Controller
 
         $feed->load(['items.libraryItem', 'items.libraryItem.mediaFile']);
 
-        $userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->get();
+        $userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->limit(100)->get();
 
         return Inertia::render('feeds/edit', [
             'feed' => $feed,
@@ -74,7 +76,7 @@ class FeedController extends Controller
         $feed->update([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'slug' => Str::slug($validated['title']),
+            'slug' => $this->generateUniqueSlug($validated['title'], $feed->id),
             'is_public' => $validated['is_public'] ?? false,
         ]);
 
@@ -105,6 +107,30 @@ class FeedController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', 'Feed deleted successfully!');
+    }
+
+    private function generateUniqueSlug(string $title, ?int $excludeFeedId = null): string
+    {
+        $slug = Str::slug($title);
+        $originalSlug = $slug;
+        $count = 1;
+
+        $query = Auth::user()->feeds()->where('slug', $slug);
+        if ($excludeFeedId) {
+            $query->where('id', '!=', $excludeFeedId);
+        }
+
+        while ($query->exists()) {
+            $slug = $originalSlug . '-' . $count;
+            $count++;
+
+            $query = Auth::user()->feeds()->where('slug', $slug);
+            if ($excludeFeedId) {
+                $query->where('id', '!=', $excludeFeedId);
+            }
+        }
+
+        return $slug;
     }
 
     private function syncFeedItems(Feed $feed, array $items): void

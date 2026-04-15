@@ -20,7 +20,7 @@ it('displays library page for authenticated users', function () {
 
     $response->assertOk();
     $response->assertInertia(
-        fn ($page) => $page->component('Library/Index')
+        fn ($page) => $page->component('dashboard')
     );
 });
 
@@ -64,7 +64,7 @@ it('shows only authenticated user library items', function () {
     $response = $this->actingAs($user)->get('/library');
 
     $response->assertInertia(
-        fn ($page) => $page->component('Library/Index')
+        fn ($page) => $page->component('dashboard')
             ->has('libraryItems', 1)
             ->where('libraryItems.0.title', 'User Item')
     );

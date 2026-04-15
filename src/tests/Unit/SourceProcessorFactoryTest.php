@@ -77,7 +77,7 @@ it('extracts video id from youtube live url', function () {
 });
 
 it('extracts video id from youtube live url with www', function () {
-    $videoId = YouTubeUrlValidator::extractVideoId('https://www.youtube.com/live/abc123');
+    $videoId = YouTubeUrlValidator::extractVideoId('https://www.youtube.com/live/gbW9_DxgBsE');
 
-    expect($videoId)->toBe('abc123');
+    expect($videoId)->toBe('gbW9_DxgBsE');
 });

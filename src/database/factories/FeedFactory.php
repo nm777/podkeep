@@ -27,7 +27,7 @@ class FeedFactory extends Factory
             'is_public' => fake()->boolean(),
             'slug' => Str::slug(fake()->sentence(3)),
             'user_guid' => Str::uuid(),
-            'token' => Str::random(32),
+            'token' => Str::random(64),
         ];
     }
 }

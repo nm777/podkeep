@@ -83,8 +83,7 @@ it('processes media file from URL correctly', function () {
     $mediaFile = $libraryItem->mediaFile;
     expect($mediaFile)->not->toBeNull();
     expect($mediaFile->file_hash)->toBe(hash('sha256', 'ID3'.str_repeat("\x00", 100).'fake audio content'));
-    // MIME type is detected from file extension by the system
-    expect($mediaFile->mime_type)->toBe('application/octet-stream'); // New validator returns octet-stream for unknown content
+    expect($mediaFile->mime_type)->toBe('application/octet-stream');
 });
 
 it('handles URL download failures gracefully', function () {

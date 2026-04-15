@@ -29,7 +29,11 @@ class MediaProcessingService
                 return $duplicateResult;
             }
 
-            $tempPath = $this->downloader->downloadFromUrl($sourceUrl);
+            $contents = $this->downloader->downloadFromUrl($sourceUrl);
+
+            $extension = pathinfo(parse_url($sourceUrl, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'mp3';
+            $tempPath = 'temp-downloads/' . uniqid() . '.' . $extension;
+            Storage::disk('public')->put($tempPath, $contents);
 
             try {
                 return $this->processFromFile($libraryItem, $tempPath, $sourceUrl);
