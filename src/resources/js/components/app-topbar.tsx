@@ -6,7 +6,7 @@ import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { useAppearance } from '@/hooks/use-appearance';
 import { useColorScheme, type ColorScheme } from '@/hooks/use-color-scheme';
 import { Link, router, usePage } from '@inertiajs/react';
-import { LogOut, Moon, Palette, Settings, Sun, User } from 'lucide-react';
+import { LogOut, Moon, Palette, Settings, Sun, User, Users } from 'lucide-react';
 
 export default function AppTopbar() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,6 +101,19 @@ export default function AppTopbar() {
                                 </Link>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
+                        {auth.user.is_admin && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem asChild>
+                                        <Link className="block w-full cursor-pointer" href="/admin/users" as="button" onClick={cleanup}>
+                                            <Users className="mr-2 h-4 w-4" />
+                                            User Management
+                                        </Link>
+                                    </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                            </>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
                             <Link className="block w-full cursor-pointer" method="post" href={route('logout')} as="button" onClick={handleLogout}>
