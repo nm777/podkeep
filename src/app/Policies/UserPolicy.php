@@ -35,7 +35,7 @@ class UserPolicy
      */
     public function approve(User $user, User $model): bool
     {
-        return $user->isAdmin() && $model->isPending();
+        return $user->isAdmin() && $user->id !== $model->id;
     }
 
     /**
@@ -43,7 +43,7 @@ class UserPolicy
      */
     public function reject(User $user, User $model): bool
     {
-        return $user->isAdmin() && $model->isPending();
+        return $user->isAdmin() && $user->id !== $model->id;
     }
 
     /**

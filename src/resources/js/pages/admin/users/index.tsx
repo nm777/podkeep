@@ -107,62 +107,6 @@ export default function UserManagement() {
                         <CardTitle>All Users</CardTitle>
                     </CardHeader>
                     <CardContent>
-<<<<<<< Updated upstream
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b">
-                                        <th className="p-2 text-left">Name</th>
-                                        <th className="p-2 text-left">Email</th>
-                                        <th className="p-2 text-left">Status</th>
-                                        <th className="p-2 text-left">Admin</th>
-                                        <th className="p-2 text-left">Joined</th>
-                                        <th className="p-2 text-left">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredUsers.map((user) => (
-                                        <tr key={user.id} className="border-b">
-                                            <td className="p-2">{user.name}</td>
-                                            <td className="p-2">{user.email}</td>
-                                            <td className="p-2">{getStatusBadge(user.approval_status)}</td>
-                                            <td className="p-2">
-                                                <Badge variant={user.is_admin ? 'default' : 'secondary'}>{user.is_admin ? 'Yes' : 'No'}</Badge>
-                                            </td>
-                                            <td className="p-2">{new Date(user.created_at).toLocaleDateString()}</td>
-                                            <td className="p-2">
-                                                <div className="flex gap-2">
-                                                    {user.approval_status === 'pending' && (
-                                                        <>
-                                                            <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
-                                                                {approveForm.processing ? 'Approving...' : 'Approve'}
-                                                            </Button>
-                                                            <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
-                                                                Reject
-                                                            </Button>
-                                                        </>
-                                                    )}
-                                                    {user.approval_status !== 'rejected' && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => handleToggleAdmin(user)}
-                                                            disabled={toggleAdminForm.processing}
-                                                        >
-                                                            {toggleAdminForm.processing
-                                                                ? 'Updating...'
-                                                                : user.is_admin
-                                                                  ? 'Remove Admin'
-                                                                  : 'Make Admin'}
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-=======
                         <div className="divide-y">
                             {filteredUsers.map((user) => (
                                 <div key={user.id} className="py-3">
@@ -180,34 +124,36 @@ export default function UserManagement() {
                                         Joined {new Date(user.created_at).toLocaleDateString()}
                                     </div>
                                     <div className="mt-2 flex flex-wrap gap-2">
-                                        {user.approval_status === 'pending' && (
-                                            <>
-                                                <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
-                                                    {approveForm.processing ? 'Approving...' : 'Approve'}
-                                                </Button>
-                                                <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
-                                                    Reject
-                                                </Button>
-                                            </>
-                                        )}
-                                        {user.approval_status !== 'rejected' && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleToggleAdmin(user)}
-                                                disabled={toggleAdminForm.processing}
-                                            >
-                                                {toggleAdminForm.processing
-                                                    ? 'Updating...'
-                                                    : user.is_admin
-                                                      ? 'Remove Admin'
-                                                      : 'Make Admin'}
+                                        {user.approval_status !== 'approved' && (
+                                            <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
+                                                {approveForm.processing ? 'Approving...' : 'Approve'}
                                             </Button>
                                         )}
+                                        {user.approval_status !== 'rejected' && (
+                                            <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
+                                                Reject
+                                            </Button>
+                                        )}
+                                        {user.approval_status === 'rejected' && (
+                                            <Button size="sm" variant="outline" onClick={() => setRejectingUser(user)}>
+                                                Reject (update reason)
+                                            </Button>
+                                        )}
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleToggleAdmin(user)}
+                                            disabled={toggleAdminForm.processing}
+                                        >
+                                            {toggleAdminForm.processing
+                                                ? 'Updating...'
+                                                : user.is_admin
+                                                  ? 'Remove Admin'
+                                                  : 'Make Admin'}
+                                        </Button>
                                     </div>
                                 </div>
                             ))}
->>>>>>> Stashed changes
                         </div>
                     </CardContent>
                 </Card>
