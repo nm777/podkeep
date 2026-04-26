@@ -20,6 +20,7 @@ describe('YouTubeProcessingService duplicate handling', function () {
             'user_id' => $user->id,
             'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             'processing_status' => ProcessingStatusType::PENDING,
+            'media_file_id' => null, // Explicitly set to null to test initial download
         ]);
 
         $mediaFile = MediaFile::factory()->create([

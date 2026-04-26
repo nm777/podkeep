@@ -57,10 +57,14 @@ class YouTubeProcessingService
             'youtube_url' => $youtubeUrl,
         ]);
 
-        // Check for duplicates first
-        $duplicateResult = $this->duplicateProcessor->processUrlDuplicate($libraryItem, $youtubeUrl);
-        if (isset($duplicateResult['media_file']) && $duplicateResult['media_file']) {
-            return $duplicateResult;
+        // Skip duplicate check if this is a redownload (item already has a media file)
+        // This prevents the system from finding the existing media file as a "duplicate" 
+        // and skipping the actual download
+        if (! $libraryItem->media_file_id) {
+            $duplicateResult = $this->duplicateProcessor->processUrlDuplicate($libraryItem, $youtubeUrl);
+            if (isset($duplicateResult['media_file']) && $duplicateResult['media_file']) {
+                return $duplicateResult;
+            }
         }
 
         // Download and process the video
