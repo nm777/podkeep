@@ -21,6 +21,11 @@ class ProcessYouTubeAudio implements ShouldQueue
         protected string $youtubeUrl,
     ) {}
 
+    public function getLibraryItemId(): int
+    {
+        return $this->libraryItem->id;
+    }
+
     /**
      * Execute the job.
      */

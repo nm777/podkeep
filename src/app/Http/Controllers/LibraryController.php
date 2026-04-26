@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\ProcessingStatusType;
 use App\Http\Requests\LibraryItemRequest;
 use App\Http\Requests\UpdateLibraryItemRequest;
+use App\Jobs\ProcessYouTubeAudio;
+use App\Jobs\RedownloadMediaFile;
 use App\Models\LibraryItem;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Http\RedirectResponse;
@@ -86,6 +88,36 @@ class LibraryController extends Controller
 
         return redirect()->route('library.index')
             ->with('success', 'Processing has been restarted.');
+    }
+
+    public function redownload($id): RedirectResponse
+    {
+        $libraryItem = LibraryItem::findOrFail($id);
+
+        Gate::authorize('update', $libraryItem);
+
+        if (! $libraryItem->mediaFile) {
+            return back()->with('error', 'No media file associated with this library item.');
+        }
+
+        if (! $libraryItem->mediaFile->source_url) {
+            return back()->with('error', 'Cannot redownload: no source URL available for this media file.');
+        }
+
+        $libraryItem->update([
+            'processing_status' => ProcessingStatusType::PROCESSING,
+            'processing_started_at' => now(),
+            'processing_completed_at' => null,
+            'processing_error' => null,
+        ]);
+
+        if ($libraryItem->source_type === 'youtube') {
+            dispatch(new ProcessYouTubeAudio($libraryItem, $libraryItem->source_url));
+        } else {
+            dispatch(new RedownloadMediaFile($libraryItem));
+        }
+
+        return back()->with('success', 'Media file is being redownloaded.');
     }
 
     public function update(UpdateLibraryItemRequest $request, $id): RedirectResponse

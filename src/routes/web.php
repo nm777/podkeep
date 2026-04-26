@@ -63,6 +63,10 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::post('library/{id}/retry', [LibraryController::class, 'retry'])
         ->name('library.retry')
         ->middleware('throttle:10,1');
+
+    Route::post('library/{id}/redownload', [LibraryController::class, 'redownload'])
+        ->name('library.redownload')
+        ->middleware('throttle:10,1');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

@@ -17,7 +17,7 @@ import { ProcessingStatusHelper } from '@/lib/processing-status';
 import { getAbsoluteRssUrl, getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
 import { type Feed, type LibraryItem } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { AlertCircle, Copy, Edit, Eye, EyeOff, FileAudio, FolderPlus, Pencil, Play, RefreshCw, Rss, Smartphone, Trash2 } from 'lucide-react';
+import { AlertCircle, ArrowDownToLine, Copy, Edit, Eye, EyeOff, FileAudio, FolderPlus, Pencil, Play, RefreshCw, Rss, Smartphone, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type Tab = 'feeds' | 'library';
@@ -134,6 +134,25 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                 router.reload({ only: ['libraryItems'] });
             },
         });
+    };
+
+    const handleRedownload = (itemId: number) => {
+        router.post(
+            route('library.redownload', itemId),
+            {},
+            {
+                onSuccess: () => {
+                    router.reload({ only: ['libraryItems'] });
+                },
+                onError: (errors) => {
+                    toast({
+                        title: 'Redownload failed',
+                        description: errors.error || 'Failed to redownload media file.',
+                        variant: 'destructive',
+                    });
+                },
+            },
+        );
     };
 
     const handleEditClick = (item: LibraryItem) => {
@@ -378,6 +397,21 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                                         )}
                                         {isComplete && (
                                             <>
+                                                {item.media_file?.source_url && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
+                                                                onClick={() => handleRedownload(item.id)}
+                                                            >
+                                                                <ArrowDownToLine className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Redownload from source</TooltipContent>
+                                                    </Tooltip>
+                                                )}
                                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(item)}>
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
