@@ -30,9 +30,16 @@ it('analyzeFileUpload returns the computed hash in its result array', function (
 });
 
 it('analyzeFileUpload identifies global duplicate using the hash', function () {
+    $otherUser = User::factory()->create();
     $mediaFile = MediaFile::factory()->create([
-        'user_id' => User::factory()->create()->id,
+        'user_id' => $otherUser->id,
         'file_hash' => $this->expectedHash,
+    ]);
+
+    LibraryItem::factory()->create([
+        'user_id' => $otherUser->id,
+        'media_file_id' => $mediaFile->id,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     $result = DuplicateDetectionService::analyzeFileUpload($this->filePath, $this->user->id);

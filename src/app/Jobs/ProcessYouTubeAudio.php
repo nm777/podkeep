@@ -37,9 +37,22 @@ class ProcessYouTubeAudio implements ShouldQueue
         ]);
 
         try {
-            $processingService->processYouTubeUrl($this->libraryItem, $this->youtubeUrl);
+            $result = $processingService->processYouTubeUrl($this->libraryItem, $this->youtubeUrl);
+
+            if (isset($result['success']) && $result['success'] === false) {
+                Log::error('ProcessYouTubeAudio processing failed', [
+                    'library_item_id' => $this->libraryItem->id,
+                    'youtube_url' => $this->youtubeUrl,
+                    'error' => $result['error'] ?? 'Unknown error',
+                ]);
+            } else {
+                Log::info('ProcessYouTubeAudio completed successfully', [
+                    'library_item_id' => $this->libraryItem->id,
+                    'is_duplicate' => $result['is_duplicate'] ?? false,
+                ]);
+            }
         } catch (\Exception $e) {
-            Log::error('ProcessYouTubeAudio job failed', [
+            Log::error('ProcessYouTubeAudio job exception', [
                 'library_item_id' => $this->libraryItem->id,
                 'youtube_url' => $this->youtubeUrl,
                 'error_message' => $e->getMessage(),

@@ -60,7 +60,7 @@ describe('UrlSourceProcessor consolidation', function () {
         [$libraryItem, $message] = $result;
         expect($libraryItem->id)->toBe($existingLibraryItem->id);
         expect($libraryItem->title)->toBe('Updated Title');
-        expect($libraryItem->is_duplicate)->toBeTrue();
+        expect($libraryItem->is_duplicate)->toBeFalse();
         expect($message)->toContain('already been processed');
     });
 
@@ -102,7 +102,7 @@ describe('UrlSourceProcessor consolidation', function () {
         [$libraryItem, $message] = $result;
         expect($libraryItem)->toBeInstanceOf(LibraryItem::class);
         expect($libraryItem->media_file_id)->toBe($globalMediaFile->id);
-        expect($libraryItem->is_duplicate)->toBeTrue();
+        expect($libraryItem->is_duplicate)->toBeFalse();
         expect($message)->toContain('already been processed');
     });
 
@@ -166,6 +166,6 @@ describe('UrlSourceProcessor consolidation', function () {
         expect($result)->toHaveCount(2);
         [$libraryItem, $message] = $result;
         expect($libraryItem->media_file_id)->toBe($existingMediaFile->id);
-        expect($libraryItem->is_duplicate)->toBeTrue();
+        expect($libraryItem->is_duplicate)->toBeFalse();
     });
 });

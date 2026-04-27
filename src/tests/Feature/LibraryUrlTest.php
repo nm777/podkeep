@@ -428,6 +428,6 @@ it('multiple users can reuse same file from same URL', function () {
         ->where('title', 'User 2 Copy')
         ->first();
     expect($user2LibraryItem)->not->toBeNull();
-    expect($user2LibraryItem->media_file_id)->toBe($mediaFile->id); // Should be same - we reuse media files
-    expect($user2LibraryItem->is_duplicate)->toBeTrue(); // Cross-user links are now marked as duplicates
+    expect($user2LibraryItem->media_file_id)->toBe($mediaFile->id);
+    expect($user2LibraryItem->is_duplicate)->toBeFalse();
 });

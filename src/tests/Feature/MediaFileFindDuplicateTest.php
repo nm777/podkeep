@@ -26,6 +26,11 @@ it('findGlobalDuplicate returns matching MediaFile via DuplicateDetectionService
         'file_hash' => hash_file('sha256', Storage::disk('public')->path($tempPath)),
     ]);
 
+    LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+
     $result = DuplicateDetectionService::findGlobalDuplicate($tempPath);
     expect($result)->not->toBeNull();
     expect($result->id)->toBe($mediaFile->id);

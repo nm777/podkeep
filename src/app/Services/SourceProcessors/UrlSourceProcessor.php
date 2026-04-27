@@ -2,7 +2,10 @@
 
 namespace App\Services\SourceProcessors;
 
+use App\Enums\ProcessingStatusType;
+use App\Models\LibraryItem;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
+use Illuminate\Support\Facades\Log;
 
 class UrlSourceProcessor
 {
@@ -19,6 +22,8 @@ class UrlSourceProcessor
     {
         $userId = auth()->id();
 
+        $this->cleanupBrokenItems($sourceUrl, $userId);
+
         $analysis = $this->duplicateProcessor->analyzeUrlDuplicate($sourceUrl, $userId);
 
         if ($analysis['should_link_to_user_duplicate']) {
@@ -26,7 +31,6 @@ class UrlSourceProcessor
             $existingItem->update([
                 'title' => $validated['title'] ?? $existingItem->title,
                 'description' => $validated['description'] ?? $existingItem->description,
-                'is_duplicate' => true,
             ]);
 
             return [$existingItem, $this->strategy->getSuccessMessage(true)];
@@ -42,10 +46,6 @@ class UrlSourceProcessor
                 $userId
             );
 
-            if ($analysis['should_link_to_global_duplicate']) {
-                $libraryItem->update(['is_duplicate' => true]);
-            }
-
             return [$libraryItem, $this->strategy->getSuccessMessage(true)];
         }
 
@@ -53,5 +53,33 @@ class UrlSourceProcessor
         $this->strategy->processNewSource($libraryItem, $sourceUrl);
 
         return [$libraryItem, $this->strategy->getProcessingMessage()];
+    }
+
+    /**
+     * Remove broken library items for this user+URL before processing.
+     * These are items from previous failed attempts that would interfere.
+     */
+    private function cleanupBrokenItems(string $sourceUrl, int $userId): void
+    {
+        $brokenItems = LibraryItem::where('source_url', $sourceUrl)
+            ->where('user_id', $userId)
+            ->where(function ($query) {
+                $query->where('processing_status', ProcessingStatusType::FAILED)
+                    ->orWhereNull('media_file_id')
+                    ->orWhere('is_duplicate', true);
+            })
+            ->get();
+
+        foreach ($brokenItems as $item) {
+            Log::info('Cleaning up broken library item before re-upload', [
+                'library_item_id' => $item->id,
+                'source_url' => $sourceUrl,
+                'status' => $item->processing_status?->value,
+                'media_file_id' => $item->media_file_id,
+                'is_duplicate' => $item->is_duplicate,
+            ]);
+
+            $item->delete();
+        }
     }
 }

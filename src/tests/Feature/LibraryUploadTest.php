@@ -312,6 +312,10 @@ it('MediaFile model can check file duplicates', function () {
         'file_hash' => hash('sha256', $content),
     ]);
 
+    LibraryItem::factory()->create([
+        'media_file_id' => $mediaFile->id,
+    ]);
+
     // Test duplicate detection
     $duplicate = DuplicateDetectionService::findGlobalDuplicate($tempPath);
     expect($duplicate)->not->toBeNull();
@@ -336,6 +340,8 @@ it('marks duplicate library items and schedules cleanup', function () {
         'file_hash' => hash('sha256', 'duplicate content'),
         'file_path' => 'media/existing-file.mp3',
     ]);
+
+    Storage::disk('public')->put('media/existing-file.mp3', 'duplicate content');
 
     // Create existing library item that references the media file
     LibraryItem::factory()->create([

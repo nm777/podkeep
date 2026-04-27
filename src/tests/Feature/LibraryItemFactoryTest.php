@@ -75,19 +75,19 @@ describe('LibraryItemFactory', function () {
         $this->assertDatabaseHas('library_items', ['id' => $item->id, 'media_file_id' => $mediaFile->id]);
     });
 
-    it('marks as duplicate when media file belongs to same user', function () {
+    it('does not mark as duplicate when linking to existing media file', function () {
         $mediaFile = MediaFile::factory()->create(['user_id' => $this->user->id]);
 
         $item = $this->factory->createFromValidatedWithMediaFile(
             $mediaFile,
-            ['title' => 'Dup'],
+            ['title' => 'Linked'],
             'url',
             null,
             $this->user->id
         );
 
-        expect($item->is_duplicate)->toBeTrue();
-        expect($item->duplicate_detected_at)->not->toBeNull();
+        expect($item->is_duplicate)->toBeFalse();
+        expect($item->duplicate_detected_at)->toBeNull();
     });
 
     it('does not mark as duplicate when media file belongs to different user', function () {

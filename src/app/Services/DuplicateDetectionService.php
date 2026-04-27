@@ -37,6 +37,7 @@ class DuplicateDetectionService
 
     /**
      * Check if a file is a duplicate globally by calculating its hash.
+     * Only returns MediaFiles that have at least one valid LibraryItem reference.
      */
     public static function findGlobalDuplicate(string $filePath, ?string $precomputedHash = null): ?MediaFile
     {
@@ -46,11 +47,18 @@ class DuplicateDetectionService
             return null;
         }
 
-        return MediaFile::findByHash($fileHash);
+        $mediaFile = MediaFile::findByHash($fileHash);
+
+        if (! $mediaFile || ! self::hasValidReference($mediaFile)) {
+            return null;
+        }
+
+        return $mediaFile;
     }
 
     /**
      * Check if a file is a duplicate for a specific user by calculating its hash.
+     * Only returns MediaFiles from healthy (completed with media file) LibraryItems.
      */
     public static function findUserDuplicate(string $filePath, int $userId, ?string $precomputedHash = null): ?MediaFile
     {
@@ -60,11 +68,18 @@ class DuplicateDetectionService
             return null;
         }
 
-        return LibraryItem::findByHashForUser($fileHash, $userId)?->mediaFile;
+        $item = LibraryItem::findByHashForUser($fileHash, $userId);
+
+        if (! $item || ! $item->hasCompleted() || ! $item->media_file_id) {
+            return null;
+        }
+
+        return $item->mediaFile;
     }
 
     /**
      * Check if a URL already exists for a specific user.
+     * Only returns healthy items (completed with a media file).
      */
     public static function findUrlDuplicateForUser(string $sourceUrl, int $userId): ?LibraryItem
     {
@@ -72,11 +87,18 @@ class DuplicateDetectionService
             return null;
         }
 
-        return LibraryItem::findBySourceUrlForUser($sourceUrl, $userId);
+        $item = LibraryItem::findBySourceUrlForUser($sourceUrl, $userId);
+
+        if (! $item || ! $item->hasCompleted() || ! $item->media_file_id) {
+            return null;
+        }
+
+        return $item;
     }
 
     /**
      * Check if a URL exists globally (any user).
+     * Only returns MediaFiles that have at least one valid LibraryItem reference.
      */
     public static function findGlobalUrlDuplicate(string $sourceUrl): ?MediaFile
     {
@@ -84,7 +106,45 @@ class DuplicateDetectionService
             return null;
         }
 
-        return MediaFile::findBySourceUrl($sourceUrl);
+        $mediaFile = MediaFile::findBySourceUrl($sourceUrl);
+
+        if (! $mediaFile || ! self::hasValidReference($mediaFile)) {
+            return null;
+        }
+
+        return $mediaFile;
+    }
+
+    /**
+     * Check if a MediaFile has at least one non-duplicate LibraryItem.
+     * Orphaned MediaFiles (no valid references) should not be treated as duplicates.
+     */
+    private static function hasValidReference(MediaFile $mediaFile): bool
+    {
+        return $mediaFile->libraryItems()->where('is_duplicate', false)->exists();
+    }
+
+    /**
+     * Remove orphaned MediaFiles by hash that have no valid LibraryItem references.
+     * Prevents unique constraint violations when creating new MediaFiles
+     * after previous failed processing attempts.
+     */
+    public static function cleanupOrphanedByHash(string $fileHash): void
+    {
+        $mediaFile = MediaFile::findByHash($fileHash);
+
+        if (! $mediaFile || self::hasValidReference($mediaFile)) {
+            return;
+        }
+
+        Log::info('Cleaning up orphaned media file by hash', [
+            'media_file_id' => $mediaFile->id,
+            'file_hash' => $fileHash,
+            'file_path' => $mediaFile->file_path,
+        ]);
+
+        Storage::disk('public')->delete($mediaFile->file_path);
+        $mediaFile->delete();
     }
 
     /**

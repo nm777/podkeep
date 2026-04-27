@@ -5,6 +5,8 @@ namespace App\Services\MediaProcessing;
 use App\Enums\ProcessingStatusType;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
+use App\Services\DuplicateDetectionService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class MediaProcessingService
@@ -69,18 +71,32 @@ class MediaProcessingService
             // Check for duplicates
             $duplicateResult = $this->duplicateProcessor->processFileDuplicate($libraryItem, $filePath);
             if ($duplicateResult['media_file']) {
-                return $duplicateResult;
+                $existingMediaFile = $duplicateResult['media_file'];
+
+                if ($this->storageManager->fileExists($existingMediaFile->file_path)) {
+                    return $duplicateResult;
+                }
+
+                Log::warning('Media file record exists but file missing from disk, recreating', [
+                    'library_item_id' => $libraryItem->id,
+                    'media_file_id' => $existingMediaFile->id,
+                    'file_path' => $existingMediaFile->file_path,
+                ]);
+
+                $existingMediaFile->delete();
             }
 
             // Validate and get file metadata
             $fullPath = Storage::disk('public')->path($filePath);
             $metadata = $this->validator->validate($fullPath);
+            $fileHash = hash_file('sha256', $fullPath);
+
+            DuplicateDetectionService::cleanupOrphanedByHash($fileHash);
 
             // Move file to permanent location
             $fileData = $this->storageManager->moveTempFile($filePath, $sourceUrl);
             $fileData = array_merge($fileData, $metadata);
 
-            // Create media file record
             $mediaFile = MediaFile::create([
                 'user_id' => $libraryItem->user_id,
                 'file_path' => $fileData['file_path'],

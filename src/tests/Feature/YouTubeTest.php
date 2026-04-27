@@ -1,6 +1,8 @@
 <?php
 
 use App\Jobs\ProcessYouTubeAudio;
+use App\Enums\ProcessingStatusType;
+use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 use Illuminate\Support\Facades\Queue;
@@ -60,10 +62,17 @@ it('reuses existing media file when same YouTube URL is provided', function () {
 
     $user = User::factory()->create();
 
-    // Create an existing media file from YouTube URL
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
         'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    ]);
+
+    LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+        'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        'source_type' => 'youtube',
+        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
     ]);
 
     $response = $this->actingAs($user)->post('/library', [

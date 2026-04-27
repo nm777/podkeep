@@ -219,14 +219,20 @@ it('detects duplicate YouTube URLs correctly', function () {
 
     $user1 = User::factory()->create();
 
-    // Create a media file for user1 with YouTube URL
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user1->id,
         'source_url' => 'https://www.youtube.com/watch?v=test123',
         'file_hash' => 'youtube-hash-123',
     ]);
 
-    // User1 tries to add same YouTube URL (should show duplicate warning)
+    LibraryItem::factory()->create([
+        'user_id' => $user1->id,
+        'media_file_id' => $mediaFile->id,
+        'source_url' => 'https://www.youtube.com/watch?v=test123',
+        'source_type' => 'youtube',
+        'processing_status' => ProcessingStatusType::COMPLETED,
+    ]);
+
     $response = actingAs($user1)
         ->post('/library', [
             'title' => 'Duplicate YouTube',

@@ -61,8 +61,7 @@ class LibraryItemFactory
             'source_type' => $sourceType,
             'source_url' => $sourceUrl,
             'media_file_id' => $mediaFile->id,
-            'is_duplicate' => $mediaFile->user_id === $currentUserId,
-            'duplicate_detected_at' => $mediaFile->user_id === $currentUserId ? now() : null,
+            'is_duplicate' => false,
             'processing_status' => ProcessingStatusType::COMPLETED,
             'processing_completed_at' => now(),
         ]);

@@ -63,7 +63,10 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             $existingMediaFile = MediaFile::factory()->create([
                 'user_id' => $this->user->id,
                 'file_hash' => $fileHash,
+                'file_path' => 'media/existing-file-dup.mp3',
             ]);
+
+            Storage::disk('public')->put('media/existing-file-dup.mp3', $fileContent);
 
             // Create existing library item that links to media file
             $existingLibraryItem = LibraryItem::factory()->create([
@@ -136,10 +139,14 @@ describe('UnifiedDuplicateProcessor Integration', function () {
         it('handles cross-user URL duplicates correctly', function () {
             $otherUser = User::factory()->create();
 
-            // Create media file for different user
             $existingMediaFile = MediaFile::factory()->create([
                 'user_id' => $otherUser->id,
                 'source_url' => 'https://example.com/shared-audio.mp3',
+            ]);
+
+            LibraryItem::factory()->create([
+                'user_id' => $otherUser->id,
+                'media_file_id' => $existingMediaFile->id,
             ]);
 
             $libraryItem = LibraryItem::factory()->create([
@@ -150,7 +157,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             $result = $this->processor->processUrlDuplicate($libraryItem, 'https://example.com/shared-audio.mp3');
 
             expect($result['success'])->toBeTrue();
-            expect($result['is_duplicate'])->toBeFalse(); // Cross-user is not marked as duplicate
+            expect($result['is_duplicate'])->toBeFalse();
             expect($result['media_file']->id)->toBe($existingMediaFile->id);
         });
 
@@ -159,10 +166,14 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             $fileContent = 'shared file content';
             $fileHash = hash('sha256', $fileContent);
 
-            // Create media file for different user
             $existingMediaFile = MediaFile::factory()->create([
                 'user_id' => $otherUser->id,
                 'file_hash' => $fileHash,
+            ]);
+
+            LibraryItem::factory()->create([
+                'user_id' => $otherUser->id,
+                'media_file_id' => $existingMediaFile->id,
             ]);
 
             $libraryItem = LibraryItem::factory()->create([
@@ -175,7 +186,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             $result = $this->processor->processFileDuplicate($libraryItem, $filePath);
 
             expect($result['success'])->toBeTrue();
-            expect($result['is_duplicate'])->toBeFalse(); // Cross-user is not marked as duplicate
+            expect($result['is_duplicate'])->toBeFalse();
             expect($result['media_file']->id)->toBe($existingMediaFile->id);
         });
     });

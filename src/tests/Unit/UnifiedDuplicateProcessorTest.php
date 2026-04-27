@@ -80,6 +80,11 @@ describe('UnifiedDuplicateProcessor', function () {
                 'source_url' => 'https://example.com/shared-audio.mp3',
             ]);
 
+            LibraryItem::factory()->create([
+                'user_id' => $otherUser->id,
+                'media_file_id' => $mediaFile->id,
+            ]);
+
             $libraryItem = LibraryItem::factory()->create([
                 'user_id' => $this->user->id,
                 'source_url' => 'https://example.com/shared-audio.mp3',
@@ -92,15 +97,14 @@ describe('UnifiedDuplicateProcessor', function () {
             expect($result['media_file']->id)->toBe($mediaFile->id);
             expect($result['message'])->toContain('Linked to existing media file');
 
-            // Verify library item was updated
             $libraryItem->refresh();
             expect($libraryItem->is_duplicate)->toBeFalse();
             expect($libraryItem->media_file_id)->toBe($mediaFile->id);
             expect($libraryItem->processing_status)->toBe(ProcessingStatusType::COMPLETED);
         });
 
-        it('handles user media file only scenario', function () {
-            $mediaFile = MediaFile::factory()->create([
+        it('handles user media file only as no duplicate when orphaned', function () {
+            MediaFile::factory()->create([
                 'user_id' => $this->user->id,
                 'source_url' => 'https://example.com/media-file-only.mp3',
             ]);
@@ -114,8 +118,7 @@ describe('UnifiedDuplicateProcessor', function () {
 
             expect($result['success'])->toBeTrue();
             expect($result['is_duplicate'])->toBeFalse();
-            expect($result['media_file']->id)->toBe($mediaFile->id);
-            expect($result['message'])->toContain('Linked to existing media file');
+            expect($result['media_file'])->toBeNull();
         });
     });
 
@@ -181,10 +184,14 @@ describe('UnifiedDuplicateProcessor', function () {
             $fileContent = 'shared file content';
             $fileHash = hash('sha256', $fileContent);
 
-            // Create existing media file for different user
             $existingMediaFile = MediaFile::factory()->create([
                 'user_id' => $otherUser->id,
                 'file_hash' => $fileHash,
+            ]);
+
+            LibraryItem::factory()->create([
+                'user_id' => $otherUser->id,
+                'media_file_id' => $existingMediaFile->id,
             ]);
 
             $libraryItem = LibraryItem::factory()->create([
@@ -201,7 +208,6 @@ describe('UnifiedDuplicateProcessor', function () {
             expect($result['media_file']->id)->toBe($existingMediaFile->id);
             expect($result['message'])->toContain('Linked to existing media file');
 
-            // Verify library item was updated
             $libraryItem->refresh();
             expect($libraryItem->is_duplicate)->toBeFalse();
             expect($libraryItem->media_file_id)->toBe($existingMediaFile->id);

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Requests\LibraryItemRequest;
+use App\Enums\ProcessingStatusType;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
@@ -105,10 +106,10 @@ describe('UnifiedSourceProcessor Edge Cases', function () {
         expect($libraryItem->user_id)->toBe($this->user->id);
     });
 
-    it('links to existing media file when user media file only edge case', function () {
+    it('treats orphaned media file as new when no valid library item exists', function () {
         $this->actingAs($this->user);
 
-        $mediaFile = MediaFile::factory()->create([
+        MediaFile::factory()->create([
             'user_id' => $this->user->id,
             'source_url' => 'https://example.com/orphan.mp3',
         ]);
@@ -117,12 +118,13 @@ describe('UnifiedSourceProcessor Edge Cases', function () {
 
         $result = $processor->process(
             new LibraryItemRequest,
-            ['title' => 'Re-link'],
+            ['title' => 'Fresh Upload'],
             'url',
             'https://example.com/orphan.mp3'
         );
 
         [$libraryItem, $message] = $result;
-        expect($libraryItem->media_file_id)->toBe($mediaFile->id);
+        expect($libraryItem->media_file_id)->toBeNull();
+        expect($libraryItem->processing_status)->toBe(ProcessingStatusType::PENDING);
     });
 });

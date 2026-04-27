@@ -74,7 +74,10 @@ describe('media_file_id persistence', function () {
         $existingMediaFile = MediaFile::factory()->create([
             'user_id' => $this->user->id,
             'file_hash' => $hash,
+            'file_path' => 'media/existing-user-dup.mp3',
         ]);
+
+        Storage::disk('public')->put('media/existing-user-dup.mp3', $content);
 
         LibraryItem::factory()->create([
             'user_id' => $this->user->id,
@@ -109,7 +112,10 @@ describe('media_file_id persistence', function () {
         $existingMediaFile = MediaFile::factory()->create([
             'user_id' => $otherUser->id,
             'file_hash' => $hash,
+            'file_path' => 'media/existing-global-dup.mp3',
         ]);
+
+        Storage::disk('public')->put('media/existing-global-dup.mp3', $content);
 
         LibraryItem::factory()->create([
             'user_id' => $otherUser->id,

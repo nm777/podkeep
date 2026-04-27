@@ -39,6 +39,8 @@ test('finds global duplicate by hash', function () {
         'file_hash' => hash('sha256', 'test content'),
     ]);
 
+    LibraryItem::factory()->create(['media_file_id' => $mediaFile->id]);
+
     $duplicate = DuplicateDetectionService::findGlobalDuplicate($filePath);
 
     expect($duplicate)->not->toBeNull();
@@ -100,6 +102,11 @@ test('finds global url duplicate', function () {
         'source_url' => $sourceUrl,
     ]);
 
+    LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+
     $duplicate = DuplicateDetectionService::findGlobalUrlDuplicate($sourceUrl);
 
     expect($duplicate)->not->toBeNull();
@@ -135,9 +142,14 @@ test('analyzes file upload with global duplicate only', function () {
     $filePath = 'media/test-audio.mp3';
     Storage::disk('public')->put($filePath, 'test content');
 
-    MediaFile::factory()->create([
+    $mediaFile = MediaFile::factory()->create([
         'user_id' => $user1->id,
         'file_hash' => hash('sha256', 'test content'),
+    ]);
+
+    LibraryItem::factory()->create([
+        'user_id' => $user1->id,
+        'media_file_id' => $mediaFile->id,
     ]);
 
     $result = DuplicateDetectionService::analyzeFileUpload($filePath, $user2->id);
@@ -180,9 +192,14 @@ test('analyzes url source with global duplicate', function () {
     $user2 = User::factory()->create();
     $sourceUrl = 'https://example.com/audio.mp3';
 
-    MediaFile::factory()->create([
+    $mediaFile = MediaFile::factory()->create([
         'user_id' => $user1->id,
         'source_url' => $sourceUrl,
+    ]);
+
+    LibraryItem::factory()->create([
+        'user_id' => $user1->id,
+        'media_file_id' => $mediaFile->id,
     ]);
 
     $result = DuplicateDetectionService::analyzeUrlSource($sourceUrl, $user2->id);
@@ -229,9 +246,9 @@ test('detects user media file only edge case', function () {
 
     $result = DuplicateDetectionService::analyzeUrlSource($sourceUrl, $user->id);
 
-    expect($result['is_user_duplicate'])->toBeTrue();
-    expect($result['user_media_file_only'])->toBeTrue();
-    expect($result['should_link_to_user_media_file'])->toBeTrue();
+    expect($result['is_user_duplicate'])->toBeFalse();
+    expect($result['is_global_duplicate'])->toBeFalse();
+    expect($result['should_create_new_file'])->toBeTrue();
 });
 
 test('handles empty url gracefully', function () {

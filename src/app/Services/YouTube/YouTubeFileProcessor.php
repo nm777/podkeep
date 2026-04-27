@@ -5,6 +5,7 @@ namespace App\Services\YouTube;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
+use App\Services\DuplicateDetectionService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -28,29 +29,43 @@ class YouTubeFileProcessor
 
         Log::info('Calculated file info', [
             'library_item_id' => $libraryItem->id,
-            'full_path' => $fullPath,
             'file_hash' => $fileHash,
-            'extension' => $extension,
             'final_path' => $finalPath,
         ]);
 
-        // Check for duplicates
         $duplicateResult = $this->duplicateProcessor->processFileDuplicate($libraryItem, $downloadedFile);
 
-        if ($duplicateResult['is_duplicate']) {
-            // Clean up temp file
-            Storage::disk('public')->delete($downloadedFile);
+        if ($duplicateResult['media_file']) {
+            $existingMediaFile = $duplicateResult['media_file'];
 
-            return $duplicateResult;
+            if (Storage::disk('public')->exists($existingMediaFile->file_path)) {
+                Log::info('File duplicate found, skipping file creation', [
+                    'library_item_id' => $libraryItem->id,
+                    'media_file_id' => $existingMediaFile->id,
+                    'is_duplicate' => $duplicateResult['is_duplicate'],
+                ]);
+
+                Storage::disk('public')->delete($downloadedFile);
+
+                return $duplicateResult;
+            }
+
+            Log::warning('Media file record exists but file missing from disk, recreating', [
+                'library_item_id' => $libraryItem->id,
+                'media_file_id' => $existingMediaFile->id,
+                'file_path' => $existingMediaFile->file_path,
+            ]);
+
+            $existingMediaFile->delete();
         }
 
-        // Move file to final location using hash
+        DuplicateDetectionService::cleanupOrphanedByHash($fileHash);
+
         $moveSuccess = Storage::disk('public')->move($downloadedFile, $finalPath);
 
         Log::info('File move completed', [
             'library_item_id' => $libraryItem->id,
             'move_success' => $moveSuccess,
-            'to_exists' => Storage::disk('public')->exists($finalPath),
             'final_path' => $finalPath,
         ]);
 
@@ -59,7 +74,6 @@ class YouTubeFileProcessor
 
         Log::info('Creating media file record', [
             'library_item_id' => $libraryItem->id,
-            'file_path' => $finalPath,
             'file_hash' => $fileHash,
             'mime_type' => $mimeType,
             'filesize' => $fileSize,

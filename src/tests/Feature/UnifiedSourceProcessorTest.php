@@ -153,7 +153,7 @@ describe('UnifiedSourceProcessor', function () {
             expect($libraryItem)->toBeInstanceOf(LibraryItem::class);
             expect($libraryItem->title)->toBe('Duplicate URL');
             expect($libraryItem->media_file_id)->toBe($existingMediaFile->id);
-            expect($libraryItem->is_duplicate)->toBeTrue();
+            expect($libraryItem->is_duplicate)->toBeFalse();
             expect($message)->toContain('already been processed');
         });
     });
