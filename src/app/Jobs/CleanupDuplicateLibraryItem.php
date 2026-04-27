@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class CleanupDuplicateLibraryItem implements ShouldQueue
 {
@@ -69,7 +70,7 @@ class CleanupDuplicateLibraryItem implements ShouldQueue
             'media_file_id' => $mediaFile->id,
         ]);
 
-        \Illuminate\Support\Facades\Storage::disk('public')->delete($mediaFile->file_path);
+        Storage::disk('public')->delete($mediaFile->file_path);
         $mediaFile->delete();
     }
 }

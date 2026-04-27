@@ -17,7 +17,22 @@ import { ProcessingStatusHelper } from '@/lib/processing-status';
 import { getAbsoluteRssUrl, getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
 import { type Feed, type LibraryItem } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { AlertCircle, ArrowDownToLine, Copy, Edit, Eye, EyeOff, FileAudio, FolderPlus, Pencil, Play, RefreshCw, Rss, Smartphone, Trash2 } from 'lucide-react';
+import {
+    AlertCircle,
+    ArrowDownToLine,
+    Copy,
+    Edit,
+    Eye,
+    EyeOff,
+    FileAudio,
+    FolderPlus,
+    Pencil,
+    Play,
+    RefreshCw,
+    Rss,
+    Smartphone,
+    Trash2,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type Tab = 'feeds' | 'library';

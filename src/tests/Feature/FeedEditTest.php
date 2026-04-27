@@ -41,9 +41,9 @@ it('allows feed owner to update feed details', function () {
     ]);
 
     $response->assertRedirect('/feeds');
-        $this->assertDatabaseHas('feeds', [
-            'id' => $feed->id,
-            'title' => 'Updated Feed Title',
+    $this->assertDatabaseHas('feeds', [
+        'id' => $feed->id,
+        'title' => 'Updated Feed Title',
         'description' => 'Updated description',
         'is_public' => true,
     ]);

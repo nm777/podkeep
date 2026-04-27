@@ -1,9 +1,10 @@
 <?php
 
+use App\Jobs\ProcessYouTubeAudio;
+use App\Jobs\RedownloadMediaFile;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
-use App\ProcessingStatusType;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -48,7 +49,7 @@ it('dispatches redownload job to queue', function () {
         ->assertRedirect()
         ->assertSessionHas('success');
 
-    Queue::assertPushed(\App\Jobs\RedownloadMediaFile::class, function ($job) use ($libraryItem) {
+    Queue::assertPushed(RedownloadMediaFile::class, function ($job) use ($libraryItem) {
         return $job->getLibraryItemId() === $libraryItem->id;
     });
 
@@ -271,7 +272,7 @@ it('dispatches process youtube audio job for youtube items', function () {
         ->assertRedirect()
         ->assertSessionHas('success');
 
-    Queue::assertPushed(\App\Jobs\ProcessYouTubeAudio::class, function ($job) use ($libraryItem) {
+    Queue::assertPushed(ProcessYouTubeAudio::class, function ($job) use ($libraryItem) {
         return $job->getLibraryItemId() === $libraryItem->id;
     });
 

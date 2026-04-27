@@ -1,7 +1,7 @@
 <?php
 
-use App\Jobs\ProcessYouTubeAudio;
 use App\Enums\ProcessingStatusType;
+use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
@@ -72,7 +72,7 @@ it('reuses existing media file when same YouTube URL is provided', function () {
         'media_file_id' => $mediaFile->id,
         'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         'source_type' => 'youtube',
-        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     $response = $this->actingAs($user)->post('/library', [

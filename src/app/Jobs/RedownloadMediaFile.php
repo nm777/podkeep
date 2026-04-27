@@ -17,6 +17,7 @@ class RedownloadMediaFile implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 300;
 
     public function __construct(
@@ -34,6 +35,7 @@ class RedownloadMediaFile implements ShouldQueue
 
         if (! $libraryItem->mediaFile || ! $libraryItem->mediaFile->source_url) {
             $this->failRedownload('No source URL available for this media file');
+
             return;
         }
 

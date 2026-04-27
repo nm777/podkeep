@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\LibraryItem;
+use App\Services\MediaProcessing\MediaDownloader;
 use App\Services\MediaProcessing\MediaRedownloader;
+use App\Services\MediaProcessing\MediaStorageManager;
 use Illuminate\Console\Command;
 
 class RedownloadMedia extends Command
@@ -39,8 +41,8 @@ class RedownloadMedia extends Command
         $this->info("Found {$items->count()} library item(s) to process.");
 
         $redownloader = new MediaRedownloader(
-            new \App\Services\MediaProcessing\MediaDownloader,
-            new \App\Services\MediaProcessing\MediaStorageManager,
+            new MediaDownloader,
+            new MediaStorageManager,
         );
 
         $successCount = 0;
@@ -54,14 +56,16 @@ class RedownloadMedia extends Command
             if (! $item->mediaFile || ! $item->mediaFile->source_url) {
                 $this->warn('  Skipped: No source URL available');
                 $skippedCount++;
+
                 continue;
             }
 
             if ($this->option('missing-only')) {
-                $storageManager = new \App\Services\MediaProcessing\MediaStorageManager;
+                $storageManager = new MediaStorageManager;
                 if ($item->mediaFile && $storageManager->fileExists($item->mediaFile->file_path)) {
                     $this->line('  Skipped: File exists (missing-only mode)');
                     $skippedCount++;
+
                     continue;
                 }
             }
@@ -70,6 +74,7 @@ class RedownloadMedia extends Command
                 $sourceUrl = $item->mediaFile->source_url ?? 'N/A';
                 $this->line("  Would redownload from: {$sourceUrl}");
                 $skippedCount++;
+
                 continue;
             }
 
@@ -77,7 +82,7 @@ class RedownloadMedia extends Command
                 $result = $redownloader->redownload($item);
                 $successCount++;
 
-                $message = "  Success: File redownloaded";
+                $message = '  Success: File redownloaded';
                 if ($result['hash_changed']) {
                     $message .= ' (content has changed)';
                 }

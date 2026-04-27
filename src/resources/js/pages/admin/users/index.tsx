@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 
 interface User {
@@ -79,7 +79,10 @@ export default function UserManagement() {
                 <div className="mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <Link href={route('dashboard')} className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+                            <Link
+                                href={route('dashboard')}
+                                className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                            >
                                 <ArrowLeft className="h-4 w-4" />
                                 Back
                             </Link>
@@ -125,9 +128,7 @@ export default function UserManagement() {
                                             <Badge variant={user.is_admin ? 'default' : 'secondary'}>{user.is_admin ? 'Admin' : 'User'}</Badge>
                                         </div>
                                     </div>
-                                    <div className="mt-1 text-xs text-muted-foreground">
-                                        Joined {new Date(user.created_at).toLocaleDateString()}
-                                    </div>
+                                    <div className="mt-1 text-xs text-muted-foreground">Joined {new Date(user.created_at).toLocaleDateString()}</div>
                                     <div className="mt-2 flex flex-wrap gap-2">
                                         {user.approval_status !== 'approved' && (
                                             <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
@@ -150,11 +151,7 @@ export default function UserManagement() {
                                             onClick={() => handleToggleAdmin(user)}
                                             disabled={toggleAdminForm.processing}
                                         >
-                                            {toggleAdminForm.processing
-                                                ? 'Updating...'
-                                                : user.is_admin
-                                                  ? 'Remove Admin'
-                                                  : 'Make Admin'}
+                                            {toggleAdminForm.processing ? 'Updating...' : user.is_admin ? 'Remove Admin' : 'Make Admin'}
                                         </Button>
                                     </div>
                                 </div>

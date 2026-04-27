@@ -3,7 +3,6 @@
 namespace App\Services\MediaProcessing;
 
 use App\Models\LibraryItem;
-use App\Models\MediaFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 

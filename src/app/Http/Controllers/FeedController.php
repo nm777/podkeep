@@ -121,7 +121,7 @@ class FeedController extends Controller
         }
 
         while ($query->exists()) {
-            $slug = $originalSlug . '-' . $count;
+            $slug = $originalSlug.'-'.$count;
             $count++;
 
             $query = Auth::user()->feeds()->where('slug', $slug);
