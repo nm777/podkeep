@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import ItemActions from '@/components/library-item-actions';
+import StatusBadge from '@/components/library-item-status-badge';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
 import { type LibraryItem } from '@/types';
-import { AlertCircle, ArrowDownToLine, Pencil, Play, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertCircle, Play } from 'lucide-react';
 
 interface LibraryItemRowProps {
     item: LibraryItem;
@@ -53,56 +54,8 @@ export default function LibraryItemRow({ item, onPlay, onEdit, onDelete, onRetry
             )}
 
             <div className="flex items-center gap-1">
-                {isComplete && <span className="text-xs text-green-600 dark:text-green-400">{status.getIcon()}</span>}
-                {isActive && (
-                    <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
-                        {status.getIcon()}
-                        {status.getDisplayName()}
-                    </span>
-                )}
-                {isFailed && (
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <span className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                                {status.getIcon()}
-                                Failed
-                            </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>{item.processing_error || 'Processing failed.'}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                )}
-                {isComplete && (
-                    <>
-                        {item.media_file?.source_url && (
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onRedownload(item.id)}>
-                                        <ArrowDownToLine className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Redownload from source</TooltipContent>
-                            </Tooltip>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(item)}>
-                            <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => onDelete(item.id)}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </>
-                )}
-                {isFailed && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onRetry(item.id)}>
-                        <RefreshCw className="h-4 w-4" />
-                    </Button>
-                )}
+                <StatusBadge item={item} isComplete={isComplete} isActive={isActive} isFailed={isFailed} />
+                <ItemActions item={item} isComplete={isComplete} isFailed={isFailed} onEdit={onEdit} onDelete={onDelete} onRetry={onRetry} onRedownload={onRedownload} />
             </div>
         </div>
     );

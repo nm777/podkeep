@@ -11,12 +11,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useToast } from '@/hooks/use-toast';
+import { useDashboardActions } from '@/hooks/use-dashboard-actions';
 import AppLayout from '@/layouts/app-layout';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
-import { getAbsoluteRssUrl } from '@/lib/subscribe-urls';
 import { type Feed, type LibraryItem } from '@/types';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { FileAudio, FolderPlus, Rss } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -29,30 +28,34 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
     const feeds: Feed[] = pageProps.feeds;
     const libraryItems: LibraryItem[] = pageProps.libraryItems;
     const flash: { success?: string; warning?: string } | undefined = pageProps.flash;
-
     const activeTab = activeTabProp ?? 'feeds';
-    const [deleteFeedDialogOpen, setDeleteFeedDialogOpen] = useState(false);
-    const [feedToDelete, setFeedToDelete] = useState<number | null>(null);
-    const [deleteItemDialogOpen, setDeleteItemDialogOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState<number | null>(null);
     const [playingItem, setPlayingItem] = useState<LibraryItem | null>(null);
-    const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [itemToEdit, setItemToEdit] = useState<LibraryItem | null>(null);
-    const { toast } = useToast();
 
     const {
-        delete: destroyItemForm,
-        post: retryForm,
-        put,
-        processing: itemProcessing,
+        deleteFeedDialogOpen,
+        setDeleteFeedDialogOpen,
+        feedToDelete,
+        setFeedToDelete,
+        deleteItemDialogOpen,
+        setDeleteItemDialogOpen,
+        itemToDelete,
+        setItemToDelete,
+        editDialogOpen,
+        itemProcessing,
         errors,
         data,
         setData,
-    } = useForm({
-        title: '',
-        description: '',
-        published_at: '',
-    });
+        handleDeleteFeedClick,
+        handleDeleteFeedConfirm,
+        handleCopyUrl,
+        handleDeleteItemClick,
+        handleDeleteItemConfirm,
+        handleRetry,
+        handleRedownload,
+        handleEditClick,
+        handleEditSubmit,
+        handleEditDialogClose,
+    } = useDashboardActions();
 
     useEffect(() => {
         const hasProcessingItems = libraryItems.some(
@@ -68,121 +71,6 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
 
         return () => clearInterval(interval);
     }, [libraryItems]);
-
-    const handleDeleteFeedClick = (feedId: number) => {
-        setFeedToDelete(feedId);
-        setDeleteFeedDialogOpen(true);
-    };
-
-    const handleDeleteFeedConfirm = () => {
-        if (feedToDelete) {
-            router.delete(route('feeds.destroy', feedToDelete), {
-                onSuccess: () => {
-                    setDeleteFeedDialogOpen(false);
-                    setFeedToDelete(null);
-                },
-                onError: () => {
-                    toast({ title: 'Error', description: 'Failed to delete feed.', variant: 'destructive' });
-                    setDeleteFeedDialogOpen(false);
-                    setFeedToDelete(null);
-                },
-            });
-        }
-    };
-
-    const handleCopyUrl = async (feed: Feed) => {
-        const fullUrl = getAbsoluteRssUrl(feed);
-        try {
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(fullUrl);
-            } else {
-                const textArea = document.createElement('textarea');
-                textArea.value = fullUrl;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            }
-            toast({ title: 'URL copied!', description: 'Feed URL has been copied to your clipboard.' });
-        } catch {
-            toast({ title: 'Failed to copy', description: 'Could not copy the URL to clipboard.', variant: 'destructive' });
-        }
-    };
-
-    const handleDeleteItemClick = (itemId: number) => {
-        setItemToDelete(itemId);
-        setDeleteItemDialogOpen(true);
-    };
-
-    const handleDeleteItemConfirm = () => {
-        if (itemToDelete) {
-            destroyItemForm(route('library.destroy', itemToDelete), {
-                onSuccess: () => {
-                    setDeleteItemDialogOpen(false);
-                    setItemToDelete(null);
-                    router.reload({ only: ['libraryItems'] });
-                },
-            });
-        }
-    };
-
-    const handleRetry = (itemId: number) => {
-        retryForm(route('library.retry', itemId), {
-            onSuccess: () => {
-                router.reload({ only: ['libraryItems'] });
-            },
-        });
-    };
-
-    const handleRedownload = (itemId: number) => {
-        router.post(
-            route('library.redownload', itemId),
-            {},
-            {
-                onSuccess: () => {
-                    router.reload({ only: ['libraryItems'] });
-                },
-                onError: (errors) => {
-                    toast({
-                        title: 'Redownload failed',
-                        description: errors.error || 'Failed to redownload media file.',
-                        variant: 'destructive',
-                    });
-                },
-            },
-        );
-    };
-
-    const handleEditClick = (item: LibraryItem) => {
-        setItemToEdit(item);
-        setData('title', item.title);
-        setData('description', item.description || '');
-        setData('published_at', item.published_at ? item.published_at.split('T')[0] : '');
-        setEditDialogOpen(true);
-    };
-
-    const handleEditSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (itemToEdit) {
-            put(route('library.update', itemToEdit.id), {
-                onSuccess: () => {
-                    setEditDialogOpen(false);
-                    setItemToEdit(null);
-                    router.reload({ only: ['libraryItems'] });
-                },
-            });
-        }
-    };
-
-    const handleEditDialogClose = () => {
-        setEditDialogOpen(false);
-        setItemToEdit(null);
-        setData('title', '');
-        setData('description', '');
-        setData('published_at', '');
-    };
 
     const handleUploadSuccess = () => {
         router.reload({ only: ['feeds', 'libraryItems'] });

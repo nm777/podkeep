@@ -1,15 +1,15 @@
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import FeedSelector from '@/components/feed-selector';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import SourceInputSection from '@/components/source-input-section';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useUrlHandler } from '@/hooks/use-url-handler';
+import { useMediaUploadForm } from '@/hooks/use-media-upload-form';
 import { formatFileSize } from '@/lib/format';
 import { type Feed } from '@/types';
-import { useForm } from '@inertiajs/react';
-import { AlertCircle, Globe, Loader2, Upload, Volume2, Youtube } from 'lucide-react';
+import { AlertCircle, Globe, Upload, Volume2, Youtube } from 'lucide-react';
 import { useState } from 'react';
 
 interface MediaUploadButtonProps {
@@ -29,105 +29,17 @@ export default function MediaUploadButton({
 }: MediaUploadButtonProps) {
     const isMobile = useIsMobile();
     const [isOpen, setIsOpen] = useState(false);
-    const [isDragOver, setIsDragOver] = useState(false);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [inputType, setInputType] = useState<'file' | 'url' | 'youtube'>('file');
-    const { isCheckingUrl, isFetchingYouTubeTitle, urlDuplicateWarning, handleUrlChange, setUrlDuplicateWarning } = useUrlHandler();
 
-    const { data, setData, post, processing, errors, reset, transform } = useForm({
-        title: '',
-        description: '',
-        published_at: '',
-        file: null as File | null,
-        url: '',
-        source_url: '',
-        feed_ids: [] as number[],
-    });
-
-    const handleFileSelect = (file: File) => {
-        setSelectedFile(file);
-        setData('file', file);
-        setData('url', '');
-        setData('source_url', '');
-        if (!data.title) {
-            setData('title', file.name.replace(/\.[^/.]+$/, ''));
-        }
-    };
-
-    const handleInputTypeChange = (newType: 'file' | 'url' | 'youtube') => {
-        setInputType(newType);
-        setData('file', null);
-        setData('url', '');
-        setData('source_url', '');
-        setData('title', '');
-        setData('description', '');
-        setData('published_at', '');
-        setSelectedFile(null);
-        setUrlDuplicateWarning(null);
-    };
-
-    const onUrlChange = (url: string) => {
-        setSelectedFile(null);
-        handleUrlChange(
-            url,
-            inputType,
-            data.title,
-            (key, value) => {
-                if (value !== null) {
-                    setData(key as 'url' | 'file' | 'source_url' | 'title', value as string);
-                }
-            },
-            setInputType,
-        );
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(false);
-        const files = Array.from(e.dataTransfer.files);
-        const mediaFile = files.find((file) => file.type.startsWith('audio/') || file.type.startsWith('video/'));
-        if (mediaFile) {
-            handleFileSelect(mediaFile);
-        }
-    };
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(true);
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        transform((data) => {
-            const baseData = {
-                title: data.title,
-                description: data.description,
-                published_at: data.published_at || undefined,
-                feed_ids: data.feed_ids,
-            };
-            if (inputType === 'file') {
-                return { ...baseData, file: data.file };
-            } else if (inputType === 'youtube') {
-                return { ...baseData, source_type: 'youtube', source_url: data.url };
-            } else {
-                return { ...baseData, source_type: 'url', url: data.url };
-            }
-        });
-        post(route('library.store'), {
-            onSuccess: () => {
-                reset();
-                setSelectedFile(null);
-                setIsOpen(false);
-                onUploadSuccess?.();
-            },
-        });
-    };
+    const {
+        data, setData, errors, processing,
+        selectedFile, inputType, isDragOver, setIsDragOver,
+        isCheckingUrl, isFetchingYouTubeTitle, urlDuplicateWarning,
+        handleFileSelect, handleInputTypeChange, onUrlChange, handleSubmit, handleDrop, handleReset,
+    } = useMediaUploadForm({ onUploadSuccess });
 
     const handleClose = () => {
         setIsOpen(false);
-        reset();
-        setSelectedFile(null);
-        setUrlDuplicateWarning(null);
+        handleReset();
     };
 
     const duplicateWarning = urlDuplicateWarning && (
@@ -137,15 +49,23 @@ export default function MediaUploadButton({
         </div>
     );
 
-    const trigger = (
-        <Button variant={variant} size={size}>
-            {iconOnly ? <Volume2 className="h-4 w-4" /> : <>+ Media</>}
-        </Button>
-    );
+    const submitLabel = processing
+        ? 'Processing...'
+        : isCheckingUrl || isFetchingYouTubeTitle
+          ? 'Checking...'
+          : inputType === 'file'
+            ? 'Upload'
+            : inputType === 'youtube'
+              ? 'Extract Audio'
+              : 'Add';
 
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>{trigger}</SheetTrigger>
+            <SheetTrigger asChild>
+                <Button variant={variant} size={size}>
+                    {iconOnly ? <Volume2 className="h-4 w-4" /> : <>+ Media</>}
+                </Button>
+            </SheetTrigger>
             <SheetContent
                 side={isMobile ? 'bottom' : 'right'}
                 hideClose
@@ -155,33 +75,15 @@ export default function MediaUploadButton({
                     <div className="flex items-center justify-between border-b px-4 py-3">
                         <SheetTitle className="text-base">Add Media</SheetTitle>
                         <div className="flex gap-1">
-                            <Button
-                                type="button"
-                                variant={inputType === 'file' ? 'default' : 'outline'}
-                                size="sm"
-                                className="h-7 px-2.5 text-xs"
-                                onClick={() => handleInputTypeChange('file')}
-                            >
+                            <Button type="button" variant={inputType === 'file' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5 text-xs" onClick={() => handleInputTypeChange('file')}>
                                 <Upload className="mr-1 h-3 w-3" />
                                 File
                             </Button>
-                            <Button
-                                type="button"
-                                variant={inputType === 'url' ? 'default' : 'outline'}
-                                size="sm"
-                                className="h-7 px-2.5 text-xs"
-                                onClick={() => handleInputTypeChange('url')}
-                            >
+                            <Button type="button" variant={inputType === 'url' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5 text-xs" onClick={() => handleInputTypeChange('url')}>
                                 <Globe className="mr-1 h-3 w-3" />
                                 URL
                             </Button>
-                            <Button
-                                type="button"
-                                variant={inputType === 'youtube' ? 'default' : 'outline'}
-                                size="sm"
-                                className="h-7 px-2.5 text-xs"
-                                onClick={() => handleInputTypeChange('youtube')}
-                            >
+                            <Button type="button" variant={inputType === 'youtube' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5 text-xs" onClick={() => handleInputTypeChange('youtube')}>
                                 <Youtube className="mr-1 h-3 w-3" />
                                 YouTube
                             </Button>
@@ -189,70 +91,19 @@ export default function MediaUploadButton({
                     </div>
                     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
                         <div className="flex-1 space-y-4 overflow-x-hidden overflow-y-auto px-4 py-4">
-                            {inputType === 'file' ? (
-                                <div>
-                                    <div
-                                        className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
-                                            isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600'
-                                        }`}
-                                        onDrop={handleDrop}
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={() => setIsDragOver(false)}
-                                    >
-                                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Drag and drop a file here, or click to select</p>
-                                        <input
-                                            type="file"
-                                            accept="audio/*,video/*"
-                                            onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
-                                            className="hidden"
-                                            id="file-upload"
-                                        />
-                                        <Label htmlFor="file-upload" className="cursor-pointer text-sm text-blue-600 hover:text-blue-500">
-                                            Browse Files
-                                        </Label>
-                                    </div>
-                                    {errors.file && <p className="mt-1 text-sm text-red-600">{errors.file}</p>}
-                                </div>
-                            ) : inputType === 'youtube' ? (
-                                <div>
-                                    <Label htmlFor="url">YouTube URL</Label>
-                                    <Input
-                                        id="url"
-                                        type="url"
-                                        value={data.url}
-                                        onChange={(e) => onUrlChange(e.target.value)}
-                                        placeholder="https://youtube.com/watch?v=..."
-                                        required
-                                    />
-                                    {errors.url && <p className="mt-1 text-sm text-red-600">{errors.url}</p>}
-                                    {errors.source_url && <p className="mt-1 text-sm text-red-600">{errors.source_url}</p>}
-                                    {isFetchingYouTubeTitle && (
-                                        <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            <span>Fetching video title...</span>
-                                        </div>
-                                    )}
-                                    {duplicateWarning}
-                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        Audio will be extracted from the YouTube video and added to your library.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div>
-                                    <Label htmlFor="url">Media URL</Label>
-                                    <Input
-                                        id="url"
-                                        type="url"
-                                        value={data.url}
-                                        onChange={(e) => onUrlChange(e.target.value)}
-                                        placeholder="https://example.com/audio.mp3"
-                                        required
-                                    />
-                                    {errors.url && <p className="mt-1 text-sm text-red-600">{errors.url}</p>}
-                                    {duplicateWarning}
-                                </div>
-                            )}
+                            <SourceInputSection
+                                inputType={inputType}
+                                url={data.url}
+                                onUrlChange={onUrlChange}
+                                isDragOver={isDragOver}
+                                onDrop={handleDrop}
+                                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                                onDragLeave={() => setIsDragOver(false)}
+                                onFileSelect={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                                isFetchingYouTubeTitle={isFetchingYouTubeTitle}
+                                duplicateWarning={duplicateWarning}
+                                errors={errors}
+                            />
 
                             {selectedFile && (
                                 <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -262,13 +113,7 @@ export default function MediaUploadButton({
 
                             <div>
                                 <Label htmlFor="title">Title</Label>
-                                <Input
-                                    id="title"
-                                    value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
-                                    placeholder="Enter title"
-                                    required
-                                />
+                                <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="Enter title" required />
                                 {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
                             </div>
 
@@ -286,52 +131,17 @@ export default function MediaUploadButton({
 
                             <div>
                                 <Label htmlFor="published_at">Publish Date</Label>
-                                <Input
-                                    id="published_at"
-                                    type="date"
-                                    value={data.published_at}
-                                    onChange={(e) => setData('published_at', e.target.value)}
-                                />
+                                <Input id="published_at" type="date" value={data.published_at} onChange={(e) => setData('published_at', e.target.value)} />
                                 {errors.published_at && <p className="mt-1 text-sm text-red-600">{errors.published_at}</p>}
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Defaults to today if not set</p>
                             </div>
 
-                            {feeds.length > 0 && (
-                                <div>
-                                    <Label>Add to Feeds (Optional)</Label>
-                                    <div className="mt-2 max-h-32 space-y-2 overflow-y-auto">
-                                        {feeds.map((feed) => (
-                                            <div key={feed.id} className="flex items-center space-x-2">
-                                                <Checkbox
-                                                    id={`feed-${feed.id}`}
-                                                    checked={data.feed_ids.includes(feed.id)}
-                                                    onCheckedChange={(checked: boolean) => {
-                                                        if (checked) {
-                                                            setData('feed_ids', [...data.feed_ids, feed.id]);
-                                                        } else {
-                                                            setData(
-                                                                'feed_ids',
-                                                                data.feed_ids.filter((id) => id !== feed.id),
-                                                            );
-                                                        }
-                                                    }}
-                                                />
-                                                <Label
-                                                    htmlFor={`feed-${feed.id}`}
-                                                    className="text-sm leading-none font-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                >
-                                                    {feed.title}
-                                                    {feed.is_public ? <span className="ml-2 text-xs text-gray-500">(Public)</span> : null}
-                                                </Label>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {errors.feed_ids && <p className="mt-1 text-sm text-red-600">{errors.feed_ids}</p>}
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        The item will be added to selected feeds after processing completes.
-                                    </p>
-                                </div>
-                            )}
+                            <FeedSelector
+                                feeds={feeds}
+                                selectedFeedIds={data.feed_ids}
+                                onChange={(feedIds) => setData('feed_ids', feedIds)}
+                                error={errors.feed_ids}
+                            />
                         </div>
                         <div className="border-t px-4 py-3">
                             <div className="flex justify-end gap-2">
@@ -339,15 +149,7 @@ export default function MediaUploadButton({
                                     Cancel
                                 </Button>
                                 <Button type="submit" disabled={processing || isCheckingUrl || (!selectedFile && !data.url)}>
-                                    {processing
-                                        ? 'Processing...'
-                                        : isCheckingUrl || isFetchingYouTubeTitle
-                                          ? 'Checking...'
-                                          : inputType === 'file'
-                                            ? 'Upload'
-                                            : inputType === 'youtube'
-                                              ? 'Extract Audio'
-                                              : 'Add'}
+                                    {submitLabel}
                                 </Button>
                             </div>
                         </div>

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 export function extractYouTubeVideoId(url: string): string | null {
     const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)/;
@@ -51,6 +51,16 @@ async function checkUrlDuplicate(url: string): Promise<string | null> {
     }
 }
 
+function extractFilenameFromUrl(url: string): string | null {
+    try {
+        const filename = new URL(url).pathname.split('/').pop() || '';
+        const title = filename.replace(/\.[^/.]+$/, '');
+        return title || null;
+    } catch {
+        return null;
+    }
+}
+
 interface UseUrlHandlerReturn {
     isCheckingUrl: boolean;
     isFetchingYouTubeTitle: boolean;
@@ -62,13 +72,36 @@ interface UseUrlHandlerReturn {
         onSetData: (key: string, value: string | null) => void,
         onSetInputType: (type: 'file' | 'url' | 'youtube') => void,
     ) => void;
+    setUrlDuplicateWarning: (warning: string | null) => void;
 }
 
 export function useUrlHandler(): UseUrlHandlerReturn {
     const [isCheckingUrl, setIsCheckingUrl] = useState(false);
     const [isFetchingYouTubeTitle, setIsFetchingYouTubeTitle] = useState(false);
     const [urlDuplicateWarning, setUrlDuplicateWarning] = useState<string | null>(null);
-    const [urlCheckTimeout, setUrlCheckTimeout] = useState<NodeJS.Timeout | null>(null);
+    const urlCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const scheduleDuplicateCheck = useCallback((url: string) => {
+        if (urlCheckTimeoutRef.current) {
+            clearTimeout(urlCheckTimeoutRef.current);
+        }
+
+        urlCheckTimeoutRef.current = setTimeout(async () => {
+            setIsCheckingUrl(true);
+            const warning = await checkUrlDuplicate(url);
+            setUrlDuplicateWarning(warning);
+            setIsCheckingUrl(false);
+        }, 500);
+    }, []);
+
+    const handleYouTubeUrl = useCallback(async (videoId: string, onSetData: (key: string, value: string | null) => void) => {
+        setIsFetchingYouTubeTitle(true);
+        const title = await fetchYouTubeVideoTitle(videoId);
+        setIsFetchingYouTubeTitle(false);
+        if (title) {
+            onSetData('title', title);
+        }
+    }, []);
 
     const handleUrlChange = useCallback(
         async (
@@ -91,40 +124,17 @@ export function useUrlHandler(): UseUrlHandlerReturn {
             onSetData('source_url', isYouTubeUrl ? url : '');
 
             if (isYouTubeUrl && url) {
-                setIsFetchingYouTubeTitle(true);
-                const title = await fetchYouTubeVideoTitle(videoId);
-                setIsFetchingYouTubeTitle(false);
+                await handleYouTubeUrl(videoId, onSetData);
+            } else if (!currentTitle && url) {
+                const title = extractFilenameFromUrl(url);
                 if (title) {
                     onSetData('title', title);
                 }
             }
 
-            if (!currentTitle && url && !isYouTubeUrl) {
-                try {
-                    const filename = new URL(url).pathname.split('/').pop() || '';
-                    const title = filename.replace(/\.[^/.]+$/, '');
-                    if (title) {
-                        onSetData('title', title);
-                    }
-                } catch {
-                    // Invalid URL, ignore
-                }
-            }
-
-            if (urlCheckTimeout) {
-                clearTimeout(urlCheckTimeout);
-            }
-
-            const timeout = setTimeout(async () => {
-                setIsCheckingUrl(true);
-                const warning = await checkUrlDuplicate(url);
-                setUrlDuplicateWarning(warning);
-                setIsCheckingUrl(false);
-            }, 500);
-
-            setUrlCheckTimeout(timeout);
+            scheduleDuplicateCheck(url);
         },
-        [urlCheckTimeout],
+        [handleYouTubeUrl, scheduleDuplicateCheck],
     );
 
     return { isCheckingUrl, isFetchingYouTubeTitle, urlDuplicateWarning, handleUrlChange, setUrlDuplicateWarning };
