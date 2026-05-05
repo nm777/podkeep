@@ -1,6 +1,6 @@
+import FeedFormFields from '@/components/feed-form-fields';
 import SheetPanel from '@/components/sheet-panel';
 import { Button } from '@/components/ui/button';
-import FeedFormFields from '@/components/feed-form-fields';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
