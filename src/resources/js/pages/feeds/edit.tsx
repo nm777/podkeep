@@ -4,7 +4,7 @@ import { useFeedItemReorder } from '@/hooks/use-feed-item-reorder';
 import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { type Feed, type FeedItem, type LibraryItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
 
 function LibraryItemInfo({ item }: { item: LibraryItem }) {
@@ -71,10 +71,13 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <FeedFormFields data={data} setData={setData} errors={errors} />
-                    <div>
+                    <div className="flex gap-2">
                         <Button type="submit" disabled={processing}>
                             {processing ? 'Saving...' : 'Save Changes'}
                         </Button>
+                        <Link href={route('dashboard')}>
+                            <Button type="button" variant="outline">Cancel</Button>
+                        </Link>
                     </div>
                 </form>
 
