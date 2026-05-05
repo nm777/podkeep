@@ -1,5 +1,7 @@
 import CreateFeedForm from '@/components/create-feed-form';
 import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
+import FeedCard from '@/components/feed-card';
+import LibraryItemRow from '@/components/library-item-row';
 import MediaPlayer from '@/components/media-player';
 import MediaUploadButton from '@/components/media-upload-button';
 import SheetPanel from '@/components/sheet-panel';
@@ -8,30 +10,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
-import { getAbsoluteRssUrl, getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
+import { getAbsoluteRssUrl } from '@/lib/subscribe-urls';
 import { type Feed, type LibraryItem } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
-    AlertCircle,
-    ArrowDownToLine,
-    Copy,
-    Edit,
-    Eye,
-    EyeOff,
     FileAudio,
     FolderPlus,
-    Pencil,
-    Play,
-    RefreshCw,
     Rss,
-    Smartphone,
-    Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -270,75 +260,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                     ) : (
                         <div className="divide-y rounded-lg border">
                             {feeds.map((feed) => (
-                                <div key={feed.id} className="px-4 py-3">
-                                    <p className="font-medium md:truncate">{feed.title}</p>
-                                    <div className="mt-1 flex items-center gap-2">
-                                        <span className="text-xs text-muted-foreground">{feed.items_count ?? 0} items</span>
-                                        <span
-                                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                                                feed.is_public
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
-                                            }`}
-                                        >
-                                            {feed.is_public ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                                            {feed.is_public ? 'Public' : 'Private'}
-                                        </span>
-                                        <div className="ml-auto flex items-center gap-1">
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                                        <a href={getApplePodcastsUrl(feed)} target="_blank" rel="noopener noreferrer">
-                                                            <FileAudio className="h-4 w-4" />
-                                                        </a>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Apple Podcasts</TooltipContent>
-                                            </Tooltip>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                                        <a href={getGooglePodcastsUrl(feed)} target="_blank" rel="noopener noreferrer">
-                                                            <Smartphone className="h-4 w-4" />
-                                                        </a>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Google Podcasts</TooltipContent>
-                                            </Tooltip>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopyUrl(feed)}>
-                                                        <Copy className="h-4 w-4" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Copy RSS URL</TooltipContent>
-                                            </Tooltip>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                                        <Link href={route('feeds.edit', feed.id)}>
-                                                            <Edit className="h-4 w-4" />
-                                                        </Link>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Edit</TooltipContent>
-                                            </Tooltip>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive hover:text-destructive"
-                                                        onClick={() => handleDeleteFeedClick(feed.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Delete</TooltipContent>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-                                </div>
+                                <FeedCard key={feed.id} feed={feed} onCopyUrl={handleCopyUrl} onDelete={handleDeleteFeedClick} />
                             ))}
                         </div>
                     )
@@ -349,106 +271,17 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                     </div>
                 ) : (
                     <div className="divide-y rounded-lg border">
-                        {libraryItems.map((item) => {
-                            const status = ProcessingStatusHelper.from(item.processing_status);
-                            const isComplete = status.hasCompleted();
-                            const isActive = status.isPending() || status.isProcessing();
-                            const isFailed = status.hasFailed();
-
-                            return (
-                                <div key={item.id} className="flex items-center gap-4 px-4 py-3">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 shrink-0"
-                                        disabled={!isComplete || !item.media_file}
-                                        onClick={() => item.media_file && setPlayingItem(item)}
-                                    >
-                                        <Play className="h-4 w-4" />
-                                    </Button>
-                                    <div className="min-w-0 flex-1">
-                                        <p className={`text-sm font-medium md:truncate ${!isComplete ? 'text-muted-foreground' : ''}`}>
-                                            {item.title}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {(item.published_at || item.created_at).split('T')[0]}
-                                            {item.media_file && (
-                                                <>
-                                                    {' '}
-                                                    · {formatFileSize(item.media_file.filesize)}
-                                                    {item.media_file.duration && <> · {formatDuration(item.media_file.duration)}</>}
-                                                </>
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    {item.is_duplicate && (
-                                        <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-                                            <AlertCircle className="h-3 w-3" />
-                                            Dup
-                                        </span>
-                                    )}
-
-                                    <div className="flex items-center gap-1">
-                                        {isComplete && <span className="text-xs text-green-600 dark:text-green-400">{status.getIcon()}</span>}
-                                        {isActive && (
-                                            <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
-                                                {status.getIcon()}
-                                                {status.getDisplayName()}
-                                            </span>
-                                        )}
-                                        {isFailed && (
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <span className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                                                        {status.getIcon()}
-                                                        Failed
-                                                    </span>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>{item.processing_error || 'Processing failed.'}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        )}
-                                        {isComplete && (
-                                            <>
-                                                {item.media_file?.source_url && (
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8"
-                                                                onClick={() => handleRedownload(item.id)}
-                                                            >
-                                                                <ArrowDownToLine className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Redownload from source</TooltipContent>
-                                                    </Tooltip>
-                                                )}
-                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(item)}>
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-destructive hover:text-destructive"
-                                                    onClick={() => handleDeleteItemClick(item.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </>
-                                        )}
-                                        {isFailed && (
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRetry(item.id)}>
-                                                <RefreshCw className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        {libraryItems.map((item) => (
+                            <LibraryItemRow
+                                key={item.id}
+                                item={item}
+                                onPlay={setPlayingItem}
+                                onEdit={handleEditClick}
+                                onDelete={handleDeleteItemClick}
+                                onRetry={handleRetry}
+                                onRedownload={handleRedownload}
+                            />
+                        ))}
                     </div>
                 )}
             </div>
