@@ -32,9 +32,7 @@ export default function LibraryItemRow({ item, onPlay, onEdit, onDelete, onRetry
                 <Play className="h-4 w-4" />
             </Button>
             <div className="min-w-0 flex-1">
-                <p className={`text-sm font-medium md:truncate ${!isComplete ? 'text-muted-foreground' : ''}`}>
-                    {item.title}
-                </p>
+                <p className={`text-sm font-medium md:truncate ${!isComplete ? 'text-muted-foreground' : ''}`}>{item.title}</p>
                 <p className="text-xs text-muted-foreground">
                     {(item.published_at || item.created_at).split('T')[0]}
                     {item.media_file && (

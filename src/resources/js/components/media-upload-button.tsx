@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useUrlHandler, extractYouTubeVideoId } from '@/hooks/use-url-handler';
+import { useUrlHandler } from '@/hooks/use-url-handler';
 import { formatFileSize } from '@/lib/format';
 import { type Feed } from '@/types';
 import { useForm } from '@inertiajs/react';
@@ -68,11 +68,17 @@ export default function MediaUploadButton({
 
     const onUrlChange = (url: string) => {
         setSelectedFile(null);
-        handleUrlChange(url, inputType, data.title, (key, value) => {
-            if (value !== null) {
-                setData(key as 'url' | 'file' | 'source_url' | 'title', value as string);
-            }
-        }, setInputType);
+        handleUrlChange(
+            url,
+            inputType,
+            data.title,
+            (key, value) => {
+                if (value !== null) {
+                    setData(key as 'url' | 'file' | 'source_url' | 'title', value as string);
+                }
+            },
+            setInputType,
+        );
     };
 
     const handleDrop = (e: React.DragEvent) => {
@@ -256,7 +262,13 @@ export default function MediaUploadButton({
 
                             <div>
                                 <Label htmlFor="title">Title</Label>
-                                <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="Enter title" required />
+                                <Input
+                                    id="title"
+                                    value={data.title}
+                                    onChange={(e) => setData('title', e.target.value)}
+                                    placeholder="Enter title"
+                                    required
+                                />
                                 {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
                             </div>
 
@@ -274,7 +286,12 @@ export default function MediaUploadButton({
 
                             <div>
                                 <Label htmlFor="published_at">Publish Date</Label>
-                                <Input id="published_at" type="date" value={data.published_at} onChange={(e) => setData('published_at', e.target.value)} />
+                                <Input
+                                    id="published_at"
+                                    type="date"
+                                    value={data.published_at}
+                                    onChange={(e) => setData('published_at', e.target.value)}
+                                />
                                 {errors.published_at && <p className="mt-1 text-sm text-red-600">{errors.published_at}</p>}
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Defaults to today if not set</p>
                             </div>
@@ -292,7 +309,10 @@ export default function MediaUploadButton({
                                                         if (checked) {
                                                             setData('feed_ids', [...data.feed_ids, feed.id]);
                                                         } else {
-                                                            setData('feed_ids', data.feed_ids.filter((id) => id !== feed.id));
+                                                            setData(
+                                                                'feed_ids',
+                                                                data.feed_ids.filter((id) => id !== feed.id),
+                                                            );
                                                         }
                                                     }}
                                                 />

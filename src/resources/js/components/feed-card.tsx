@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { getAbsoluteRssUrl, getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
+import { getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
 import { type Feed } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Copy, Edit, Eye, EyeOff, FileAudio, Smartphone, Trash2 } from 'lucide-react';

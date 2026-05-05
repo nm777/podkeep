@@ -13,16 +13,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
-import { formatDuration, formatFileSize } from '@/lib/format';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
 import { getAbsoluteRssUrl } from '@/lib/subscribe-urls';
 import { type Feed, type LibraryItem } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import {
-    FileAudio,
-    FolderPlus,
-    Rss,
-} from 'lucide-react';
+import { FileAudio, FolderPlus, Rss } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type Tab = 'feeds' | 'library';
