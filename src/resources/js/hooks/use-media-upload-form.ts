@@ -6,9 +6,10 @@ type InputType = 'file' | 'url' | 'youtube';
 
 interface UseMediaUploadFormOptions {
     onUploadSuccess?: () => void;
+    onClose?: () => void;
 }
 
-export function useMediaUploadForm({ onUploadSuccess }: UseMediaUploadFormOptions) {
+export function useMediaUploadForm({ onUploadSuccess, onClose }: UseMediaUploadFormOptions) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [inputType, setInputType] = useState<InputType>('file');
     const [isDragOver, setIsDragOver] = useState(false);
@@ -76,6 +77,7 @@ export function useMediaUploadForm({ onUploadSuccess }: UseMediaUploadFormOption
             onSuccess: () => {
                 reset();
                 setSelectedFile(null);
+                onClose?.();
                 onUploadSuccess?.();
             },
         });

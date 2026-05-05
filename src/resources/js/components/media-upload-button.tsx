@@ -35,7 +35,7 @@ export default function MediaUploadButton({
         selectedFile, inputType, isDragOver, setIsDragOver,
         isCheckingUrl, isFetchingYouTubeTitle, urlDuplicateWarning,
         handleFileSelect, handleInputTypeChange, onUrlChange, handleSubmit, handleDrop, handleReset,
-    } = useMediaUploadForm({ onUploadSuccess });
+    } = useMediaUploadForm({ onUploadSuccess, onClose: () => setIsOpen(false) });
 
     const handleClose = () => {
         setIsOpen(false);
