@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { setCookie } from '@/lib/cookies';
+
 export type ColorScheme = 'default' | 'ocean' | 'forest' | 'ember';
 
 const VALID_SCHEMES: ColorScheme[] = ['default', 'ocean', 'forest', 'ember'];
@@ -9,15 +11,6 @@ const isValidScheme = (value: string | null): value is ColorScheme => value !== 
 const getStoredScheme = (): ColorScheme => {
     const stored = localStorage.getItem('color-scheme');
     return isValidScheme(stored) ? stored : 'default';
-};
-
-const setCookie = (name: string, value: string, days = 365) => {
-    if (typeof document === 'undefined') {
-        return;
-    }
-
-    const maxAge = days * 24 * 60 * 60;
-    document.cookie = `${name}=${value};path=/;max-age=${maxAge};SameSite=Lax`;
 };
 
 const applyScheme = (scheme: ColorScheme) => {

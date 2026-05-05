@@ -1,7 +1,7 @@
 import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 import React from 'react';
 
-export const ProcessingStatus = {
+const ProcessingStatus = {
     PENDING: 'pending',
     PROCESSING: 'processing',
     COMPLETED: 'completed',

@@ -25,7 +25,7 @@ const _actionTypes = actionTypes; // Mark as used
 
 let count = 0;
 
-function genId() {
+export function genId() {
     count = (count + 1) % Number.MAX_SAFE_INTEGER;
     return count.toString();
 }
@@ -72,7 +72,7 @@ const addToRemoveQueue = (toastId: string) => {
     toastTimeouts.set(toastId, timeout);
 };
 
-export const reducer = (state: State, action: Action): State => {
+const reducer = (state: State, action: Action): State => {
     switch (action.type) {
         case 'ADD_TOAST':
             return {
@@ -129,7 +129,7 @@ const listeners: Array<(state: State) => void> = [];
 
 let memoryState: State = { toasts: [] };
 
-function dispatch(action: Action) {
+export function dispatch(action: Action) {
     memoryState = reducer(memoryState, action);
     listeners.forEach((listener) => {
         listener(memoryState);
@@ -138,7 +138,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, 'id'>;
 
-function toast({ ...props }: Toast) {
+export function toast({ ...props }: Toast) {
     const id = genId();
 
     const update = (props: ToasterToast) =>
@@ -167,7 +167,7 @@ function toast({ ...props }: Toast) {
     };
 }
 
-function useToast() {
+export function useToast() {
     const [state, setState] = React.useState<State>(memoryState);
 
     React.useEffect(() => {
@@ -187,4 +187,3 @@ function useToast() {
     };
 }
 
-export { toast, useToast };

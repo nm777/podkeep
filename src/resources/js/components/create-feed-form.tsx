@@ -1,10 +1,6 @@
-import InputError from '@/components/input-error';
 import SheetPanel from '@/components/sheet-panel';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import FeedFormFields from '@/components/feed-form-fields';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
@@ -70,35 +66,7 @@ export default function CreateFeedForm({ renderTrigger }: CreateFeedFormProps) {
                 </>
             }
         >
-            <div className="space-y-2">
-                <Label htmlFor="feed-title">Title</Label>
-                <Input
-                    id="feed-title"
-                    type="text"
-                    value={data.title}
-                    onChange={(e) => setData('title', e.target.value)}
-                    placeholder="Enter feed title"
-                    required
-                />
-                {errors.title && <InputError message={errors.title} />}
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="feed-description">Description</Label>
-                <Textarea
-                    id="feed-description"
-                    value={data.description}
-                    onChange={(e) => setData('description', e.target.value)}
-                    placeholder="Enter feed description (optional)"
-                    rows={3}
-                />
-                {errors.description && <InputError message={errors.description} />}
-            </div>
-
-            <div className="flex items-center space-x-2">
-                <Checkbox id="is_public" checked={data.is_public} onCheckedChange={(checked) => setData('is_public', checked === true)} />
-                <Label htmlFor="is_public">Make this feed public</Label>
-            </div>
+            <FeedFormFields data={data} setData={setData} errors={errors} />
         </SheetPanel>
     );
 }

@@ -1,9 +1,6 @@
-import InputError from '@/components/input-error';
+import FeedFormFields from '@/components/feed-form-fields';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { type Feed, type FeedItem, type LibraryItem } from '@/types';
@@ -14,6 +11,23 @@ import { useState } from 'react';
 interface EditFeedProps {
     feed: Feed;
     userLibraryItems: LibraryItem[];
+}
+
+export function LibraryItemInfo({ item }: { item: LibraryItem }) {
+    return (
+        <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{item.title}</p>
+            <p className="text-xs text-muted-foreground">
+                {item.media_file ? (
+                    <>
+                        {formatDuration(item.media_file.duration)} · {formatFileSize(item.media_file.filesize)}
+                    </>
+                ) : (
+                    'Processing...'
+                )}
+            </p>
+        </div>
+    );
 }
 
 export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
@@ -90,35 +104,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                 <h1 className="text-xl font-semibold">{feed.title}</h1>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="title">Title</Label>
-                        <Input
-                            id="title"
-                            type="text"
-                            value={data.title}
-                            onChange={(e) => setData('title', e.target.value)}
-                            placeholder="Enter feed title"
-                            required
-                        />
-                        {errors.title && <InputError message={errors.title} />}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                            id="description"
-                            value={data.description}
-                            onChange={(e) => setData('description', e.target.value)}
-                            placeholder="Enter feed description (optional)"
-                            rows={3}
-                        />
-                        {errors.description && <InputError message={errors.description} />}
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="is_public" checked={data.is_public} onCheckedChange={(checked) => setData('is_public', checked === true)} />
-                        <Label htmlFor="is_public">Make this feed public</Label>
-                    </div>
+                    <FeedFormFields data={data} setData={setData} errors={errors} />
 
                     <div>
                         <Button type="submit" disabled={processing}>
@@ -150,19 +136,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                         className="flex cursor-move items-center gap-3 px-4 py-3 hover:bg-muted/50"
                                     >
                                         <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-medium">{libraryItem.title}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {libraryItem.media_file ? (
-                                                    <>
-                                                        {formatDuration(libraryItem.media_file.duration)} ·{' '}
-                                                        {formatFileSize(libraryItem.media_file.filesize)}
-                                                    </>
-                                                ) : (
-                                                    'Processing...'
-                                                )}
-                                            </p>
-                                        </div>
+                                        <LibraryItemInfo item={libraryItem} />
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -183,19 +157,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                             <div className="max-h-48 space-y-1 overflow-y-auto">
                                 {availableLibraryItems.map((libraryItem) => (
                                     <div key={libraryItem.id} className="flex items-center gap-2 rounded-md border p-2">
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-medium">{libraryItem.title}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {libraryItem.media_file ? (
-                                                    <>
-                                                        {formatDuration(libraryItem.media_file.duration)} ·{' '}
-                                                        {formatFileSize(libraryItem.media_file.filesize)}
-                                                    </>
-                                                ) : (
-                                                    'Processing...'
-                                                )}
-                                            </p>
-                                        </div>
+                                        <LibraryItemInfo item={libraryItem} />
                                         <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)} className="shrink-0">
                                             <Plus className="h-4 w-4" />
                                         </Button>
