@@ -1,6 +1,6 @@
 import SheetPanel from '@/components/sheet-panel';
+import UserRow from '@/components/user-row';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -59,14 +59,10 @@ export default function UserManagement() {
         toggleAdminForm.post(route('admin.users.toggle-admin', user.id));
     };
 
-    const getStatusBadge = (status: string) => {
-        const variants = {
-            pending: 'secondary',
-            approved: 'default',
-            rejected: 'destructive',
-        } as const;
-
-        return <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+    const closeRejectPanel = () => {
+        setRejectingUser(null);
+        rejectForm.setData('reason', '');
+        rejectForm.clearErrors();
     };
 
     const filteredUsers = users.filter((user) => showRejected || user.approval_status !== 'rejected');
@@ -117,44 +113,15 @@ export default function UserManagement() {
                     <CardContent>
                         <div className="divide-y">
                             {filteredUsers.map((user) => (
-                                <div key={user.id} className="py-3">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="min-w-0">
-                                            <p className="font-medium">{user.name}</p>
-                                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                                        </div>
-                                        <div className="flex shrink-0 items-center gap-1.5">
-                                            {getStatusBadge(user.approval_status)}
-                                            <Badge variant={user.is_admin ? 'default' : 'secondary'}>{user.is_admin ? 'Admin' : 'User'}</Badge>
-                                        </div>
-                                    </div>
-                                    <div className="mt-1 text-xs text-muted-foreground">Joined {new Date(user.created_at).toLocaleDateString()}</div>
-                                    <div className="mt-2 flex flex-wrap gap-2">
-                                        {user.approval_status !== 'approved' && (
-                                            <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
-                                                {approveForm.processing ? 'Approving...' : 'Approve'}
-                                            </Button>
-                                        )}
-                                        {user.approval_status !== 'rejected' && (
-                                            <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
-                                                Reject
-                                            </Button>
-                                        )}
-                                        {user.approval_status === 'rejected' && (
-                                            <Button size="sm" variant="outline" onClick={() => setRejectingUser(user)}>
-                                                Reject (update reason)
-                                            </Button>
-                                        )}
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => handleToggleAdmin(user)}
-                                            disabled={toggleAdminForm.processing}
-                                        >
-                                            {toggleAdminForm.processing ? 'Updating...' : user.is_admin ? 'Remove Admin' : 'Make Admin'}
-                                        </Button>
-                                    </div>
-                                </div>
+                                <UserRow
+                                    key={user.id}
+                                    user={user}
+                                    onApprove={handleApprove}
+                                    onReject={setRejectingUser}
+                                    onToggleAdmin={handleToggleAdmin}
+                                    approveProcessing={approveForm.processing}
+                                    toggleAdminProcessing={toggleAdminForm.processing}
+                                />
                             ))}
                         </div>
                     </CardContent>
@@ -163,24 +130,11 @@ export default function UserManagement() {
 
             <SheetPanel
                 open={!!rejectingUser}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setRejectingUser(null);
-                        rejectForm.setData('reason', '');
-                        rejectForm.clearErrors();
-                    }
-                }}
+                onOpenChange={(open) => { if (!open) closeRejectPanel(); }}
                 title="Reject User"
                 footer={
                     <>
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setRejectingUser(null);
-                                rejectForm.setData('reason', '');
-                                rejectForm.clearErrors();
-                            }}
-                        >
+                        <Button variant="outline" onClick={closeRejectPanel}>
                             Cancel
                         </Button>
                         <Button variant="destructive" onClick={handleReject} disabled={!rejectForm.data.reason.trim() || rejectForm.processing}>

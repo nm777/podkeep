@@ -1,19 +1,12 @@
 import FeedFormFields from '@/components/feed-form-fields';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { useFeedItemReorder } from '@/hooks/use-feed-item-reorder';
 import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
 
-interface EditFeedProps {
-    feed: Feed;
-    userLibraryItems: LibraryItem[];
-}
-
-export function LibraryItemInfo({ item }: { item: LibraryItem }) {
+function LibraryItemInfo({ item }: { item: LibraryItem }) {
     return (
         <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{item.title}</p>
@@ -30,9 +23,12 @@ export function LibraryItemInfo({ item }: { item: LibraryItem }) {
     );
 }
 
-export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
-    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+interface EditFeedProps {
+    feed: Feed;
+    userLibraryItems: LibraryItem[];
+}
 
+export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
     const { data, setData, put, processing, errors } = useForm({
         title: feed.title,
         description: feed.description || '',
@@ -44,50 +40,19 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
         })),
     });
 
+    const { handleDragStart, handleDragOver, handleDrop } = useFeedItemReorder(data.items, (items) => setData('items', items));
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         put(`/feeds/${feed.id}`);
     };
 
     const addLibraryItem = (libraryItemId: number) => {
-        const newItem = {
-            id: Date.now(),
-            library_item_id: libraryItemId,
-            sequence: data.items.length,
-        };
-        setData('items', [...data.items, newItem]);
+        setData('items', [...data.items, { id: Date.now(), library_item_id: libraryItemId, sequence: data.items.length }]);
     };
 
     const removeItem = (index: number) => {
-        const newItems = data.items.filter((_, i) => i !== index);
-        setData(
-            'items',
-            newItems.map((item, i) => ({ ...item, sequence: i })),
-        );
-    };
-
-    const handleDragStart = (index: number) => {
-        setDraggedIndex(index);
-    };
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-    };
-
-    const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-        e.preventDefault();
-        if (draggedIndex === null) return;
-
-        const draggedItem = data.items[draggedIndex];
-        const newItems = [...data.items];
-        newItems.splice(draggedIndex, 1);
-        newItems.splice(dropIndex, 0, draggedItem);
-
-        setData(
-            'items',
-            newItems.map((item, i) => ({ ...item, sequence: i })),
-        );
-        setDraggedIndex(null);
+        setData('items', data.items.filter((_, i) => i !== index).map((item, i) => ({ ...item, sequence: i })));
     };
 
     const getLibraryItem = (libraryItemId: number) => {
@@ -105,7 +70,6 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <FeedFormFields data={data} setData={setData} errors={errors} />
-
                     <div>
                         <Button type="submit" disabled={processing}>
                             {processing ? 'Saving...' : 'Save Changes'}
@@ -153,7 +117,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
                     {availableLibraryItems.length > 0 && (
                         <div className="space-y-2 border-t pt-4">
-                            <Label className="text-sm font-medium">Add Library Items</Label>
+                            <p className="text-sm font-medium">Add Library Items</p>
                             <div className="max-h-48 space-y-1 overflow-y-auto">
                                 {availableLibraryItems.map((libraryItem) => (
                                     <div key={libraryItem.id} className="flex items-center gap-2 rounded-md border p-2">
