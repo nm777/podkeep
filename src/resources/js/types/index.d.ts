@@ -92,3 +92,25 @@ export interface User {
     created_at: string;
     updated_at: string;
 }
+
+export interface ShareFeed {
+    title: string;
+    description: string | null;
+    cover_image_url: string | null;
+}
+
+export interface ShareEpisode {
+    id: number;
+    title: string;
+    description: string | null;
+    published_at: string | null;
+    duration: number | null;
+    media_url: string;
+}
+
+export interface SharePageProps {
+    feed: ShareFeed;
+    episodes: ShareEpisode[];
+    rssUrl: string;
+    isPublic: boolean;
+}

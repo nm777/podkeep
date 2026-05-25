@@ -21,3 +21,11 @@ export function getGooglePodcastsUrl(feed: Feed): string {
     const fullUrl = getAbsoluteRssUrl(feed);
     return `https://podcasts.google.com/subscribe?url=${encodeURIComponent(fullUrl)}`;
 }
+
+export function getShareUrl(feed: Feed): string {
+    const baseUrl = `/share/${feed.user_guid}/${feed.slug}`;
+    if (!feed.is_public && feed.token) {
+        return `${baseUrl}?token=${feed.token}`;
+    }
+    return baseUrl;
+}
