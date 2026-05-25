@@ -3,15 +3,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
 import { type Feed } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Copy, Edit, Eye, EyeOff, FileAudio, Smartphone, Trash2 } from 'lucide-react';
+import { Copy, Edit, Eye, EyeOff, FileAudio, Share, Smartphone, Trash2 } from 'lucide-react';
 
 interface FeedCardProps {
     feed: Feed;
     onCopyUrl: (feed: Feed) => void;
+    onCopyShareUrl: (feed: Feed) => void;
     onDelete: (feedId: number) => void;
 }
 
-export default function FeedCard({ feed, onCopyUrl, onDelete }: FeedCardProps) {
+export default function FeedCard({ feed, onCopyUrl, onCopyShareUrl, onDelete }: FeedCardProps) {
     return (
         <div className="px-4 py-3">
             <p className="font-medium md:truncate">{feed.title}</p>
@@ -47,6 +48,14 @@ export default function FeedCard({ feed, onCopyUrl, onDelete }: FeedCardProps) {
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>Google Podcasts</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onCopyShareUrl(feed)}>
+                                <Share className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Copy Share Link</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                         <TooltipTrigger asChild>

@@ -3,6 +3,7 @@
         "resources/js/pages/**/*.tsx"
     ],
     "ignoreExports": [
-        { "file": "resources/js/lib/subscribe-urls.ts", "exports": ["getFullRssUrl", "getShareUrl"] }
+        { "file": "resources/js/lib/subscribe-urls.ts", "exports": ["getFullRssUrl", "getShareUrl"] },
+        { "file": "resources/js/lib/clipboard.ts", "exports": ["copyToClipboard"] }
     ]
 }

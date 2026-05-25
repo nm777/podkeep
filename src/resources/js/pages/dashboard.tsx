@@ -48,6 +48,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
         handleDeleteFeedClick,
         handleDeleteFeedConfirm,
         handleCopyUrl,
+        handleCopyShareUrl,
         handleDeleteItemClick,
         handleDeleteItemConfirm,
         handleRetry,
@@ -143,7 +144,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                     ) : (
                         <div className="divide-y rounded-lg border">
                             {feeds.map((feed) => (
-                                <FeedCard key={feed.id} feed={feed} onCopyUrl={handleCopyUrl} onDelete={handleDeleteFeedClick} />
+                                <FeedCard key={feed.id} feed={feed} onCopyUrl={handleCopyUrl} onCopyShareUrl={handleCopyShareUrl} onDelete={handleDeleteFeedClick} />
                             ))}
                         </div>
                     )

@@ -1,8 +1,9 @@
 import { useToast } from '@/hooks/use-toast';
+import { copyToClipboard } from '@/lib/clipboard';
+import { getAbsoluteRssUrl, getShareUrl } from '@/lib/subscribe-urls';
 import { type Feed, type LibraryItem } from '@/types';
 import { router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { getAbsoluteRssUrl } from '@/lib/subscribe-urls';
 
 export function useDashboardActions() {
     const { toast } = useToast();
@@ -48,23 +49,20 @@ export function useDashboardActions() {
     };
 
     const handleCopyUrl = async (feed: Feed) => {
-        const fullUrl = getAbsoluteRssUrl(feed);
         try {
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(fullUrl);
-            } else {
-                const textArea = document.createElement('textarea');
-                textArea.value = fullUrl;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            }
+            await copyToClipboard(getAbsoluteRssUrl(feed));
             toast({ title: 'URL copied!', description: 'Feed URL has been copied to your clipboard.' });
         } catch {
             toast({ title: 'Failed to copy', description: 'Could not copy the URL to clipboard.', variant: 'destructive' });
+        }
+    };
+
+    const handleCopyShareUrl = async (feed: Feed) => {
+        try {
+            await copyToClipboard(window.location.origin + getShareUrl(feed));
+            toast({ title: 'Link copied!', description: 'Share link has been copied to your clipboard.' });
+        } catch {
+            toast({ title: 'Failed to copy', description: 'Could not copy the link to clipboard.', variant: 'destructive' });
         }
     };
 
@@ -157,6 +155,7 @@ export function useDashboardActions() {
         handleDeleteFeedClick,
         handleDeleteFeedConfirm,
         handleCopyUrl,
+        handleCopyShareUrl,
         handleDeleteItemClick,
         handleDeleteItemConfirm,
         handleRetry,
