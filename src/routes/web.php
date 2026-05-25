@@ -5,6 +5,7 @@ use App\Http\Controllers\FeedController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\RssController;
+use App\Http\Controllers\ShareController;
 use App\Http\Controllers\Web\UrlDuplicateCheckController;
 use App\Http\Controllers\Web\YouTubeController;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,8 @@ Route::get('', function () {
 })->name('home');
 
 Route::get('rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name('rss.show')->middleware('throttle:120,1');
+
+Route::get('share/{user_guid}/{feed_slug}', [ShareController::class, 'show'])->name('share.show')->middleware('throttle:120,1');
 
 Route::get('files/{file_path}', [MediaController::class, 'show'])->name('files.show')->where('file_path', '.*')->middleware('throttle:60,1');
 
