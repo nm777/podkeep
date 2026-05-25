@@ -34,12 +34,8 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
     const {
         deleteFeedDialogOpen,
         setDeleteFeedDialogOpen,
-        feedToDelete,
-        setFeedToDelete,
         deleteItemDialogOpen,
         setDeleteItemDialogOpen,
-        itemToDelete,
-        setItemToDelete,
         editDialogOpen,
         itemProcessing,
         errors,
