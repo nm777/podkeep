@@ -53,7 +53,10 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
     };
 
     const removeItem = (index: number) => {
-        setData('items', data.items.filter((_, i) => i !== index).map((item, i) => ({ ...item, sequence: i })));
+        setData(
+            'items',
+            data.items.filter((_, i) => i !== index).map((item, i) => ({ ...item, sequence: i })),
+        );
     };
 
     const getLibraryItem = (libraryItemId: number) => {
@@ -76,7 +79,9 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                             {processing ? 'Saving...' : 'Save Changes'}
                         </Button>
                         <Link href={route('dashboard')}>
-                            <Button type="button" variant="outline">Cancel</Button>
+                            <Button type="button" variant="outline">
+                                Cancel
+                            </Button>
                         </Link>
                     </div>
                 </form>

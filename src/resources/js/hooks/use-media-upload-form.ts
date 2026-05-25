@@ -49,11 +49,17 @@ export function useMediaUploadForm({ onUploadSuccess, onClose }: UseMediaUploadF
 
     const onUrlChange = (url: string) => {
         setSelectedFile(null);
-        handleUrlChange(url, inputType, data.title, (key, value) => {
-            if (value !== null) {
-                setData(key as 'url' | 'file' | 'source_url' | 'title', value as string);
-            }
-        }, setInputType);
+        handleUrlChange(
+            url,
+            inputType,
+            data.title,
+            (key, value) => {
+                if (value !== null) {
+                    setData(key as 'url' | 'file' | 'source_url' | 'title', value as string);
+                }
+            },
+            setInputType,
+        );
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -118,5 +124,4 @@ export function useMediaUploadForm({ onUploadSuccess, onClose }: UseMediaUploadF
         handleDrop,
         handleReset,
     };
-
 }

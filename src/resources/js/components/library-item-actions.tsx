@@ -30,12 +30,7 @@ export default function ItemActions({ item, isComplete, isFailed, onEdit, onDele
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(item)}>
                     <Pencil className="h-4 w-4" />
                 </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => onDelete(item.id)}
-                >
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(item.id)}>
                     <Trash2 className="h-4 w-4" />
                 </Button>
             </>

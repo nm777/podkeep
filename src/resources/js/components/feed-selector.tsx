@@ -40,9 +40,7 @@ export default function FeedSelector({ feeds, selectedFeedIds, onChange, error }
                 ))}
             </div>
             {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                The item will be added to selected feeds after processing completes.
-            </p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">The item will be added to selected feeds after processing completes.</p>
         </div>
     );
 }

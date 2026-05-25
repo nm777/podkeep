@@ -27,9 +27,7 @@ function CopyRssButton({ rssUrl }: { rssUrl: string }) {
 function FeedHeader({ feed }: { feed: SharePageProps['feed'] }) {
     return (
         <div className="mb-8">
-            {feed.cover_image_url && (
-                <img src={feed.cover_image_url} alt={feed.title} className="mb-4 h-32 w-32 rounded-lg object-cover" />
-            )}
+            {feed.cover_image_url && <img src={feed.cover_image_url} alt={feed.title} className="mb-4 h-32 w-32 rounded-lg object-cover" />}
             <h1 className="text-2xl font-bold">{feed.title}</h1>
             {feed.description && <p className="mt-2 text-muted-foreground">{feed.description}</p>}
         </div>
@@ -60,11 +58,7 @@ export default function ShareShow({ feed, episodes, rssUrl }: SharePageProps & {
                     <CopyRssButton rssUrl={rssUrl} />
                 </div>
 
-                <ShareEpisodeList
-                    episodes={episodes}
-                    activeEpisodeId={activeEpisode?.id ?? null}
-                    onSelect={setActiveEpisode}
-                />
+                <ShareEpisodeList episodes={episodes} activeEpisodeId={activeEpisode?.id ?? null} onSelect={setActiveEpisode} />
             </main>
         </div>
     );

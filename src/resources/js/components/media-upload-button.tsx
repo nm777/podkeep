@@ -1,12 +1,12 @@
-import { Button } from '@/components/ui/button';
 import FeedSelector from '@/components/feed-selector';
+import SourceInputSection from '@/components/source-input-section';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
-import SourceInputSection from '@/components/source-input-section';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useMediaUploadForm } from '@/hooks/use-media-upload-form';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { formatFileSize } from '@/lib/format';
 import { type Feed } from '@/types';
 import { AlertCircle, Globe, Upload, Volume2, Youtube } from 'lucide-react';
@@ -31,10 +31,23 @@ export default function MediaUploadButton({
     const [isOpen, setIsOpen] = useState(false);
 
     const {
-        data, setData, errors, processing,
-        selectedFile, inputType, isDragOver, setIsDragOver,
-        isCheckingUrl, isFetchingYouTubeTitle, urlDuplicateWarning,
-        handleFileSelect, handleInputTypeChange, onUrlChange, handleSubmit, handleDrop, handleReset,
+        data,
+        setData,
+        errors,
+        processing,
+        selectedFile,
+        inputType,
+        isDragOver,
+        setIsDragOver,
+        isCheckingUrl,
+        isFetchingYouTubeTitle,
+        urlDuplicateWarning,
+        handleFileSelect,
+        handleInputTypeChange,
+        onUrlChange,
+        handleSubmit,
+        handleDrop,
+        handleReset,
     } = useMediaUploadForm({ onUploadSuccess, onClose: () => setIsOpen(false) });
 
     const handleClose = () => {
@@ -75,15 +88,33 @@ export default function MediaUploadButton({
                     <div className="flex items-center justify-between border-b px-4 py-3">
                         <SheetTitle className="text-base">Add Media</SheetTitle>
                         <div className="flex gap-1">
-                            <Button type="button" variant={inputType === 'file' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5 text-xs" onClick={() => handleInputTypeChange('file')}>
+                            <Button
+                                type="button"
+                                variant={inputType === 'file' ? 'default' : 'outline'}
+                                size="sm"
+                                className="h-7 px-2.5 text-xs"
+                                onClick={() => handleInputTypeChange('file')}
+                            >
                                 <Upload className="mr-1 h-3 w-3" />
                                 File
                             </Button>
-                            <Button type="button" variant={inputType === 'url' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5 text-xs" onClick={() => handleInputTypeChange('url')}>
+                            <Button
+                                type="button"
+                                variant={inputType === 'url' ? 'default' : 'outline'}
+                                size="sm"
+                                className="h-7 px-2.5 text-xs"
+                                onClick={() => handleInputTypeChange('url')}
+                            >
                                 <Globe className="mr-1 h-3 w-3" />
                                 URL
                             </Button>
-                            <Button type="button" variant={inputType === 'youtube' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5 text-xs" onClick={() => handleInputTypeChange('youtube')}>
+                            <Button
+                                type="button"
+                                variant={inputType === 'youtube' ? 'default' : 'outline'}
+                                size="sm"
+                                className="h-7 px-2.5 text-xs"
+                                onClick={() => handleInputTypeChange('youtube')}
+                            >
                                 <Youtube className="mr-1 h-3 w-3" />
                                 YouTube
                             </Button>
@@ -97,7 +128,10 @@ export default function MediaUploadButton({
                                 onUrlChange={onUrlChange}
                                 isDragOver={isDragOver}
                                 onDrop={handleDrop}
-                                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    setIsDragOver(true);
+                                }}
                                 onDragLeave={() => setIsDragOver(false)}
                                 onFileSelect={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                                 isFetchingYouTubeTitle={isFetchingYouTubeTitle}
@@ -113,7 +147,13 @@ export default function MediaUploadButton({
 
                             <div>
                                 <Label htmlFor="title">Title</Label>
-                                <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="Enter title" required />
+                                <Input
+                                    id="title"
+                                    value={data.title}
+                                    onChange={(e) => setData('title', e.target.value)}
+                                    placeholder="Enter title"
+                                    required
+                                />
                                 {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
                             </div>
 
@@ -131,7 +171,12 @@ export default function MediaUploadButton({
 
                             <div>
                                 <Label htmlFor="published_at">Publish Date</Label>
-                                <Input id="published_at" type="date" value={data.published_at} onChange={(e) => setData('published_at', e.target.value)} />
+                                <Input
+                                    id="published_at"
+                                    type="date"
+                                    value={data.published_at}
+                                    onChange={(e) => setData('published_at', e.target.value)}
+                                />
                                 {errors.published_at && <p className="mt-1 text-sm text-red-600">{errors.published_at}</p>}
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Defaults to today if not set</p>
                             </div>

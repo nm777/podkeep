@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useDashboardActions } from '@/hooks/use-dashboard-actions';
+import { useIsMobile } from '@/hooks/use-mobile';
 import AppLayout from '@/layouts/app-layout';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
 import { type Feed, type LibraryItem } from '@/types';
@@ -140,7 +140,13 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                     ) : (
                         <div className="divide-y rounded-lg border">
                             {feeds.map((feed) => (
-                                <FeedCard key={feed.id} feed={feed} onCopyUrl={handleCopyUrl} onCopyShareUrl={handleCopyShareUrl} onDelete={handleDeleteFeedClick} />
+                                <FeedCard
+                                    key={feed.id}
+                                    feed={feed}
+                                    onCopyUrl={handleCopyUrl}
+                                    onCopyShareUrl={handleCopyShareUrl}
+                                    onDelete={handleDeleteFeedClick}
+                                />
                             ))}
                         </div>
                     )

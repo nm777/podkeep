@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProcessingStatusType;
 use App\Models\Feed;
 use App\Models\FeedItem;
 use App\Models\LibraryItem;
@@ -28,7 +29,7 @@ it('shows share page for public feed', function () {
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $this->user->id,
         'media_file_id' => $mediaFile->id,
-        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     FeedItem::factory()->create([
@@ -81,7 +82,7 @@ it('grants access to private feed with valid token', function () {
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $this->user->id,
         'media_file_id' => $mediaFile->id,
-        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     FeedItem::factory()->create([
@@ -124,19 +125,19 @@ it('only shows completed items with media files', function () {
     $completedItem = LibraryItem::factory()->create([
         'user_id' => $this->user->id,
         'media_file_id' => $mediaFile->id,
-        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     $pendingItem = LibraryItem::factory()->create([
         'user_id' => $this->user->id,
         'media_file_id' => MediaFile::factory()->create(['user_id' => $this->user->id]),
-        'processing_status' => \App\Enums\ProcessingStatusType::PENDING,
+        'processing_status' => ProcessingStatusType::PENDING,
     ]);
 
     $itemWithoutMedia = LibraryItem::factory()->create([
         'user_id' => $this->user->id,
         'media_file_id' => null,
-        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $completedItem->id, 'sequence' => 1]);
@@ -165,14 +166,14 @@ it('orders episodes by sequence ascending', function () {
         'user_id' => $this->user->id,
         'media_file_id' => $mediaFile1->id,
         'title' => 'Second Episode',
-        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     $item2 = LibraryItem::factory()->create([
         'user_id' => $this->user->id,
         'media_file_id' => $mediaFile2->id,
         'title' => 'First Episode',
-        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $item1->id, 'sequence' => 2]);
@@ -203,7 +204,7 @@ it('includes feed_token in media URL for private feeds', function () {
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $this->user->id,
         'media_file_id' => $mediaFile->id,
-        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     FeedItem::factory()->create([
@@ -217,7 +218,7 @@ it('includes feed_token in media URL for private feeds', function () {
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page
         ->where('episodes.0.media_url', '/files/media/test-audio.mp3?feed_token=secret-token')
-        ->where('rssUrl', url("/rss/{$feed->user_guid}/{$feed->slug}") . '?token=secret-token')
+        ->where('rssUrl', url("/rss/{$feed->user_guid}/{$feed->slug}").'?token=secret-token')
     );
 });
 
@@ -235,7 +236,7 @@ it('does not include feed_token in media URL for public feeds', function () {
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $this->user->id,
         'media_file_id' => $mediaFile->id,
-        'processing_status' => \App\Enums\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
     FeedItem::factory()->create([

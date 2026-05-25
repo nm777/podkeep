@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
 import ItemActions from '@/components/library-item-actions';
 import StatusBadge from '@/components/library-item-status-badge';
+import { Button } from '@/components/ui/button';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
 import { type LibraryItem } from '@/types';
@@ -55,7 +55,15 @@ export default function LibraryItemRow({ item, onPlay, onEdit, onDelete, onRetry
 
             <div className="flex items-center gap-1">
                 <StatusBadge item={item} isComplete={isComplete} isActive={isActive} isFailed={isFailed} />
-                <ItemActions item={item} isComplete={isComplete} isFailed={isFailed} onEdit={onEdit} onDelete={onDelete} onRetry={onRetry} onRedownload={onRedownload} />
+                <ItemActions
+                    item={item}
+                    isComplete={isComplete}
+                    isFailed={isFailed}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onRetry={onRetry}
+                    onRedownload={onRedownload}
+                />
             </div>
         </div>
     );

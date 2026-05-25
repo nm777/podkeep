@@ -44,13 +44,7 @@ export default function SourceInputSection({
                 >
                     <Upload className="mx-auto h-12 w-12 text-gray-400" />
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Drag and drop a file here, or click to select</p>
-                    <input
-                        type="file"
-                        accept="audio/*,video/*"
-                        onChange={onFileSelect}
-                        className="hidden"
-                        id="file-upload"
-                    />
+                    <input type="file" accept="audio/*,video/*" onChange={onFileSelect} className="hidden" id="file-upload" />
                     <Label htmlFor="file-upload" className="cursor-pointer text-sm text-blue-600 hover:text-blue-500">
                         Browse Files
                     </Label>

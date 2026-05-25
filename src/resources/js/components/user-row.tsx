@@ -59,12 +59,7 @@ export default function UserRow({ user, onApprove, onReject, onToggleAdmin, appr
                         Reject (update reason)
                     </Button>
                 )}
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onToggleAdmin(user)}
-                    disabled={toggleAdminProcessing}
-                >
+                <Button size="sm" variant="outline" onClick={() => onToggleAdmin(user)} disabled={toggleAdminProcessing}>
                     {toggleAdminProcessing ? 'Updating...' : user.is_admin ? 'Remove Admin' : 'Make Admin'}
                 </Button>
             </div>

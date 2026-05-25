@@ -1,11 +1,11 @@
 import SheetPanel from '@/components/sheet-panel';
-import UserRow from '@/components/user-row';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import UserRow from '@/components/user-row';
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
@@ -130,7 +130,9 @@ export default function UserManagement() {
 
             <SheetPanel
                 open={!!rejectingUser}
-                onOpenChange={(open) => { if (!open) closeRejectPanel(); }}
+                onOpenChange={(open) => {
+                    if (!open) closeRejectPanel();
+                }}
                 title="Reject User"
                 footer={
                     <>
