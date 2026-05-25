@@ -1,0 +1,8 @@
+{
+    "dynamicallyLoaded": [
+        "resources/js/pages/**/*.tsx"
+    ],
+    "ignoreExports": [
+        { "file": "resources/js/lib/subscribe-urls.ts", "exports": ["getFullRssUrl", "getShareUrl"] }
+    ]
+}
