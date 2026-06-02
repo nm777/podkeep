@@ -16,10 +16,12 @@ export default function CreateFeedForm({ renderTrigger }: CreateFeedFormProps) {
     const { data, setData, post, processing, errors, reset } = useForm<{
         title: string;
         description: string;
+        website_url: string;
         is_public: boolean;
     }>({
         title: '',
         description: '',
+        website_url: '',
         is_public: false,
     });
 

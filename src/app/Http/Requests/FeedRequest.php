@@ -26,6 +26,7 @@ class FeedRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
+            'website_url' => ['nullable', 'string', 'url', 'max:255'],
             'is_public' => ['boolean'],
             'items' => ['nullable', 'array'],
             'items.*.library_item_id' => ['required', 'integer', 'exists:library_items,id', function ($attribute, $value, $fail) {

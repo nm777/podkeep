@@ -38,6 +38,7 @@ class FeedController extends Controller
         $feed = Auth::user()->feeds()->create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
+            'website_url' => $validated['website_url'] ?? null,
             'slug' => $slug,
             'user_guid' => Str::uuid(),
             'token' => Str::random(64),
@@ -76,6 +77,7 @@ class FeedController extends Controller
         $feed->update([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
+            'website_url' => $validated['website_url'] ?? null,
             'slug' => $this->generateUniqueSlug($validated['title'], $feed->id),
             'is_public' => $validated['is_public'] ?? false,
         ]);

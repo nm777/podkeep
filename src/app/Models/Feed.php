@@ -13,6 +13,7 @@ class Feed extends Model
         'user_id',
         'title',
         'description',
+        'website_url',
         'cover_image_url',
         'is_public',
         'slug',

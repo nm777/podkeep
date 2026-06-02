@@ -8,10 +8,11 @@ interface FeedFormFieldsProps {
     data: {
         title: string;
         description: string;
+        website_url: string;
         is_public: boolean;
     };
-    setData: (key: 'title' | 'description' | 'is_public', value: string | boolean) => void;
-    errors: Partial<Record<'title' | 'description', string>>;
+    setData: (key: 'title' | 'description' | 'website_url' | 'is_public', value: string | boolean) => void;
+    errors: Partial<Record<'title' | 'description' | 'website_url', string>>;
 }
 
 export default function FeedFormFields({ data, setData, errors }: FeedFormFieldsProps) {
@@ -40,6 +41,18 @@ export default function FeedFormFields({ data, setData, errors }: FeedFormFields
                     rows={3}
                 />
                 {errors.description && <InputError message={errors.description} />}
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="website_url">Website URL</Label>
+                <Input
+                    id="website_url"
+                    type="url"
+                    value={data.website_url}
+                    onChange={(e) => setData('website_url', e.target.value)}
+                    placeholder="https://example.com (optional)"
+                />
+                {errors.website_url && <InputError message={errors.website_url} />}
             </div>
 
             <div className="flex items-center space-x-2">

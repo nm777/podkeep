@@ -5,6 +5,7 @@
     <channel>
         <title>{{ $feed->title }}</title>
         <description><![CDATA[{!! $feed->description !!}]]></description>
+        <link>{{ $feed->website_url ?? route('share.show', ['user_guid' => $feed->user_guid, 'feed_slug' => $feed->slug]) }}</link>
         <image>
             <url>{{ $feed->cover_image_url ?? asset('logo.svg') }}</url>
             <title>{{ $feed->title }}</title>

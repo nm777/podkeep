@@ -62,6 +62,7 @@ export interface Feed {
     id: number;
     title: string;
     description?: string;
+    website_url?: string;
     is_public: boolean;
     slug: string;
     user_guid: string;

@@ -33,6 +33,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
     const { data, setData, put, processing, errors } = useForm({
         title: feed.title,
         description: feed.description || '',
+        website_url: feed.website_url || '',
         is_public: feed.is_public,
         items: (feed.items ?? []).map((item: FeedItem) => ({
             id: item.id,

@@ -18,6 +18,7 @@ class FeedResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
+            'website_url' => $this->website_url,
             'cover_image_url' => $this->cover_image_url,
             'is_public' => $this->is_public,
             'slug' => $this->slug,
