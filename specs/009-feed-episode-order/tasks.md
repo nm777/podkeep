@@ -43,8 +43,8 @@ description: "Task list for Per-Feed Episode Ordering feature"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Update Feed model in `src/app/Models/Feed.php` — add `'episode_order'` to `$fillable` array, add `casts()` method with `'episode_order' => EpisodeOrderType::class`, and add `->orderBy('sequence')` to the `items()` relationship (currently a bare `hasMany` with no ordering — this fixes the latent RSS ordering bug)
-- [ ] T004 Run the migration via `php artisan migrate --force` in the container and verify the `episode_order` column exists on the feeds table
+- [X] T003 Update Feed model in `src/app/Models/Feed.php` — add `'episode_order'` to `$fillable` array, add `casts()` method with `'episode_order' => EpisodeOrderType::class`, and add `->orderBy('sequence')` to the `items()` relationship (currently a bare `hasMany` with no ordering — this fixes the latent RSS ordering bug)
+- [X] T004 Run the migration via `php artisan migrate --force` in the container and verify the `episode_order` column exists on the feeds table
 
 **Checkpoint**: Foundation ready — Feed model has the new field, enum is available, items relationship orders by sequence.
 

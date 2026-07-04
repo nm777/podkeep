@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EpisodeOrderType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,10 +17,18 @@ class Feed extends Model
         'website_url',
         'cover_image_url',
         'is_public',
+        'episode_order',
         'slug',
         'user_guid',
         'token',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'episode_order' => EpisodeOrderType::class,
+        ];
+    }
 
     public function user()
     {
@@ -28,6 +37,6 @@ class Feed extends Model
 
     public function items()
     {
-        return $this->hasMany(FeedItem::class);
+        return $this->hasMany(FeedItem::class)->orderBy('sequence');
     }
 }
