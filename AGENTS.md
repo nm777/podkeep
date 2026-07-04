@@ -5,6 +5,7 @@ Auto-generated from all feature plans. Last updated: 2026-05-25
 ## Active Technologies
 - PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3, Laravel Sanctum v4 (NEW — for personal access tokens) (008-rest-api-keys)
 - MySQL 8.0+ (SQLite for tests), database-backed queues, local `public` disk for media files (008-rest-api-keys)
+- Cookie (`appearance`) + localStorage — both already wired by `useAppearance` hook (010-system-theme)
 
 - PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3 (007-podcast-share-player)
 
@@ -24,9 +25,10 @@ npm test && npm run lint
 PHP 8.4 (Laravel 12), TypeScript (React 19): Follow standard conventions
 
 ## Recent Changes
+- 010-system-theme: Added PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3
+- 009-feed-episode-order: Added PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3, Laravel Sanctum v4
 - 008-rest-api-keys: Added PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3, Laravel Sanctum v4 (NEW — for personal access tokens)
 
-- 007-podcast-share-player: Added PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3
 
 <!-- MANUAL ADDITIONS START -->
 
