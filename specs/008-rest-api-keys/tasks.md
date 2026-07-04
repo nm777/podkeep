@@ -87,16 +87,16 @@ description: "Task list for REST API with API Key Authentication feature"
 
 ### Tests for User Story 2 (MANDATORY per constitution) ⚠️
 
-- [ ] T016 [P] [US2] Feature test for feed creation in `src/tests/Feature/Api/V1/FeedControllerTest.php` — test POST `/api/v1/feeds` with valid data returns 201 with JSON resource including generated slug/user_guid/token; test validation errors (missing title); test unauthenticated returns 401
-- [ ] T017 [P] [US2] Feature test for feed listing and show in `src/tests/Feature/Api/V1/FeedControllerTest.php` — test GET `/api/v1/feeds` returns only the authenticated user's feeds as JSON array; test GET `/api/v1/feeds/{id}` returns 404 for another user's feed
-- [ ] T018 [P] [US2] Feature test for feed update and delete in `src/tests/Feature/Api/V1/FeedControllerTest.php` — test PUT `/api/v1/feeds/{id}` updates fields and returns updated resource; test DELETE returns 204; test modifying another user's feed returns 403/404
+- [X] T016 [P] [US2] Feature test for feed creation in `src/tests/Feature/Api/V1/FeedControllerTest.php` — test POST `/api/v1/feeds` with valid data returns 201 with JSON resource including generated slug/user_guid/token; test validation errors (missing title); test unauthenticated returns 401
+- [X] T017 [P] [US2] Feature test for feed listing and show in `src/tests/Feature/Api/V1/FeedControllerTest.php` — test GET `/api/v1/feeds` returns only the authenticated user's feeds as JSON array; test GET `/api/v1/feeds/{id}` returns 404 for another user's feed
+- [X] T018 [P] [US2] Feature test for feed update and delete in `src/tests/Feature/Api/V1/FeedControllerTest.php` — test PUT `/api/v1/feeds/{id}` updates fields and returns updated resource; test DELETE returns 204; test modifying another user's feed returns 403/404
 
 ### Implementation for User Story 2
 
-- [ ] T019 [P] [US2] Create StoreFeedRequest in `src/app/Http/Requests/Api/V1/StoreFeedRequest.php` with rules: `title: required, string, max:255`, `description: nullable, string, max:1000`, `website_url: nullable, url, max:255`, `is_public: boolean` (mirror rules from existing `src/app/Http/Requests/FeedRequest.php` but WITHOUT the `items` array — feed item attachment is a separate endpoint)
-- [ ] T020 [P] [US2] Create UpdateFeedRequest in `src/app/Http/Requests/Api/V1/UpdateFeedRequest.php` with same rules as StoreFeedRequest but all fields optional
-- [ ] T021 [US2] Create API FeedController in `src/app/Http/Controllers/Api/V1/FeedController.php` with `index()` (returns `FeedResource::collection($user->feeds()->withCount('items')->latest()->get())`), `store()` (creates feed with auto-generated slug/user_guid/token per existing `FeedController` logic, returns `FeedResource` with 201), `show()`/`update()`/`destroy()` (scoped to `Auth::user()->feeds()` to prevent cross-user access, using `FeedResource` and `Gate::authorize` with existing `FeedPolicy`) — see `specs/008-rest-api-keys/contracts/feeds.md`
-- [ ] T022 [US2] Register feed API routes in `src/routes/api.php` inside the v1 group: `Route::apiResource('feeds', FeedController::class)` (this provides index/store/show/update/destroy automatically)
+- [X] T019 [P] [US2] Create StoreFeedRequest in `src/app/Http/Requests/Api/V1/StoreFeedRequest.php` with rules: `title: required, string, max:255`, `description: nullable, string, max:1000`, `website_url: nullable, url, max:255`, `is_public: boolean` (mirror rules from existing `src/app/Http/Requests/FeedRequest.php` but WITHOUT the `items` array — feed item attachment is a separate endpoint)
+- [X] T020 [P] [US2] Create UpdateFeedRequest in `src/app/Http/Requests/Api/V1/UpdateFeedRequest.php` with same rules as StoreFeedRequest but all fields optional
+- [X] T021 [US2] Create API FeedController in `src/app/Http/Controllers/Api/V1/FeedController.php` with `index()` (returns `FeedResource::collection($user->feeds()->withCount('items')->latest()->get())`), `store()` (creates feed with auto-generated slug/user_guid/token per existing `FeedController` logic, returns `FeedResource` with 201), `show()`/`update()`/`destroy()` (scoped to `Auth::user()->feeds()` to prevent cross-user access, using `FeedResource` and `Gate::authorize` with existing `FeedPolicy`) — see `specs/008-rest-api-keys/contracts/feeds.md`
+- [X] T022 [US2] Register feed API routes in `src/routes/api.php` inside the v1 group: `Route::apiResource('feeds', FeedController::class)` (this provides index/store/show/update/destroy automatically)
 
 **Checkpoint**: User Stories 1 AND 2 both work independently — users can manage feeds via API.
 

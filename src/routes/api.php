@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\FeedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,4 +14,6 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'eligible.api'])
                 'email' => $request->user()->email,
             ]);
         })->name('api.v1.me');
+
+        Route::apiResource('feeds', FeedController::class);
     });
