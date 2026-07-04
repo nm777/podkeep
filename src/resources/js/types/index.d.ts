@@ -64,6 +64,7 @@ export interface Feed {
     description?: string;
     website_url?: string;
     is_public: boolean;
+    episode_order?: string;
     slug: string;
     user_guid: string;
     token?: string;

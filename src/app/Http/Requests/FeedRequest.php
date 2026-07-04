@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\EpisodeOrderType;
 use App\Models\LibraryItem;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class FeedRequest extends FormRequest
 {
@@ -28,6 +30,7 @@ class FeedRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'website_url' => ['nullable', 'string', 'url', 'max:255'],
             'is_public' => ['boolean'],
+            'episode_order' => ['nullable', 'string', Rule::enum(EpisodeOrderType::class)],
             'items' => ['nullable', 'array'],
             'items.*.library_item_id' => ['required', 'integer', 'exists:library_items,id', function ($attribute, $value, $fail) {
                 $item = LibraryItem::find($value);

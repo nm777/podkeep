@@ -35,6 +35,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
         description: feed.description || '',
         website_url: feed.website_url || '',
         is_public: feed.is_public,
+        episode_order: feed.episode_order || 'newest_first',
         items: (feed.items ?? []).map((item: FeedItem) => ({
             id: item.id,
             library_item_id: item.library_item_id,

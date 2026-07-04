@@ -21,6 +21,7 @@ class FeedResource extends JsonResource
             'website_url' => $this->website_url,
             'cover_image_url' => $this->cover_image_url,
             'is_public' => $this->is_public,
+            'episode_order' => $this->episode_order?->value,
             'slug' => $this->slug,
             'user_guid' => $this->user_guid,
             'token' => $this->when($request->user()?->id === $this->user_id, $this->token),

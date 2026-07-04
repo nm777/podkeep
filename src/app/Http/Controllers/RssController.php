@@ -14,12 +14,17 @@ class RssController extends Controller
     {
         $feed = Feed::where('user_guid', $user_guid)
             ->where('slug', $feed_slug)
-            ->with(['items.libraryItem.mediaFile'])
             ->first();
 
         if (! $feed) {
             abort(404);
         }
+
+        $direction = $feed->episode_order->isChronological() ? 'asc' : 'desc';
+        $feed->load([
+            'items' => fn ($q) => $q->reorder()->orderBy('sequence', $direction),
+            'items.libraryItem.mediaFile',
+        ]);
 
         if (! $feed->is_public && $request->token !== $feed->token) {
             abort(404);

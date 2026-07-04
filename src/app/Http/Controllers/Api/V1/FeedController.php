@@ -39,6 +39,7 @@ class FeedController extends Controller
             'description' => $validated['description'] ?? null,
             'website_url' => $validated['website_url'] ?? null,
             'is_public' => $validated['is_public'] ?? false,
+            'episode_order' => $validated['episode_order'] ?? 'newest_first',
             'slug' => $this->generateUniqueSlug($validated['title']),
             'user_guid' => Str::uuid(),
             'token' => Str::random(64),

@@ -43,6 +43,7 @@ class FeedController extends Controller
             'user_guid' => Str::uuid(),
             'token' => Str::random(64),
             'is_public' => $validated['is_public'] ?? false,
+            'episode_order' => $validated['episode_order'] ?? 'newest_first',
         ]);
 
         return redirect()->route('feeds.edit', $feed)->with('success', 'Feed created successfully!');
@@ -55,7 +56,11 @@ class FeedController extends Controller
     {
         Gate::authorize('update', $feed);
 
-        $feed->load(['items.libraryItem', 'items.libraryItem.mediaFile']);
+        $feed->load([
+            'items' => fn ($q) => $q->orderBy('sequence', 'asc'),
+            'items.libraryItem',
+            'items.libraryItem.mediaFile',
+        ]);
 
         $userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->limit(100)->get();
 
@@ -80,6 +85,7 @@ class FeedController extends Controller
             'website_url' => $validated['website_url'] ?? null,
             'slug' => $this->generateUniqueSlug($validated['title'], $feed->id),
             'is_public' => $validated['is_public'] ?? false,
+            'episode_order' => $validated['episode_order'] ?? $feed->episode_order,
         ]);
 
         if (isset($validated['items'])) {

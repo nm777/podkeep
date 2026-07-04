@@ -25,8 +25,11 @@ class ShareController extends Controller
 
         $token = $feed->is_public ? null : $feed->token;
 
-        $episodes = $feed->items
-            ->sortBy('sequence')
+        $items = $feed->episode_order->isChronological()
+            ? $feed->items->sortBy('sequence')
+            : $feed->items->sortByDesc('sequence');
+
+        $episodes = $items
             ->filter(fn ($item) => $item->libraryItem
                 && $item->libraryItem->processing_status?->value === 'completed'
                 && $item->libraryItem->mediaFile)
