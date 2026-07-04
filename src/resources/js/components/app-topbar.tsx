@@ -24,13 +24,14 @@ export default function AppTopbar() {
     const { appearance, updateAppearance } = useAppearance();
     const { colorScheme, updateColorScheme } = useColorScheme();
 
-    const isDark =
-        appearance === 'dark' ||
-        (appearance === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const themeOptions = [
+        { value: 'light' as const, label: 'Light', icon: Sun },
+        { value: 'dark' as const, label: 'Dark', icon: Moon },
+        { value: 'system' as const, label: 'System', icon: Monitor },
+    ];
 
-    const toggleTheme = () => {
-        updateAppearance(isDark ? 'light' : 'dark');
-    };
+    const activeTheme = themeOptions.find((o) => o.value === appearance) ?? themeOptions[2];
+    const ActiveIcon = activeTheme.icon;
 
     const schemeOptions: { value: ColorScheme; label: string; color: string }[] = [
         { value: 'default', label: 'Default', color: 'bg-neutral-400' },
@@ -51,10 +52,26 @@ export default function AppTopbar() {
             </Link>
 
             <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={toggleTheme}>
-                    {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                    <span className="sr-only">Toggle theme</span>
-                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9">
+                            <ActiveIcon className="h-4 w-4" />
+                            <span className="sr-only">Theme</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {themeOptions.map((option) => {
+                            const Icon = option.icon;
+                            return (
+                                <DropdownMenuItem key={option.value} onClick={() => updateAppearance(option.value)} className="flex items-center gap-2">
+                                    <Icon className="h-4 w-4" />
+                                    {option.label}
+                                    {appearance === option.value && <span className="ml-auto text-xs">✓</span>}
+                                </DropdownMenuItem>
+                            );
+                        })}
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -104,12 +121,6 @@ export default function AppTopbar() {
                                 <Link className="block w-full cursor-pointer" href={route('password.edit')} as="button" prefetch onClick={cleanup}>
                                     <Settings className="mr-2 h-4 w-4" />
                                     Password
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                                <Link className="block w-full cursor-pointer" href={route('appearance')} as="button" prefetch onClick={cleanup}>
-                                    <Monitor className="mr-2 h-4 w-4" />
-                                    Appearance
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
