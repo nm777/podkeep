@@ -884,18 +884,6 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/app/Services/MediaProcessing/UnifiedDuplicateProcessor.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Method App\\\\Services\\\\SourceProcessors\\\\FileUploadProcessor\\:\\:process\\(\\) has parameter \\$validated with no value type specified in iterable type array\\.$#',
-	'identifier' => 'missingType.iterableValue',
-	'count' => 1,
-	'path' => __DIR__ . '/app/Services/SourceProcessors/FileUploadProcessor.php',
-];
-$ignoreErrors[] = [
-	'message' => '#^Method App\\\\Services\\\\SourceProcessors\\\\FileUploadProcessor\\:\\:process\\(\\) return type has no value type specified in iterable type array\\.$#',
-	'identifier' => 'missingType.iterableValue',
-	'count' => 1,
-	'path' => __DIR__ . '/app/Services/SourceProcessors/FileUploadProcessor.php',
-];
-$ignoreErrors[] = [
 	'message' => '#^Method App\\\\Services\\\\SourceProcessors\\\\LibraryItemFactory\\:\\:createFromValidated\\(\\) has parameter \\$validated with no value type specified in iterable type array\\.$#',
 	'identifier' => 'missingType.iterableValue',
 	'count' => 1,
@@ -930,18 +918,6 @@ $ignoreErrors[] = [
 	'identifier' => 'missingType.iterableValue',
 	'count' => 1,
 	'path' => __DIR__ . '/app/Services/SourceProcessors/LibraryItemFactory.php',
-];
-$ignoreErrors[] = [
-	'message' => '#^Method App\\\\Services\\\\SourceProcessors\\\\UnifiedSourceProcessor\\:\\:process\\(\\) has parameter \\$validated with no value type specified in iterable type array\\.$#',
-	'identifier' => 'missingType.iterableValue',
-	'count' => 1,
-	'path' => __DIR__ . '/app/Services/SourceProcessors/UnifiedSourceProcessor.php',
-];
-$ignoreErrors[] = [
-	'message' => '#^Method App\\\\Services\\\\SourceProcessors\\\\UnifiedSourceProcessor\\:\\:process\\(\\) return type has no value type specified in iterable type array\\.$#',
-	'identifier' => 'missingType.iterableValue',
-	'count' => 1,
-	'path' => __DIR__ . '/app/Services/SourceProcessors/UnifiedSourceProcessor.php',
 ];
 $ignoreErrors[] = [
 	'message' => '#^Cannot access property \\$value on string\\.$#',
@@ -1038,6 +1014,138 @@ $ignoreErrors[] = [
 	'identifier' => 'method.notFound',
 	'count' => 1,
 	'path' => __DIR__ . '/tests/Feature/AddLibraryItemToFeedsJobTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Access to an undefined property Pest\\\\Mixins\\\\Expectation\\<mixed\\>\\:\\:\\$not\\.$#',
+	'identifier' => 'property.notFound',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/ApiKeyManagementTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:actingAs\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 7,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/ApiKeyManagementTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:assertDatabaseHas\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 2,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/ApiKeyManagementTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:assertDatabaseMissing\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 2,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/ApiKeyManagementTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:withHeader\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/ApiKeyManagementTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:getJson\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/AuthenticationTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:withHeader\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 6,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/AuthenticationTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:assertDatabaseHas\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 3,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/FeedControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:assertDatabaseMissing\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/FeedControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:postJson\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/FeedControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:withHeader\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 11,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/FeedControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Unable to resolve the template type TKey in call to function collect$#',
+	'identifier' => 'argument.templateType',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/FeedControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Unable to resolve the template type TValue in call to function collect$#',
+	'identifier' => 'argument.templateType',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/FeedControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:assertDatabaseHas\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 3,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/FeedItemControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:assertDatabaseMissing\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 3,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/FeedItemControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:withHeader\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 10,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/FeedItemControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:assertDatabaseHas\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 5,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/LibraryItemControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:assertDatabaseMissing\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/LibraryItemControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:withHeader\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 12,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/LibraryItemControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Unable to resolve the template type TKey in call to function collect$#',
+	'identifier' => 'argument.templateType',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/LibraryItemControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Unable to resolve the template type TValue in call to function collect$#',
+	'identifier' => 'argument.templateType',
+	'count' => 1,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/LibraryItemControllerTest.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:withHeader\\(\\)\\.$#',
+	'identifier' => 'method.notFound',
+	'count' => 7,
+	'path' => __DIR__ . '/tests/Feature/Api/V1/MediaProcessingControllerTest.php',
 ];
 $ignoreErrors[] = [
 	'message' => '#^Access to an undefined property PHPUnit\\\\Framework\\\\TestCase\\:\\:\\$user\\.$#',

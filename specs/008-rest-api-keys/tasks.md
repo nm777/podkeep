@@ -173,9 +173,9 @@ description: "Task list for REST API with API Key Authentication feature"
 
 **Purpose**: Verification, formatting, and end-to-end validation
 
-- [ ] T042 [P] Run end-to-end validation using the workflow in `specs/008-rest-api-keys/quickstart.md` (create key, create feed, upload mp3, poll status, attach to feed, verify RSS)
-- [ ] T043 [P] Run `vendor/bin/pint --dirty` in src/ to format all new PHP files per project style
-- [ ] T044 Run full test suite via `php artisan test --no-interaction` in src/ and ensure all existing tests still pass alongside new API tests
+- [X] T042 [P] Run end-to-end validation using the workflow in `specs/008-rest-api-keys/quickstart.md` (create key, create feed, upload mp3, poll status, attach to feed, verify RSS)
+- [X] T043 [P] Run `vendor/bin/pint --dirty` in src/ to format all new PHP files per project style
+- [X] T044 Run full test suite via `php artisan test --no-interaction` in src/ and ensure all existing tests still pass alongside new API tests
 
 ---
 

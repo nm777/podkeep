@@ -23,8 +23,8 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'eligible.api'])
         Route::put('feeds/{feed}/items/reorder', [FeedItemController::class, 'reorder'])->name('api.v1.feed-items.reorder');
         Route::delete('feeds/{feed}/items/{item}', [FeedItemController::class, 'destroy'])->name('api.v1.feed-items.destroy');
 
-        Route::apiResource('feeds', FeedController::class);
-        Route::apiResource('library', LibraryItemController::class);
+        Route::apiResource('feeds', FeedController::class)->names('api.v1.feeds');
+        Route::apiResource('library', LibraryItemController::class)->names('api.v1.library');
         Route::post('library/{id}/retry', [MediaProcessingController::class, 'retry'])->name('api.v1.library.retry');
         Route::post('library/{id}/redownload', [MediaProcessingController::class, 'redownload'])->name('api.v1.library.redownload');
     });
