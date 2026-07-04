@@ -49,4 +49,25 @@ When dispatching work to subagents, the **orchestrating agent** retains responsi
 - **Not run linting or static analysis** unless explicitly asked — the orchestrator runs quality checks after the work is returned.
 - Report any blockers or decisions made back to the orchestrator in the task result.
 
+### Docker Deployment Architecture
+
+**Do not run `docker compose` commands from this repo directory.** This dev path and the production deployment share the same Docker Compose project name (`podkeep`), so any `docker compose` command here affects production containers.
+
+**Production** lives at `/home/nate/Documents/docker/podkeep/`:
+- Uses pre-built images (`podkeep-app:latest`, `podkeep-web:latest`) with source code baked into the image at build time.
+- Only `storage/`, `database.sqlite`, and `.env` are volume-mounted. Source code and `public/build/` come from the image.
+- The user rebuilds images manually — do not attempt it yourself.
+
+**Development** lives at `/home/nate/src/podkeep/`:
+- The `docker-compose.yml` uses `target: dev` which does NOT copy source into the image. The bind mount (`./src:/var/www/html`) is broken — the running container has stale files from its original creation, not current source.
+- **Never run `npm run build` inside the running container** — it builds from stale files, not current source, and produces a Vite manifest that doesn't match the assets served by nginx.
+- To run PHP commands (tests, artisan, phpstan), the orchestrator must first sync changed files into the container via `docker compose cp src/<path> app:/var/www/html/<path>` (from the production compose directory).
+- Node/npm/fallow are not installed by default — they must be installed via `apk add --no-cache nodejs npm` inside the container after each restart.
+
+**The correct workflow for frontend changes:**
+1. Edit files on the host.
+2. Sync to container, run tests/tools as needed.
+3. Commit the source changes.
+4. The user rebuilds the Docker images and redeploys — the Dockerfile's `frontend` stage runs `npm run build` during image build, producing correct assets from current source.
+
 <!-- MANUAL ADDITIONS END -->
