@@ -15,7 +15,12 @@ interface FeedCardProps {
 export default function FeedCard({ feed, onCopyUrl, onCopyShareUrl, onDelete }: FeedCardProps) {
     return (
         <div className="px-4 py-3">
-            <a href={`/share/${feed.user_guid}/${feed.slug}`} target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:underline md:truncate">
+            <a
+                href={`/share/${feed.user_guid}/${feed.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground hover:underline md:truncate"
+            >
                 {feed.title}
             </a>
             <div className="mt-1 flex items-center gap-2">
