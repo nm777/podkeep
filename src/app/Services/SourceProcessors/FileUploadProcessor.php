@@ -2,10 +2,11 @@
 
 namespace App\Services\SourceProcessors;
 
-use App\Http\Requests\LibraryItemRequest;
 use App\Jobs\CleanupDuplicateLibraryItem;
 use App\Jobs\ProcessMediaFile;
+use App\Models\LibraryItem;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Storage;
 
 class FileUploadProcessor
@@ -16,7 +17,11 @@ class FileUploadProcessor
         private UploadStrategy $strategy
     ) {}
 
-    public function process(LibraryItemRequest $request, array $validated, string $sourceType): array
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array{0: LibraryItem, 1: string}
+     */
+    public function process(FormRequest $request, array $validated, string $sourceType): array
     {
         $file = $request->file('file');
         $tempPath = $file->store('temp-uploads', 'public');

@@ -2,8 +2,8 @@
 
 namespace App\Services\SourceProcessors;
 
-use App\Http\Requests\LibraryItemRequest;
 use App\Models\LibraryItem;
+use Illuminate\Foundation\Http\FormRequest;
 
 class UnifiedSourceProcessor
 {
@@ -15,8 +15,11 @@ class UnifiedSourceProcessor
 
     /**
      * Process source using unified logic with strategy pattern.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array{0: LibraryItem, 1: string}
      */
-    public function process(LibraryItemRequest $request, array $validated, string $sourceType, ?string $sourceUrl): array
+    public function process(FormRequest $request, array $validated, string $sourceType, ?string $sourceUrl): array
     {
         // Validate source using strategy
         $this->strategy->validate($sourceUrl);
