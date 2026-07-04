@@ -1,9 +1,16 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['throttle:api', 'auth:sanctum', 'eligible.api'])
     ->prefix('v1')
     ->group(function () {
-        // API v1 routes will be added here
+        Route::get('/me', function (Request $request) {
+            return response()->json([
+                'id' => $request->user()->id,
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+            ]);
+        })->name('api.v1.me');
     });
