@@ -63,7 +63,11 @@ export default function AppTopbar() {
                         {themeOptions.map((option) => {
                             const Icon = option.icon;
                             return (
-                                <DropdownMenuItem key={option.value} onClick={() => updateAppearance(option.value)} className="flex items-center gap-2">
+                                <DropdownMenuItem
+                                    key={option.value}
+                                    onClick={() => updateAppearance(option.value)}
+                                    className="flex items-center gap-2"
+                                >
                                     <Icon className="h-4 w-4" />
                                     {option.label}
                                     {appearance === option.value && <span className="ml-auto text-xs">✓</span>}

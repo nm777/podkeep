@@ -67,7 +67,7 @@ export default function FeedFormFields({ data, setData, errors }: FeedFormFields
                     id="episode_order"
                     value={data.episode_order}
                     onChange={(e) => setData('episode_order', e.target.value)}
-                    className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm"
                 >
                     <option value="newest_first">Newest First</option>
                     <option value="chronological">Chronological (oldest first)</option>

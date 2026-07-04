@@ -1,7 +1,7 @@
-import { type Appearance, useAppearance } from '@/hooks/use-appearance';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { type Appearance, useAppearance } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { ComponentType } from 'react';
@@ -61,7 +61,7 @@ export default function Appearance() {
                                     onClick={() => updateAppearance(option.value)}
                                     aria-pressed={isActive}
                                     className={cn(
-                                        'flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                                        'flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                                         isActive ? 'border-primary bg-accent' : 'border-border',
                                     )}
                                 >
