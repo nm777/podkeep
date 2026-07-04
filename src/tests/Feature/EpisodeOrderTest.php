@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ProcessingStatusType;
+use App\Jobs\AddLibraryItemToFeedsJob;
 use App\Models\Feed;
 use App\Models\FeedItem;
 use App\Models\LibraryItem;
@@ -253,5 +254,55 @@ describe('API episode_order exposure', function () {
             'title' => 'API Chronological Feed',
             'episode_order' => 'chronological',
         ]);
+    });
+});
+
+describe('auto-append sequence behavior', function () {
+    it('appends new items to the end for chronological feeds', function () {
+        // Create a chronological feed with 2 items (sequences 0, 1)
+        $user = User::factory()->create();
+        $feed = Feed::factory()->create(['user_id' => $user->id, 'episode_order' => 'chronological']);
+        $item1 = LibraryItem::factory()->create(['user_id' => $user->id]);
+        $item2 = LibraryItem::factory()->create(['user_id' => $user->id]);
+        FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $item1->id, 'sequence' => 0]);
+        FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $item2->id, 'sequence' => 1]);
+
+        // Add a new item via the job (simulates upload + attach to feed)
+        $newItem = LibraryItem::factory()->create(['user_id' => $user->id]);
+        dispatch(new AddLibraryItemToFeedsJob($newItem, [$feed->id]));
+
+        // The new item should have sequence 2 (max + 1)
+        $newFeedItem = FeedItem::where('feed_id', $feed->id)
+            ->where('library_item_id', $newItem->id)
+            ->first();
+        expect($newFeedItem->sequence)->toBe(2);
+
+        // In chronological (ASC) order, the new item should appear LAST
+        $feedItems = $feed->fresh()->items()->orderBy('sequence', 'asc')->get();
+        expect($feedItems->last()->library_item_id)->toBe($newItem->id);
+    });
+
+    it('places new items at the top for newest_first feeds', function () {
+        // Create a newest_first feed with 2 items (sequences 0, 1)
+        $user = User::factory()->create();
+        $feed = Feed::factory()->create(['user_id' => $user->id, 'episode_order' => 'newest_first']);
+        $item1 = LibraryItem::factory()->create(['user_id' => $user->id]);
+        $item2 = LibraryItem::factory()->create(['user_id' => $user->id]);
+        FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $item1->id, 'sequence' => 0]);
+        FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $item2->id, 'sequence' => 1]);
+
+        // Add a new item via the job
+        $newItem = LibraryItem::factory()->create(['user_id' => $user->id]);
+        dispatch(new AddLibraryItemToFeedsJob($newItem, [$feed->id]));
+
+        // The new item should have sequence 2 (max + 1 = highest sequence)
+        $newFeedItem = FeedItem::where('feed_id', $feed->id)
+            ->where('library_item_id', $newItem->id)
+            ->first();
+        expect($newFeedItem->sequence)->toBe(2);
+
+        // In newest_first (DESC) order, the highest sequence appears FIRST
+        $feedItems = $feed->fresh()->items()->reorder()->orderBy('sequence', 'desc')->get();
+        expect($feedItems->first()->library_item_id)->toBe($newItem->id);
     });
 });

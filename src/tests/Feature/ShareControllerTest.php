@@ -157,6 +157,7 @@ it('orders episodes by sequence ascending', function () {
     $feed = Feed::factory()->create([
         'user_id' => $this->user->id,
         'is_public' => true,
+        'episode_order' => 'chronological',
     ]);
 
     $mediaFile1 = MediaFile::factory()->create(['user_id' => $this->user->id]);

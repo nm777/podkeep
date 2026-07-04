@@ -92,7 +92,7 @@ description: "Task list for Per-Feed Episode Ordering feature"
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Feature test for auto-append sequence behavior in `src/tests/Feature/EpisodeOrderTest.php` — test that adding a new item to a chronological feed assigns `max(sequence) + 1` (appears at end in ASC order), and adding to a newest_first feed also assigns `max(sequence) + 1` (appears at top in DESC order), verifying both modes produce the correct visual position with the existing `AddLibraryItemToFeedsJob` logic
+- [X] T019 [P] [US2] Feature test for auto-append sequence behavior in `src/tests/Feature/EpisodeOrderTest.php` — test that adding a new item to a chronological feed assigns `max(sequence) + 1` (appears at end in ASC order), and adding to a newest_first feed also assigns `max(sequence) + 1` (appears at top in DESC order), verifying both modes produce the correct visual position with the existing `AddLibraryItemToFeedsJob` logic
 
 **Checkpoint**: Both user stories are independently functional — the complete episode ordering feature is available.
 
@@ -102,8 +102,8 @@ description: "Task list for Per-Feed Episode Ordering feature"
 
 **Purpose**: Formatting and regression validation
 
-- [ ] T020 [P] Run `vendor/bin/pint --dirty` in src/ to format all modified PHP files
-- [ ] T021 Run full test suite via `php artisan test --no-interaction` in src/ and verify all existing tests still pass alongside new episode order tests
+- [X] T020 [P] Run `vendor/bin/pint --dirty` in src/ to format all modified PHP files
+- [X] T021 Run full test suite via `php artisan test --no-interaction` in src/ and verify all existing tests still pass alongside new episode order tests
 
 ---
 
