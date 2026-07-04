@@ -42,11 +42,11 @@ description: "Task list for REST API with API Key Authentication feature"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 [P] Add `HasApiTokens` trait from Laravel Sanctum to User model in `src/app/Models/User.php` (add `use Laravel\Sanctum\HasApiTokens;` to imports and trait list)
-- [ ] T003 [P] Create EnsureEligibleForApi middleware in `src/app/Http/Middleware/EnsureEligibleForApi.php` that checks `$user->hasVerifiedEmail()` and `$user->isApproved()`, returning JSON 403 responses (not redirects) — see `specs/008-rest-api-keys/research.md` R3
-- [ ] T004 Register middleware alias `'eligible.api' => EnsureEligibleForApi::class` in `src/bootstrap/app.php` and verify `install:api` added `api:` routing to `withRouting()`
-- [ ] T005 [P] Configure `RateLimiter::for('api')` in `src/app/Providers/AppServiceProvider.php` with 60 requests/minute limit keyed by `$request->user()?->id ?: $request->ip()` — see `specs/008-rest-api-keys/research.md` R6
-- [ ] T006 Create base v1 API route group in `src/routes/api.php` with middleware stack `['throttle:api', 'auth:sanctum', 'eligible.api']` inside `Route::prefix('v1')` group — see `specs/008-rest-api-keys/contracts/authentication.md`
+- [X] T002 [P] Add `HasApiTokens` trait from Laravel Sanctum to User model in `src/app/Models/User.php` (add `use Laravel\Sanctum\HasApiTokens;` to imports and trait list)
+- [X] T003 [P] Create EnsureEligibleForApi middleware in `src/app/Http/Middleware/EnsureEligibleForApi.php` that checks `$user->hasVerifiedEmail()` and `$user->isApproved()`, returning JSON 403 responses (not redirects) — see `specs/008-rest-api-keys/research.md` R3
+- [X] T004 Register middleware alias `'eligible.api' => EnsureEligibleForApi::class` in `src/bootstrap/app.php` and verify `install:api` added `api:` routing to `withRouting()`
+- [X] T005 [P] Configure `RateLimiter::for('api')` in `src/app/Providers/AppServiceProvider.php` with 60 requests/minute limit keyed by `$request->user()?->id ?: $request->ip()` — see `specs/008-rest-api-keys/research.md` R6
+- [X] T006 Create base v1 API route group in `src/routes/api.php` with middleware stack `['throttle:api', 'auth:sanctum', 'eligible.api']` inside `Route::prefix('v1')` group — see `specs/008-rest-api-keys/contracts/authentication.md`
 
 **Checkpoint**: Foundation ready — API routing, Sanctum auth, rate limiting, and eligibility checks are wired. User story implementation can now begin.
 

@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => AdminMiddleware::class,
             'approved' => ApprovedUserMiddleware::class,
+            'eligible.api' => \App\Http\Middleware\EnsureEligibleForApi::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
