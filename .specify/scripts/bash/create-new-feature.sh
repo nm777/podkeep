@@ -245,13 +245,16 @@ fi
 
 # Determine branch number
 if [ -z "$BRANCH_NUMBER" ]; then
+    # Get highest number across ALL features (not just same-name collisions)
+    HIGHEST_SPECS=$(get_highest_from_specs "$SPECS_DIR")
+    HIGHEST_BRANCHES=0
     if [ "$HAS_GIT" = true ]; then
-        # Check existing branches on remotes
-        BRANCH_NUMBER=$(check_existing_branches "$BRANCH_SUFFIX" "$SPECS_DIR")
+        HIGHEST_BRANCHES=$(get_highest_from_branches)
+    fi
+    if [ "$HIGHEST_BRANCHES" -gt "$HIGHEST_SPECS" ]; then
+        BRANCH_NUMBER=$((HIGHEST_BRANCHES + 1))
     else
-        # Fall back to local directory check
-        HIGHEST=$(get_highest_from_specs "$SPECS_DIR")
-        BRANCH_NUMBER=$((HIGHEST + 1))
+        BRANCH_NUMBER=$((HIGHEST_SPECS + 1))
     fi
 fi
 
