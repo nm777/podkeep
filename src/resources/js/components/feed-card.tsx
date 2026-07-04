@@ -15,7 +15,9 @@ interface FeedCardProps {
 export default function FeedCard({ feed, onCopyUrl, onCopyShareUrl, onDelete }: FeedCardProps) {
     return (
         <div className="px-4 py-3">
-            <p className="font-medium md:truncate">{feed.title}</p>
+            <a href={`/share/${feed.user_guid}/${feed.slug}`} target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:underline md:truncate">
+                {feed.title}
+            </a>
             <div className="mt-1 flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">{feed.items_count ?? 0} items</span>
                 <span
