@@ -65,7 +65,6 @@ class UrlSourceProcessor
             ->where('user_id', $userId)
             ->where(function ($query) {
                 $query->where('processing_status', ProcessingStatusType::FAILED)
-                    ->orWhereNull('media_file_id')
                     ->orWhere('is_duplicate', true);
             })
             ->get();

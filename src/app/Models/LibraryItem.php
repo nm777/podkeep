@@ -24,7 +24,7 @@ class LibraryItem extends Model
         'processing_started_at',
         'processing_completed_at',
         'processing_error',
-        'published_at',
+        'temp_file_path',
     ];
 
     protected function casts(): array
@@ -32,11 +32,10 @@ class LibraryItem extends Model
         return [
             'is_duplicate' => 'boolean',
             'duplicate_detected_at' => 'datetime',
-            'published_at' => 'datetime',
+            'published_at' => 'date',
             'processing_started_at' => 'datetime',
             'processing_completed_at' => 'datetime',
             'processing_status' => ProcessingStatusType::class,
-            'published_at' => 'date',
         ];
     }
 

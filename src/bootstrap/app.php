@@ -50,5 +50,6 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function ($schedule) {
         $schedule->command('media:cleanup-orphaned')->daily();
+        $schedule->command('media:retry-pending')->everyFiveMinutes();
     })
     ->create();

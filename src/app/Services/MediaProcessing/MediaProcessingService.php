@@ -111,6 +111,7 @@ class MediaProcessingService
             $libraryItem->update([
                 'processing_status' => ProcessingStatusType::COMPLETED,
                 'processing_completed_at' => now(),
+                'temp_file_path' => null,
             ]);
 
             return [

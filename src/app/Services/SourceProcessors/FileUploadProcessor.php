@@ -70,6 +70,8 @@ class FileUploadProcessor
             'filesize' => $file->getSize(),
         ], $userId);
 
+        $libraryItem->update(['temp_file_path' => $tempPath]);
+
         ProcessMediaFile::dispatch($libraryItem, null, $tempPath);
 
         return [$libraryItem, $this->strategy->getProcessingMessage()];
