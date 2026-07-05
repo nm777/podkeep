@@ -17,6 +17,7 @@ RUN apk add --no-cache \
     libzip-dev \
     make \
     oniguruma-dev \
+    postgresql-dev \
     sqlite-dev \
     unzip \
     wget \
@@ -33,6 +34,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     mbstring \
     opcache \
     pdo \
+    pdo_pgsql \
     pdo_sqlite \
     xml \
     zip
