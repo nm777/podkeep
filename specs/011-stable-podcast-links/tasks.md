@@ -42,7 +42,7 @@
 
 **Purpose**: Confirm a green starting point so any later failure is attributable to this feature's change.
 
-- [ ] T001 Run existing feed/RSS/share test suites to confirm green baseline via `docker compose exec app php artisan test tests/Feature/FeedEditTest.php tests/Feature/FeedManagementTest.php tests/Feature/ShareControllerTest.php tests/Feature/RssFeedTest.php` (run from the production compose dir `/home/nate/Documents/docker/podkeep/` per AGENTS.md)
+- [X] T001 Run existing feed/RSS/share test suites to confirm green baseline via `docker compose exec app php artisan test tests/Feature/FeedEditTest.php tests/Feature/FeedManagementTest.php tests/Feature/ShareControllerTest.php tests/Feature/RssFeedTest.php` (run from the production compose dir `/home/nate/Documents/docker/podkeep/` per AGENTS.md)
 
 ---
 
@@ -52,7 +52,7 @@
 
 **⚠️ CRITICAL**: This phase MUST complete (red confirmed) before the fix is applied.
 
-- [ ] T002 Create `src/tests/Feature/StableFeedLinksTest.php` (Pest) containing all scenarios below, modeled on the style of `src/tests/Feature/FeedEditTest.php`. Use `Feed::factory()` and `actingAs()`. Scenarios to include:
+- [X] T002 Create `src/tests/Feature/StableFeedLinksTest.php` (Pest) containing all scenarios below, modeled on the style of `src/tests/Feature/FeedEditTest.php`. Use `Feed::factory()` and `actingAs()`. Scenarios to include:
   - **US1 scenarios**:
     - `it('keeps the slug unchanged when renaming a feed via the web update')` — PUT `/feeds/{id}` with a new title; assert DB `slug` equals the original slug and `title` updated.
     - `it('keeps the original RSS URL resolving after a rename, showing the new title')` — rename; GET `/rss/{user_guid}/{original_slug}`; assert 200, `Content-Type` XML, body contains the NEW title.
@@ -65,7 +65,7 @@
     - `it('keeps the slug unchanged when renaming via the API')` — PUT `/api/v1/feeds/{id}` with new title; assert 200, response JSON `slug` and `user_guid` unchanged, `title` updated.
     - `it('shows the latest title after renames via both web and API')` — rename via web then via API; GET original share URL; assert latest title shown.
     - `it('still prevents non-owners from renaming a feed')` — non-owner PUT `/feeds/{id}`; assert 403, slug/title unchanged (FR-006 regression guard).
-- [ ] T003 Sync the new test file into the container and run it to confirm the slug-stability assertions FAIL (red): `docker compose cp src/tests/Feature/StableFeedLinksTest.php app:/var/www/html/tests/Feature/StableFeedLinksTest.php` then `docker compose exec app php artisan test tests/Feature/StableFeedLinksTest.php` (run from `/home/nate/Documents/docker/podkeep/`)
+- [X] T003 Sync the new test file into the container and run it to confirm the slug-stability assertions FAIL (red): `docker compose cp src/tests/Feature/StableFeedLinksTest.php app:/var/www/html/tests/Feature/StableFeedLinksTest.php` then `docker compose exec app php artisan test tests/Feature/StableFeedLinksTest.php` (run from `/home/nate/Documents/docker/podkeep/`)
 
 **Checkpoint**: All slug-stability assertions are red. Ready for the fix.
 
@@ -79,8 +79,8 @@
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Apply the root-cause fix in `src/app/Http/Controllers/FeedController.php`: (1) in `update()`, delete the line `'slug' => $this->generateUniqueSlug($validated['title'], $feed->id),` from the `$feed->update([...])` array (the `title` assignment on the line above stays); (2) in the private `generateUniqueSlug()`, remove the now-dead `?int $excludeFeedId = null` parameter and both `if ($excludeFeedId) { ... }` blocks (its only remaining caller `store()` does not pass it). Do NOT touch the API controller — it already leaves the slug untouched.
-- [ ] T005 [US1] Sync the controller change and run US1's scenarios to confirm green: `docker compose cp src/app/Http/Controllers/FeedController.php app:/var/www/html/app/Http/Controllers/FeedController.php` then `docker compose exec app php artisan test tests/Feature/StableFeedLinksTest.php` (run from `/home/nate/Documents/docker/podkeep/`)
+- [X] T004 [US1] Apply the root-cause fix in `src/app/Http/Controllers/FeedController.php`: (1) in `update()`, delete the line `'slug' => $this->generateUniqueSlug($validated['title'], $feed->id),` from the `$feed->update([...])` array (the `title` assignment on the line above stays); (2) in the private `generateUniqueSlug()`, remove the now-dead `?int $excludeFeedId = null` parameter and both `if ($excludeFeedId) { ... }` blocks (its only remaining caller `store()` does not pass it). Do NOT touch the API controller — it already leaves the slug untouched.
+- [X] T005 [US1] Sync the controller change and run US1's scenarios to confirm green: `docker compose cp src/app/Http/Controllers/FeedController.php app:/var/www/html/app/Http/Controllers/FeedController.php` then `docker compose exec app php artisan test tests/Feature/StableFeedLinksTest.php` (run from `/home/nate/Documents/docker/podkeep/`)
 
 **Checkpoint**: User Story 1 is fully functional — the original RSS/share URL resolves after a rename and reflects the new title. (MVP delivered.)
 
@@ -94,7 +94,7 @@
 
 > Implementation is already covered by T004 (the fix removed slug regeneration from every `update()`, not just title changes). This phase verifies US2's scenarios pass and locks them in as regression guards.
 
-- [ ] T006 [US2] Run US2's scenarios (description edit, is_public toggle) to confirm green: `docker compose exec app php artisan test tests/Feature/StableFeedLinksTest.php --filter='description|is_public'` (run from `/home/nate/Documents/docker/podkeep/`). If any fail, T004 did not fully remove slug regeneration — re-check `update()`.
+- [X] T006 [US2] Run US2's scenarios (description edit, is_public toggle) to confirm green: `docker compose exec app php artisan test tests/Feature/StableFeedLinksTest.php --filter='description|is_public'` (run from `/home/nate/Documents/docker/podkeep/`). If any fail, T004 did not fully remove slug regeneration — re-check `update()`.
 
 **Checkpoint**: User Stories 1 AND 2 both hold — no save of any kind changes the public link.
 
@@ -108,7 +108,7 @@
 
 > Implementation is already covered by T004 (web path now matches the API path, which has always left the slug untouched). This phase verifies US3's parity scenarios pass.
 
-- [ ] T007 [US3] Run US3's scenarios (API rename, web+API sequence shows latest title, non-owner 403) to confirm green: `docker compose exec app php artisan test tests/Feature/StableFeedLinksTest.php --filter='API|both web|non-owners'` (run from `/home/nate/Documents/docker/podkeep/`)
+- [X] T007 [US3] Run US3's scenarios (API rename, web+API sequence shows latest title, non-owner 403) to confirm green: `docker compose exec app php artisan test tests/Feature/StableFeedLinksTest.php --filter='API|both web|non-owners'` (run from `/home/nate/Documents/docker/podkeep/`)
 
 **Checkpoint**: All three user stories are independently satisfied and verified.
 
@@ -118,9 +118,9 @@
 
 **Purpose**: Ensure no regressions and that quality gates pass before commit.
 
-- [ ] T008 [P] Run the related existing suites to confirm no regression via `docker compose exec app php artisan test tests/Feature/FeedEditTest.php tests/Feature/FeedManagementTest.php tests/Feature/ShareControllerTest.php tests/Feature/RssFeedTest.php` (run from `/home/nate/Documents/docker/podkeep/`). In particular `FeedEditTest`'s "allows feed owner to update feed details" must still pass (title still updates; only slug stability is new).
-- [ ] T009 [P] Run PHPStan and address any findings via `docker compose exec app ./vendor/bin/phpstan` (run from `/home/nate/Documents/docker/podkeep/`)
-- [ ] T010 Commit the controller change plus the new test file on the `011-stable-podcast-links` branch (do NOT run `npm run build` inside the container — there is no frontend change). Inspect `git status`/`git diff` before committing; stage only `src/app/Http/Controllers/FeedController.php` and `src/tests/Feature/StableFeedLinksTest.php`.
+- [X] T008 [P] Run the related existing suites to confirm no regression via `docker compose exec app php artisan test tests/Feature/FeedEditTest.php tests/Feature/FeedManagementTest.php tests/Feature/ShareControllerTest.php tests/Feature/RssFeedTest.php` (run from `/home/nate/Documents/docker/podkeep/`). In particular `FeedEditTest`'s "allows feed owner to update feed details" must still pass (title still updates; only slug stability is new).
+- [X] T009 [P] Run PHPStan and address any findings via `docker compose exec app ./vendor/bin/phpstan` (run from `/home/nate/Documents/docker/podkeep/`)
+- [X] T010 Commit the controller change plus the new test file on the `011-stable-podcast-links` branch (do NOT run `npm run build` inside the container — there is no frontend change). Inspect `git status`/`git diff` before committing; stage only `src/app/Http/Controllers/FeedController.php` and `src/tests/Feature/StableFeedLinksTest.php`.
 
 ---
 

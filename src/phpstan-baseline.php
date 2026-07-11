@@ -4024,4 +4024,29 @@ $ignoreErrors[] = [
     'path' => __DIR__.'/tests/tests/Unit/UnifiedDuplicateProcessorTest.php',
 ];
 
+$ignoreErrors[] = [
+    'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:actingAs\\(\\)\\.$#',
+    'identifier' => 'method.notFound',
+    'count' => 9,
+    'path' => __DIR__.'/tests/Feature/StableFeedLinksTest.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:assertDatabaseHas\\(\\)\\.$#',
+    'identifier' => 'method.notFound',
+    'count' => 6,
+    'path' => __DIR__.'/tests/Feature/StableFeedLinksTest.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:get\\(\\)\\.$#',
+    'identifier' => 'method.notFound',
+    'count' => 4,
+    'path' => __DIR__.'/tests/Feature/StableFeedLinksTest.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:withHeader\\(\\)\\.$#',
+    'identifier' => 'method.notFound',
+    'count' => 2,
+    'path' => __DIR__.'/tests/Feature/StableFeedLinksTest.php',
+];
+
 return ['parameters' => ['ignoreErrors' => $ignoreErrors]];

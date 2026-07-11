@@ -83,7 +83,6 @@ class FeedController extends Controller
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'website_url' => $validated['website_url'] ?? null,
-            'slug' => $this->generateUniqueSlug($validated['title'], $feed->id),
             'is_public' => $validated['is_public'] ?? false,
             'episode_order' => $validated['episode_order'] ?? $feed->episode_order,
         ]);
@@ -117,25 +116,19 @@ class FeedController extends Controller
         return redirect()->route('dashboard')->with('success', 'Feed deleted successfully!');
     }
 
-    private function generateUniqueSlug(string $title, ?int $excludeFeedId = null): string
+    private function generateUniqueSlug(string $title): string
     {
         $slug = Str::slug($title);
         $originalSlug = $slug;
         $count = 1;
 
         $query = Auth::user()->feeds()->where('slug', $slug);
-        if ($excludeFeedId) {
-            $query->where('id', '!=', $excludeFeedId);
-        }
 
         while ($query->exists()) {
             $slug = $originalSlug.'-'.$count;
             $count++;
 
             $query = Auth::user()->feeds()->where('slug', $slug);
-            if ($excludeFeedId) {
-                $query->where('id', '!=', $excludeFeedId);
-            }
         }
 
         return $slug;
