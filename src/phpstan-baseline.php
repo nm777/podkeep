@@ -4060,5 +4060,23 @@ $ignoreErrors[] = [
     'count' => 1,
     'path' => __DIR__.'/tests/Feature/AppearanceSettingsTest.php',
 ];
+$ignoreErrors[] = [
+    'message' => '#^Relation \'mediaFile\' is not found in App\\\\Models\\\\LibraryItem model\\.$#',
+    'identifier' => 'larastan.relationExistence',
+    'count' => 2,
+    'path' => __DIR__.'/app/Console/Commands/RedownloadMissingMedia.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Relation \'feeds\' is not found in App\\\\Models\\\\LibraryItem model\\.$#',
+    'identifier' => 'larastan.relationExistence',
+    'count' => 1,
+    'path' => __DIR__.'/app/Console/Commands/RedownloadMissingMedia.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Access to an undefined property App\\\\Models\\\\LibraryItem\\:\\:\\$mediaFile\\.$#',
+    'identifier' => 'property.notFound',
+    'count' => 1,
+    'path' => __DIR__.'/app/Console/Commands/RedownloadMissingMedia.php',
+];
 
 return ['parameters' => ['ignoreErrors' => $ignoreErrors]];
