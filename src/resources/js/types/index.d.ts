@@ -1,3 +1,4 @@
+import type { PageProps } from '@inertiajs/core';
 import { LucideIcon } from 'lucide-react';
 import type { Config } from 'ziggy-js';
 
@@ -74,7 +75,7 @@ export interface Feed {
     updated_at: string;
 }
 
-export interface SharedData {
+export interface SharedData extends PageProps {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
