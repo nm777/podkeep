@@ -4048,5 +4048,17 @@ $ignoreErrors[] = [
     'count' => 2,
     'path' => __DIR__.'/tests/Feature/StableFeedLinksTest.php',
 ];
+$ignoreErrors[] = [
+    'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:actingAs\\(\\)\\.$#',
+    'identifier' => 'method.notFound',
+    'count' => 1,
+    'path' => __DIR__.'/tests/Feature/AppearanceSettingsTest.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Call to an undefined method PHPUnit\\\\Framework\\\\TestCase\\:\\:get\\(\\)\\.$#',
+    'identifier' => 'method.notFound',
+    'count' => 1,
+    'path' => __DIR__.'/tests/Feature/AppearanceSettingsTest.php',
+];
 
 return ['parameters' => ['ignoreErrors' => $ignoreErrors]];

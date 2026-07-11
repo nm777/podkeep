@@ -24,6 +24,7 @@ interface User {
 }
 
 interface PageProps {
+    [key: string]: unknown;
     users: User[];
     flash?: {
         success?: string;
