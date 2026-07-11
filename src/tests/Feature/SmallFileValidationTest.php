@@ -3,8 +3,13 @@
 use App\Services\MediaProcessing\MediaDownloader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Storage::fake('public');
+});
 
 describe('Small file media validation', function () {
     it('rejects files under 100 bytes with invalid signature', function () {
@@ -43,8 +48,9 @@ describe('Small file media validation', function () {
         ]);
 
         $downloader = app(MediaDownloader::class);
-        $result = $downloader->downloadFromUrl('https://example.com/valid.mp3');
+        $path = $downloader->downloadFromUrl('https://example.com/valid.mp3');
 
-        expect($result)->toBeString();
+        expect($path)->toBeString();
+        expect(Storage::disk('public')->exists($path))->toBeTrue();
     });
 });

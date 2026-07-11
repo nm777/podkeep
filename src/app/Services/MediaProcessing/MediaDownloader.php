@@ -5,25 +5,23 @@ namespace App\Services\MediaProcessing;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class MediaDownloader
 {
     /**
-     * Download media from URL with redirect handling.
+     * Download media from URL to a temp file on the public disk.
+     * Streams to disk via Guzzle's sink option to avoid loading
+     * large files into memory.
+     *
+     * @return string Relative path on the public disk
      */
-    public function downloadFromUrl(string $url): ?string
+    public function downloadFromUrl(string $url): string
     {
         $this->validateUrlSafety($url);
 
         try {
-            $response = $this->executeDownload($url);
-            $contents = $response->body();
-
-            $this->validateResponse($response, $contents);
-            $contents = $this->handleHtmlRedirect($contents, $url);
-            $this->validateMediaContent($contents);
-
-            return $contents;
+            return $this->downloadToTempFile($url);
         } catch (\Exception $e) {
             Log::error('Media download failed', [
                 'url' => $url,
@@ -35,11 +33,70 @@ class MediaDownloader
     }
 
     /**
-     * Execute HTTP download with redirect options.
+     * Download URL to a temp file, handling HTML redirects recursively.
      */
-    private function executeDownload(string $url): Response
+    private function downloadToTempFile(string $url, int $redirectDepth = 0): string
+    {
+        if ($redirectDepth > 5) {
+            throw new \Exception('Too many HTML redirects');
+        }
+
+        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'mp3';
+        $relativePath = 'temp-downloads/'.uniqid().'.'.$extension;
+
+        Storage::disk('public')->makeDirectory('temp-downloads');
+        $absolutePath = Storage::disk('public')->path($relativePath);
+
+        try {
+            $response = $this->executeDownload($url, $absolutePath);
+
+            if (! $response->successful()) {
+                throw new \Exception('Failed to download file: HTTP '.$response->status());
+            }
+
+            // Guzzle's sink option streams the body to disk in production.
+            // Http::fake doesn't process sink, so write the body manually in tests.
+            if (! file_exists($absolutePath) || filesize($absolutePath) === 0) {
+                $body = $response->body();
+                if (empty($body)) {
+                    throw new \Exception('Downloaded file is empty');
+                }
+                file_put_contents($absolutePath, $body);
+            }
+
+            // Read only the first bytes for content validation
+            $firstBytes = file_get_contents($absolutePath, false, null, 0, 4096);
+
+            // Handle HTML redirects (redirect pages are small, safe to read fully)
+            if ($this->isHtmlContent($firstBytes)) {
+                $html = file_get_contents($absolutePath);
+                Storage::disk('public')->delete($relativePath);
+
+                $redirectUrl = $this->extractRedirectUrl($html, $url);
+                if ($redirectUrl) {
+                    return $this->downloadToTempFile($redirectUrl, $redirectDepth + 1);
+                }
+
+                throw new \Exception('Download failed: Got HTML content instead of media file');
+            }
+
+            $this->validateMediaContent($firstBytes);
+
+            return $relativePath;
+        } catch (\Exception $e) {
+            Storage::disk('public')->delete($relativePath);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Execute HTTP download, streaming response body to the sink path.
+     */
+    private function executeDownload(string $url, string $sinkPath): Response
     {
         return Http::timeout(60)->withOptions([
+            'sink' => $sinkPath,
             'allow_redirects' => [
                 'max' => 5,
                 'strict' => true,
@@ -48,42 +105,6 @@ class MediaDownloader
                 'track_redirects' => true,
             ],
         ])->get($url);
-    }
-
-    /**
-     * Validate HTTP response and content.
-     */
-    private function validateResponse(Response $response, string $contents): void
-    {
-        if (! $response->successful()) {
-            throw new \Exception('Failed to download file: HTTP '.$response->status());
-        }
-
-        if (empty($contents)) {
-            throw new \Exception('Downloaded file is empty');
-        }
-    }
-
-    /**
-     * Handle HTML JavaScript redirects.
-     */
-    private function handleHtmlRedirect(string $contents, string $originalUrl): string
-    {
-        if (! $this->isHtmlContent($contents)) {
-            return $contents;
-        }
-
-        $redirectUrl = $this->extractRedirectUrl($contents, $originalUrl);
-
-        if ($redirectUrl) {
-            try {
-                return $this->downloadFromUrl($redirectUrl);
-            } catch (\Exception $e) {
-                throw new \Exception('Download failed: Got HTML redirect page instead of media file');
-            }
-        }
-
-        throw new \Exception('Download failed: Got HTML content instead of media file');
     }
 
     /**

@@ -41,8 +41,9 @@ describe('SSRF protection in MediaDownloader', function () {
         ]);
 
         $downloader = new MediaDownloader;
-        $result = $downloader->downloadFromUrl('https://example.com/audio.mp3');
+        $path = $downloader->downloadFromUrl('https://example.com/audio.mp3');
 
-        expect($result)->not->toBeEmpty();
+        expect($path)->not->toBeEmpty();
+        expect(Storage::disk('public')->exists($path))->toBeTrue();
     });
 });

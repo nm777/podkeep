@@ -2,9 +2,14 @@
 
 use App\Services\MediaProcessing\MediaDownloader;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 uses(TestCase::class);
+
+beforeEach(function () {
+    Storage::fake('public');
+});
 
 test('downloads media file successfully', function () {
     $url = 'https://example.com/audio.mp3';
@@ -12,9 +17,9 @@ test('downloads media file successfully', function () {
 
     Http::fake([$url => Http::response($content, 200)]);
 
-    $result = (new MediaDownloader)->downloadFromUrl($url);
+    $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect($result)->toBe($content);
+    expect(Storage::disk('public')->get($path))->toBe($content);
 });
 
 test('throws exception for failed http request', function () {
@@ -54,9 +59,9 @@ test('handles javascript redirect', function () {
         $redirectUrl => Http::response($audioContent, 200),
     ]);
 
-    $result = (new MediaDownloader)->downloadFromUrl($url);
+    $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect($result)->toBe($audioContent);
+    expect(Storage::disk('public')->get($path))->toBe($audioContent);
 });
 
 test('converts relative redirect url to absolute', function () {
@@ -69,9 +74,9 @@ test('converts relative redirect url to absolute', function () {
         $absoluteUrl => Http::response($audioContent, 200),
     ]);
 
-    $result = (new MediaDownloader)->downloadFromUrl($url);
+    $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect($result)->toBe($audioContent);
+    expect(Storage::disk('public')->get($path))->toBe($audioContent);
 });
 
 test('validates mp3 with id3 tag', function () {
@@ -80,9 +85,9 @@ test('validates mp3 with id3 tag', function () {
 
     Http::fake([$url => Http::response($content, 200)]);
 
-    $result = (new MediaDownloader)->downloadFromUrl($url);
+    $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect($result)->toBe($content);
+    expect(Storage::disk('public')->get($path))->toBe($content);
 });
 
 test('throws exception for invalid media content', function () {

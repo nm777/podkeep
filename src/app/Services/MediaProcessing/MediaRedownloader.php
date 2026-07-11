@@ -29,15 +29,7 @@ class MediaRedownloader
         $fileExisted = $this->storageManager->fileExists($mediaFile->file_path);
 
         try {
-            $contents = $this->downloader->downloadFromUrl($mediaFile->source_url);
-
-            if (empty($contents)) {
-                throw new \Exception('Downloaded content is empty');
-            }
-
-            $extension = pathinfo($mediaFile->file_path, PATHINFO_EXTENSION);
-            $tempPath = 'temp-redownload-'.$libraryItem->id.'-'.uniqid().'.'.$extension;
-            Storage::disk('public')->put($tempPath, $contents);
+            $tempPath = $this->downloader->downloadFromUrl($mediaFile->source_url);
 
             $storageInfo = $this->storageManager->moveTempFile($tempPath, $mediaFile->source_url);
 
