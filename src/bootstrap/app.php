@@ -33,7 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'eligible.api' => EnsureEligibleForApi::class,
         ]);
 
-        $middleware->validateCsrfTokens(except: [
+        $middleware->preventRequestForgery(except: [
         ]);
 
         $middleware->trustProxies(

@@ -11,3 +11,8 @@ parameters:
         - app/Http/Controllers/Auth/*
     checkMissingCallableSignature: false
     reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # Larastan does not yet resolve Pest 4's refactored TestCall magic methods/properties.
+        # Remove these once Larastan adds Pest 4 support.
+        - '#Call to an undefined method Pest\\PendingCalls\\TestCall::#'
+        - '#Access to an undefined property Pest\\PendingCalls\\TestCall::#'
