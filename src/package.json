@@ -13,20 +13,20 @@
     "devDependencies": {
         "@eslint/js": "^9.19.0",
         "@tailwindcss/vite": "^4.0.6",
-        "@types/node": "^24.10.1",
-        "@vitejs/plugin-react": "^5.1.1",
+        "@types/node": "^26.0.0",
+        "@vitejs/plugin-react": "^6.0.0",
         "concurrently": "^9.0.1",
         "eslint": "^9.17.0",
         "eslint-config-prettier": "^10.0.1",
         "eslint-plugin-react": "^7.37.3",
         "eslint-plugin-react-hooks": "^7.0.1",
-        "fallow": "^2.80.0",
-        "globals": "^16.5.0",
+        "fallow": "^3.0.0",
+        "globals": "^17.0.0",
         "prettier": "^3.4.2",
         "prettier-plugin-organize-imports": "^4.1.0",
-        "prettier-plugin-tailwindcss": "^0.7.1",
+        "prettier-plugin-tailwindcss": "^0.8.0",
         "typescript-eslint": "^8.23.0",
-        "vite": "^7.2.2"
+        "vite": "^8.0.0"
     },
     "dependencies": {
         "@headlessui/react": "^2.2.0",
@@ -45,14 +45,14 @@
         "@types/react-dom": "^19.0.2",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
-        "laravel-vite-plugin": "^2.0.1",
-        "lucide-react": "^0.554.0",
+        "laravel-vite-plugin": "^3.0.0",
+        "lucide-react": "^1.0.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "tailwind-merge": "^3.0.1",
         "tailwindcss": "^4.0.0",
         "tailwindcss-animate": "^1.0.7",
-        "typescript": "^5.7.2"
+        "typescript": "^6.0.0"
     },
     "optionalDependencies": {
         "@rollup/rollup-linux-x64-gnu": "4.9.5",

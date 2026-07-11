@@ -79,7 +79,7 @@ export function useUrlHandler(): UseUrlHandlerReturn {
     const [isCheckingUrl, setIsCheckingUrl] = useState(false);
     const [isFetchingYouTubeTitle, setIsFetchingYouTubeTitle] = useState(false);
     const [urlDuplicateWarning, setUrlDuplicateWarning] = useState<string | null>(null);
-    const urlCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const urlCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const scheduleDuplicateCheck = useCallback((url: string) => {
         if (urlCheckTimeoutRef.current) {

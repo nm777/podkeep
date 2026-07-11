@@ -9,7 +9,7 @@ import { useMediaUploadForm } from '@/hooks/use-media-upload-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { formatFileSize } from '@/lib/format';
 import { type Feed } from '@/types';
-import { AlertCircle, Globe, Upload, Volume2, Youtube } from 'lucide-react';
+import { AlertCircle, Globe, MonitorPlay, Upload, Volume2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface MediaUploadButtonProps {
@@ -115,7 +115,7 @@ export default function MediaUploadButton({
                                 className="h-7 px-2.5 text-xs"
                                 onClick={() => handleInputTypeChange('youtube')}
                             >
-                                <Youtube className="mr-1 h-3 w-3" />
+                                <MonitorPlay className="mr-1 h-3 w-3" />
                                 YouTube
                             </Button>
                         </div>
