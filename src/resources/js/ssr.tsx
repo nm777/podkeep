@@ -13,7 +13,10 @@ createServer((page) =>
         page,
         render: ReactDOMServer.renderToString,
         title: (title) => (title ? `${title} - ${appName}` : appName),
-        resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')).then((module) => (module as { default: ComponentType }).default),
+        resolve: (name) =>
+            resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')).then(
+                (module) => (module as { default: ComponentType }).default,
+            ),
         setup: ({ App, props }) => {
             const ziggy = page.props.ziggy as Config & { location: string };
 
