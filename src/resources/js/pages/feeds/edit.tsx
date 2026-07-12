@@ -119,9 +119,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                 <h2 className="text-base font-medium">Feed Items</h2>
 
                 {data.items.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-muted-foreground">
-                        No items in this feed yet. Add items from your library below.
-                    </p>
+                    <p className="py-8 text-center text-sm text-muted-foreground">No items in this feed yet. Add items from your library below.</p>
                 ) : (
                     <div className="divide-y rounded-lg border">
                         {data.items.map((item, index) => {
