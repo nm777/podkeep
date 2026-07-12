@@ -14,7 +14,7 @@ beforeEach(function () {
 
     $this->feed = Feed::factory()->create([
         'user_id' => $this->user->id,
-        'episode_order' => 'chronological',
+        'feed_type' => 'static',
     ]);
     $this->mediaFile = MediaFile::factory()->create(['user_id' => $this->user->id]);
 
@@ -126,8 +126,8 @@ it('handles large number of items without N+1 queries', function () {
     expect(FeedItem::where('feed_id', $this->feed->id)->count())->toBe(50);
 });
 
-it('preserves arrangement for newest_first when frontend sends reversed sequences', function () {
-    $this->feed->update(['episode_order' => 'newest_first']);
+it('preserves arrangement for append when frontend sends reversed sequences', function () {
+    $this->feed->update(['feed_type' => 'append']);
 
     $response = $this->actingAs($this->user)->put(route('feeds.update', $this->feed), [
         'title' => 'Updated',

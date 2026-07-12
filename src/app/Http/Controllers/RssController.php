@@ -20,9 +20,10 @@ class RssController extends Controller
             abort(404);
         }
 
-        $direction = $feed->episode_order->isChronological() ? 'asc' : 'desc';
         $feed->load([
-            'items' => fn ($q) => $q->reorder()->orderBy('sequence', $direction),
+            'items' => fn ($q) => $feed->feed_type->isStatic()
+                ? $q->reorder()->orderBy('sequence', 'asc')
+                : $q->reorder()->orderBy('created_at', 'desc'),
             'items.libraryItem.mediaFile',
         ]);
 

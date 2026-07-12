@@ -45,6 +45,7 @@ export interface LibraryItem {
     processing_completed_at?: string;
     processing_error?: string;
     published_at?: string;
+    display_date?: string;
     created_at: string;
     updated_at: string;
     media_file?: MediaFile | null;
@@ -65,7 +66,7 @@ export interface Feed {
     description?: string;
     website_url?: string;
     is_public: boolean;
-    episode_order?: string;
+    feed_type: 'static' | 'append';
     slug: string;
     user_guid: string;
     token?: string;

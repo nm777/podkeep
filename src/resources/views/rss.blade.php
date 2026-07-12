@@ -21,8 +21,10 @@
             @if($item->libraryItem->mediaFile)
         <item>
             <title>{{ $item->libraryItem->title }}</title>
-            <description><![CDATA[{!! $item->libraryItem->description !!}]]></description>
-            <pubDate>{{ ($item->libraryItem->published_at ?? $feed->created_at->copy()->addMinutes($item->sequence))->toRfc822String() }}</pubDate>
+            <description><![CDATA[{!! $feed->feed_type->isAppend() && $item->libraryItem->display_date ? '[' . $item->libraryItem->display_date->format('M j, Y') . '] ' : '' !!}{!! $item->libraryItem->description !!}]]></description>
+            <pubDate>{{ ($feed->feed_type->isStatic()
+                ? $feed->created_at->copy()->addMinutes($item->sequence)
+                : $item->created_at)->toRfc822String() }}</pubDate>
             <guid isPermaLink="false">{{ $item->id }}</guid>
             <enclosure url="{{ $item->libraryItem->mediaFile->rss_url }}{{ $feed->is_public ? '' : '?feed_token=' . $feed->token }}"
                 length="{{ $item->libraryItem->mediaFile->filesize }}"

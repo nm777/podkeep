@@ -25,9 +25,9 @@ class ShareController extends Controller
 
         $token = $feed->is_public ? null : $feed->token;
 
-        $items = $feed->episode_order->isChronological()
+        $items = $feed->feed_type->isStatic()
             ? $feed->items->sortBy('sequence')
-            : $feed->items->sortByDesc('sequence');
+            : $feed->items->sortByDesc('created_at');
 
         $episodes = $items
             ->filter(fn ($item) => $item->libraryItem

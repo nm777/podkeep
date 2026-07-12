@@ -134,7 +134,7 @@ it('allows reordering items in feed', function () {
     $user = User::factory()->create();
     $feed = Feed::factory()->create([
         'user_id' => $user->id,
-        'episode_order' => 'chronological',
+        'feed_type' => 'static',
     ]);
 
     $mediaFile1 = MediaFile::factory()->create();

@@ -43,7 +43,7 @@ class FeedController extends Controller
             'user_guid' => Str::uuid(),
             'token' => Str::random(64),
             'is_public' => $validated['is_public'] ?? false,
-            'episode_order' => $validated['episode_order'] ?? 'newest_first',
+            'feed_type' => $validated['feed_type'] ?? 'append',
         ]);
 
         return redirect()->route('feeds.edit', $feed)->with('success', 'Feed created successfully!');
@@ -56,10 +56,12 @@ class FeedController extends Controller
     {
         Gate::authorize('update', $feed);
 
-        $direction = $feed->episode_order->isChronological() ? 'asc' : 'desc';
+        $direction = $feed->feed_type->isStatic() ? 'asc' : 'desc';
 
         $feed->load([
-            'items' => fn ($q) => $q->reorder()->orderBy('sequence', $direction),
+            'items' => fn ($q) => $feed->feed_type->isStatic()
+                ? $q->reorder()->orderBy('sequence', 'asc')
+                : $q->reorder()->orderBy('created_at', 'desc'),
             'items.libraryItem',
             'items.libraryItem.mediaFile',
         ]);
@@ -81,16 +83,37 @@ class FeedController extends Controller
 
         $validated = $request->validated();
 
+        $wasStatic = $feed->feed_type->isStatic();
+
         $feed->update([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'website_url' => $validated['website_url'] ?? null,
             'is_public' => $validated['is_public'] ?? false,
-            'episode_order' => $validated['episode_order'] ?? $feed->episode_order,
+            'feed_type' => $validated['feed_type'] ?? $feed->feed_type,
         ]);
+
+        // When switching to Append, re-order items by addition recency
+        if (($validated['feed_type'] ?? null) === 'append' && $wasStatic) {
+            $items = $feed->items()->reorder()->orderBy('created_at', 'desc')->get();
+            foreach ($items as $index => $item) {
+                $item->update(['sequence' => $index]);
+            }
+        }
 
         if (isset($validated['items'])) {
             $this->syncFeedItems($feed, $validated['items']);
+        }
+
+        // Update display dates if provided (for Append feeds)
+        if (isset($validated['display_dates'])) {
+            foreach ($validated['display_dates'] as $libraryItemId => $date) {
+                if ($date) {
+                    \App\Models\LibraryItem::where('id', $libraryItemId)
+                        ->where('user_id', $feed->user_id)
+                        ->update(['display_date' => $date]);
+                }
+            }
         }
 
         // Clear RSS cache when feed is updated

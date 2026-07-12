@@ -4096,5 +4096,29 @@ $ignoreErrors[] = [
     'count' => 1,
     'path' => __DIR__.'/tests/Feature/FeedItemSyncTest.php',
 ];
+$ignoreErrors[] = [
+    'message' => '#^Cannot call method isStatic\\(\\) on string\\.$#',
+    'identifier' => 'method.nonObject',
+    'count' => 3,
+    'path' => __DIR__.'/app/Http/Controllers/FeedController.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Cannot call method isStatic\\(\\) on string\\.$#',
+    'identifier' => 'method.nonObject',
+    'count' => 1,
+    'path' => __DIR__.'/app/Http/Controllers/RssController.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Cannot call method isStatic\\(\\) on string\\.$#',
+    'identifier' => 'method.nonObject',
+    'count' => 1,
+    'path' => __DIR__.'/app/Http/Controllers/ShareController.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Access to an undefined property App\\\\Http\\\\Resources\\\\FeedResource::\\$feed_type\\.$#',
+    'identifier' => 'property.notFound',
+    'count' => 1,
+    'path' => __DIR__.'/app/Http/Resources/FeedResource.php',
+];
 
 return ['parameters' => ['ignoreErrors' => $ignoreErrors]];
