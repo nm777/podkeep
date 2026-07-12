@@ -16,17 +16,19 @@
         <atom:link
             href="{{ route('rss.show', ['user_guid' => $feed->user_guid, 'feed_slug' => $feed->slug]) }}"
             rel="self" type="application/rss+xml" />
+        @php($episodeIndex = 0)
         @foreach ($feed->items as $item)
             @if($item->libraryItem->mediaFile)
         <item>
             <title>{{ $item->libraryItem->title }}</title>
             <description><![CDATA[{!! $item->libraryItem->description !!}]]></description>
-            <pubDate>{{ ($item->libraryItem->published_at ?? $item->created_at)->toRfc822String() }}</pubDate>
+            <pubDate>{{ ($item->libraryItem->published_at ?? $feed->created_at->copy()->addMinutes($item->sequence))->toRfc822String() }}</pubDate>
             <guid isPermaLink="false">{{ $item->id }}</guid>
             <enclosure url="{{ $item->libraryItem->mediaFile->rss_url }}{{ $feed->is_public ? '' : '?feed_token=' . $feed->token }}"
                 length="{{ $item->libraryItem->mediaFile->filesize }}"
                 type="{{ $item->libraryItem->mediaFile->mime_type }}" />
         </item>
+            @php($episodeIndex++)
             @endif
         @endforeach
     </channel>
