@@ -30,6 +30,17 @@ interface EditFeedProps {
 }
 
 export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
+    return (
+        <AppLayout>
+            <Head title={`Edit Feed: ${feed.title}`} />
+            {/* key on updated_at forces remount after save, so useForm
+                re-initializes from the fresh server data */}
+            <EditFeedForm key={feed.updated_at} feed={feed} userLibraryItems={userLibraryItems} />
+        </AppLayout>
+    );
+}
+
+function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
     const { data, setData, put, processing, errors } = useForm({
         title: feed.title,
         description: feed.description || '',
@@ -87,85 +98,81 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
     const availableLibraryItems = userLibraryItems.filter((item) => !data.items.some((feedItem) => feedItem.library_item_id === item.id));
 
     return (
-        <AppLayout>
-            <Head title={`Edit Feed: ${feed.title}`} />
+        <div className="space-y-6">
+            <h1 className="text-xl font-semibold">{feed.title}</h1>
 
-            <div className="space-y-6">
-                <h1 className="text-xl font-semibold">{feed.title}</h1>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <FeedFormFields data={data} setData={setData} errors={errors} />
-                    <div className="flex gap-2">
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Saving...' : 'Save Changes'}
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <FeedFormFields data={data} setData={setData} errors={errors} />
+                <div className="flex gap-2">
+                    <Button type="submit" disabled={processing}>
+                        {processing ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                    <Link href={route('dashboard')}>
+                        <Button type="button" variant="outline">
+                            Cancel
                         </Button>
-                        <Link href={route('dashboard')}>
-                            <Button type="button" variant="outline">
-                                Cancel
-                            </Button>
-                        </Link>
-                    </div>
-                </form>
-
-                <div className="space-y-3">
-                    <h2 className="text-base font-medium">Feed Items</h2>
-
-                    {data.items.length === 0 ? (
-                        <p className="py-8 text-center text-sm text-muted-foreground">
-                            No items in this feed yet. Add items from your library below.
-                        </p>
-                    ) : (
-                        <div className="divide-y rounded-lg border">
-                            {data.items.map((item, index) => {
-                                const libraryItem = getLibraryItem(item.library_item_id);
-                                if (!libraryItem) return null;
-
-                                return (
-                                    <div
-                                        key={item.library_item_id}
-                                        draggable
-                                        onDragStart={() => handleDragStart(index)}
-                                        onDragOver={handleDragOver}
-                                        onDrop={(e) => handleDrop(e, index)}
-                                        className="flex cursor-move items-center gap-3 px-4 py-3 hover:bg-muted/50"
-                                    >
-                                        <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                        <LibraryItemInfo item={libraryItem} />
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => removeItem(index)}
-                                            className="shrink-0 text-destructive hover:text-destructive"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-
-                    {availableLibraryItems.length > 0 && (
-                        <div className="space-y-2 border-t pt-4">
-                            <p className="text-sm font-medium">Add Library Items</p>
-                            <div className="max-h-48 space-y-1 overflow-y-auto">
-                                {availableLibraryItems.map((libraryItem) => (
-                                    <div key={libraryItem.id} className="flex items-center gap-2 rounded-md border p-2">
-                                        <LibraryItemInfo item={libraryItem} />
-                                        <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)} className="shrink-0">
-                                            <Plus className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {availableLibraryItems.length === 0 && data.items.length > 0 && (
-                        <p className="text-center text-sm text-muted-foreground">All library items are already in this feed</p>
-                    )}
+                    </Link>
                 </div>
+            </form>
+
+            <div className="space-y-3">
+                <h2 className="text-base font-medium">Feed Items</h2>
+
+                {data.items.length === 0 ? (
+                    <p className="py-8 text-center text-sm text-muted-foreground">
+                        No items in this feed yet. Add items from your library below.
+                    </p>
+                ) : (
+                    <div className="divide-y rounded-lg border">
+                        {data.items.map((item, index) => {
+                            const libraryItem = getLibraryItem(item.library_item_id);
+                            if (!libraryItem) return null;
+
+                            return (
+                                <div
+                                    key={item.library_item_id}
+                                    draggable
+                                    onDragStart={() => handleDragStart(index)}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, index)}
+                                    className="flex cursor-move items-center gap-3 px-4 py-3 hover:bg-muted/50"
+                                >
+                                    <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    <LibraryItemInfo item={libraryItem} />
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeItem(index)}
+                                        className="shrink-0 text-destructive hover:text-destructive"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {availableLibraryItems.length > 0 && (
+                    <div className="space-y-2 border-t pt-4">
+                        <p className="text-sm font-medium">Add Library Items</p>
+                        <div className="max-h-48 space-y-1 overflow-y-auto">
+                            {availableLibraryItems.map((libraryItem) => (
+                                <div key={libraryItem.id} className="flex items-center gap-2 rounded-md border p-2">
+                                    <LibraryItemInfo item={libraryItem} />
+                                    <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)} className="shrink-0">
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {availableLibraryItems.length === 0 && data.items.length > 0 && (
+                    <p className="text-center text-sm text-muted-foreground">All library items are already in this feed</p>
+                )}
             </div>
-        </AppLayout>
+        </div>
     );
 }
