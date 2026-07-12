@@ -43,7 +43,13 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
         })),
     });
 
-    const { handleDragStart, handleDragOver, handleDrop } = useFeedItemReorder(data.items, (items) => setData('items', items));
+    const { handleDragStart, handleDragOver, handleDrop } = useFeedItemReorder(data.items, (items) => {
+        const count = items.length;
+        setData('items', items.map((item, i) => ({
+            ...item,
+            sequence: data.episode_order === 'newest_first' ? count - 1 - i : i,
+        })));
+    });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -51,13 +57,20 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
     };
 
     const addLibraryItem = (libraryItemId: number) => {
-        setData('items', [...data.items, { id: Date.now(), library_item_id: libraryItemId, sequence: data.items.length }]);
+        const count = data.items.length;
+        setData('items', [...data.items, {
+            id: Date.now(),
+            library_item_id: libraryItemId,
+            sequence: data.episode_order === 'newest_first' ? 0 : count,
+        }]);
     };
 
     const removeItem = (index: number) => {
+        const filtered = data.items.filter((_, i) => i !== index);
+        const count = filtered.length;
         setData(
             'items',
-            data.items.filter((_, i) => i !== index).map((item, i) => ({ ...item, sequence: i })),
+            filtered.map((item, i) => ({ ...item, sequence: data.episode_order === 'newest_first' ? count - 1 - i : i })),
         );
     };
 

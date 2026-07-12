@@ -126,16 +126,16 @@ it('handles large number of items without N+1 queries', function () {
     expect(FeedItem::where('feed_id', $this->feed->id)->count())->toBe(50);
 });
 
-it('reverses sequences for newest_first so arrangement survives DESC reload', function () {
+it('preserves arrangement for newest_first when frontend sends reversed sequences', function () {
     $this->feed->update(['episode_order' => 'newest_first']);
 
     $response = $this->actingAs($this->user)->put(route('feeds.update', $this->feed), [
         'title' => 'Updated',
         'is_public' => false,
         'items' => [
-            ['library_item_id' => $this->items[0]->id, 'sequence' => 0],
+            ['library_item_id' => $this->items[0]->id, 'sequence' => 2],
             ['library_item_id' => $this->items[1]->id, 'sequence' => 1],
-            ['library_item_id' => $this->items[2]->id, 'sequence' => 2],
+            ['library_item_id' => $this->items[2]->id, 'sequence' => 0],
         ],
     ]);
 

@@ -138,7 +138,6 @@ class FeedController extends Controller
 
     private function syncFeedItems(Feed $feed, array $items): void
     {
-        $currentItems = $feed->items->keyBy('library_item_id');
         $newItemIds = collect($items)->pluck('library_item_id');
 
         if ($newItemIds->isEmpty()) {
@@ -151,22 +150,13 @@ class FeedController extends Controller
             ->whereNotIn('library_item_id', $newItemIds)
             ->delete();
 
-        $count = count($items);
-
-        // Update or create items
-        foreach ($items as $index => $item) {
-            // When newest_first (DESC display), reverse the sequence so the
-            // user's drag-and-drop arrangement is preserved after reload
-            $sequence = $feed->episode_order->isNewestFirst()
-                ? $count - 1 - $index
-                : $index;
-
+        foreach ($items as $item) {
             $feed->items()->updateOrCreate(
                 [
                     'library_item_id' => $item['library_item_id'],
                 ],
                 [
-                    'sequence' => $sequence,
+                    'sequence' => $item['sequence'],
                 ]
             );
         }
