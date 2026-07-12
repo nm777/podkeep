@@ -45,10 +45,13 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
     const { handleDragStart, handleDragOver, handleDrop } = useFeedItemReorder(data.items, (items) => {
         const count = items.length;
-        setData('items', items.map((item, i) => ({
-            ...item,
-            sequence: data.episode_order === 'newest_first' ? count - 1 - i : i,
-        })));
+        setData(
+            'items',
+            items.map((item, i) => ({
+                ...item,
+                sequence: data.episode_order === 'newest_first' ? count - 1 - i : i,
+            })),
+        );
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -58,11 +61,14 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
     const addLibraryItem = (libraryItemId: number) => {
         const count = data.items.length;
-        setData('items', [...data.items, {
-            id: Date.now(),
-            library_item_id: libraryItemId,
-            sequence: data.episode_order === 'newest_first' ? 0 : count,
-        }]);
+        setData('items', [
+            ...data.items,
+            {
+                id: Date.now(),
+                library_item_id: libraryItemId,
+                sequence: data.episode_order === 'newest_first' ? 0 : count,
+            },
+        ]);
     };
 
     const removeItem = (index: number) => {
