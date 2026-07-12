@@ -56,8 +56,10 @@ class FeedController extends Controller
     {
         Gate::authorize('update', $feed);
 
+        $direction = $feed->episode_order->isChronological() ? 'asc' : 'desc';
+
         $feed->load([
-            'items' => fn ($q) => $q->orderBy('sequence', 'asc'),
+            'items' => fn ($q) => $q->reorder()->orderBy('sequence', $direction),
             'items.libraryItem',
             'items.libraryItem.mediaFile',
         ]);
@@ -94,7 +96,7 @@ class FeedController extends Controller
         // Clear RSS cache when feed is updated
         Cache::forget("rss.{$feed->id}");
 
-        return redirect()->route('dashboard')->with('success', 'Feed updated successfully!');
+        return redirect()->route('feeds.edit', $feed)->with('success', 'Feed updated successfully!');
     }
 
     /**
@@ -149,14 +151,22 @@ class FeedController extends Controller
             ->whereNotIn('library_item_id', $newItemIds)
             ->delete();
 
+        $count = count($items);
+
         // Update or create items
         foreach ($items as $index => $item) {
+            // When newest_first (DESC display), reverse the sequence so the
+            // user's drag-and-drop arrangement is preserved after reload
+            $sequence = $feed->episode_order->isNewestFirst()
+                ? $count - 1 - $index
+                : $index;
+
             $feed->items()->updateOrCreate(
                 [
                     'library_item_id' => $item['library_item_id'],
                 ],
                 [
-                    'sequence' => $index,
+                    'sequence' => $sequence,
                 ]
             );
         }

@@ -197,9 +197,37 @@ describe('share player ordering', function () {
 });
 
 describe('feed edit page loading order', function () {
-    it('loads items ordered by sequence ascending on edit page', function () {
+    it('loads items in episode order direction on edit page (newest_first = desc)', function () {
         $user = User::factory()->create();
         $feed = Feed::factory()->create(['user_id' => $user->id]);
+
+        foreach ([2, 0, 1] as $sequence) {
+            $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id]);
+
+            FeedItem::factory()->create([
+                'feed_id' => $feed->id,
+                'library_item_id' => $libraryItem->id,
+                'sequence' => $sequence,
+            ]);
+        }
+
+        $response = $this->actingAs($user)->get("/feeds/{$feed->id}/edit");
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('feed.items', 3)
+                ->where('feed.items.0.sequence', 2)
+                ->where('feed.items.1.sequence', 1)
+                ->where('feed.items.2.sequence', 0)
+            );
+    });
+
+    it('loads items ascending when episode order is chronological', function () {
+        $user = User::factory()->create();
+        $feed = Feed::factory()->create([
+            'user_id' => $user->id,
+            'episode_order' => 'chronological',
+        ]);
 
         foreach ([2, 0, 1] as $sequence) {
             $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id]);

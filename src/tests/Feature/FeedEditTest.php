@@ -40,7 +40,7 @@ it('allows feed owner to update feed details', function () {
         'is_public' => true,
     ]);
 
-    $response->assertRedirect('/feeds');
+    $response->assertRedirect("/feeds/{$feed->id}/edit");
     $this->assertDatabaseHas('feeds', [
         'id' => $feed->id,
         'title' => 'Updated Feed Title',
@@ -95,7 +95,7 @@ it('allows adding items to feed', function () {
         ],
     ]);
 
-    $response->assertRedirect('/feeds');
+    $response->assertRedirect("/feeds/{$feed->id}/edit");
     $this->assertDatabaseHas('feed_items', [
         'feed_id' => $feed->id,
         'library_item_id' => $libraryItem->id,
@@ -124,7 +124,7 @@ it('allows removing items from feed', function () {
         'items' => [],
     ]);
 
-    $response->assertRedirect('/feeds');
+    $response->assertRedirect("/feeds/{$feed->id}/edit");
     $this->assertDatabaseMissing('feed_items', [
         'id' => $feedItem->id,
     ]);
@@ -132,7 +132,10 @@ it('allows removing items from feed', function () {
 
 it('allows reordering items in feed', function () {
     $user = User::factory()->create();
-    $feed = Feed::factory()->create(['user_id' => $user->id]);
+    $feed = Feed::factory()->create([
+        'user_id' => $user->id,
+        'episode_order' => 'chronological',
+    ]);
 
     $mediaFile1 = MediaFile::factory()->create();
     $mediaFile2 = MediaFile::factory()->create();
@@ -156,7 +159,7 @@ it('allows reordering items in feed', function () {
         ],
     ]);
 
-    $response->assertRedirect('/feeds');
+    $response->assertRedirect("/feeds/{$feed->id}/edit");
 
     $this->assertDatabaseHas('feed_items', [
         'feed_id' => $feed->id,

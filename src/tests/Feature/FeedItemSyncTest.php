@@ -12,7 +12,10 @@ beforeEach(function () {
         'approval_status' => 'approved',
     ]);
 
-    $this->feed = Feed::factory()->create(['user_id' => $this->user->id]);
+    $this->feed = Feed::factory()->create([
+        'user_id' => $this->user->id,
+        'episode_order' => 'chronological',
+    ]);
     $this->mediaFile = MediaFile::factory()->create(['user_id' => $this->user->id]);
 
     $this->items = collect(range(1, 6))->map(function ($i) {
@@ -121,4 +124,29 @@ it('handles large number of items without N+1 queries', function () {
     $response->assertRedirect();
 
     expect(FeedItem::where('feed_id', $this->feed->id)->count())->toBe(50);
+});
+
+it('reverses sequences for newest_first so arrangement survives DESC reload', function () {
+    $this->feed->update(['episode_order' => 'newest_first']);
+
+    $response = $this->actingAs($this->user)->put(route('feeds.update', $this->feed), [
+        'title' => 'Updated',
+        'is_public' => false,
+        'items' => [
+            ['library_item_id' => $this->items[0]->id, 'sequence' => 0],
+            ['library_item_id' => $this->items[1]->id, 'sequence' => 1],
+            ['library_item_id' => $this->items[2]->id, 'sequence' => 2],
+        ],
+    ]);
+
+    $response->assertRedirect();
+
+    $feedItems = FeedItem::where('feed_id', $this->feed->id)
+        ->orderBy('sequence', 'desc')
+        ->with('libraryItem')
+        ->get();
+
+    // Items displayed DESC should match the order the user arranged them
+    expect($feedItems->pluck('library_item_id')->toArray())
+        ->toBe([$this->items[0]->id, $this->items[1]->id, $this->items[2]->id]);
 });

@@ -17,7 +17,7 @@ it('keeps the slug unchanged when renaming a feed via the web update', function 
         'title' => 'Brand New Title',
     ]);
 
-    $response->assertRedirect('/feeds');
+    $response->assertRedirect("/feeds/{$feed->id}/edit");
     $this->assertDatabaseHas('feeds', [
         'id' => $feed->id,
         'title' => 'Brand New Title',
@@ -116,7 +116,7 @@ it('keeps the slug unchanged when editing only the description', function () {
         'description' => 'A brand new description',
     ]);
 
-    $response->assertRedirect('/feeds');
+    $response->assertRedirect("/feeds/{$feed->id}/edit");
     $this->assertDatabaseHas('feeds', [
         'id' => $feed->id,
         'slug' => 'original-slug',
@@ -139,7 +139,7 @@ it('keeps the slug unchanged when toggling is_public', function () {
         'is_public' => false,
     ]);
 
-    $response->assertRedirect('/feeds');
+    $response->assertRedirect("/feeds/{$feed->id}/edit");
     $this->assertDatabaseHas('feeds', [
         'id' => $feed->id,
         'slug' => 'original-slug',

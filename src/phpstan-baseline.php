@@ -4078,5 +4078,23 @@ $ignoreErrors[] = [
     'count' => 1,
     'path' => __DIR__.'/app/Console/Commands/RedownloadMissingMedia.php',
 ];
+$ignoreErrors[] = [
+    'message' => '#^Cannot call method isChronological\\(\\) on string\\.$#',
+    'identifier' => 'method.nonObject',
+    'count' => 1,
+    'path' => __DIR__.'/app/Http/Controllers/FeedController.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Cannot call method isNewestFirst\\(\\) on string\\.$#',
+    'identifier' => 'method.nonObject',
+    'count' => 1,
+    'path' => __DIR__.'/app/Http/Controllers/FeedController.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Relation \'libraryItem\' is not found in App\\\\Models\\\\FeedItem model\\.$#',
+    'identifier' => 'larastan.relationExistence',
+    'count' => 1,
+    'path' => __DIR__.'/tests/Feature/FeedItemSyncTest.php',
+];
 
 return ['parameters' => ['ignoreErrors' => $ignoreErrors]];
