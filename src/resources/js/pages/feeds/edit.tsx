@@ -126,8 +126,12 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
 
                 {data.feed_type === 'static' && data.items.length > 1 && (
                     <div className="flex flex-wrap gap-2">
-                        <span className="text-xs text-muted-foreground self-center">Quick sort:</span>
-                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
+                        <span className="self-center text-xs text-muted-foreground">Quick sort:</span>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
                             onClick={() => {
                                 const sorted = [...data.items].sort((a, b) => {
                                     const aTitle = getLibraryItem(a.library_item_id)?.title ?? '';
@@ -135,12 +139,19 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                                     return aTitle.localeCompare(bTitle);
                                 });
                                 const count = sorted.length;
-                                setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+                                setData(
+                                    'items',
+                                    sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
+                                );
                             }}
                         >
                             A→Z
                         </Button>
-                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
                             onClick={() => {
                                 const sorted = [...data.items].sort((a, b) => {
                                     const aTitle = getLibraryItem(a.library_item_id)?.title ?? '';
@@ -148,12 +159,19 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                                     return bTitle.localeCompare(aTitle);
                                 });
                                 const count = sorted.length;
-                                setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+                                setData(
+                                    'items',
+                                    sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
+                                );
                             }}
                         >
                             Z→A
                         </Button>
-                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
                             onClick={() => {
                                 const sorted = [...data.items].sort((a, b) => {
                                     const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
@@ -161,12 +179,19 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                                     return (aDate || '').localeCompare(bDate || '');
                                 });
                                 const count = sorted.length;
-                                setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+                                setData(
+                                    'items',
+                                    sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
+                                );
                             }}
                         >
                             Oldest First
                         </Button>
-                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
                             onClick={() => {
                                 const sorted = [...data.items].sort((a, b) => {
                                     const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
@@ -174,7 +199,10 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                                     return (bDate || '').localeCompare(aDate || '');
                                 });
                                 const count = sorted.length;
-                                setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+                                setData(
+                                    'items',
+                                    sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
+                                );
                             }}
                         >
                             Newest First

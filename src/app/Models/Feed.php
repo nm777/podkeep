@@ -30,7 +30,7 @@ class Feed extends Model
     protected function casts(): array
     {
         return [
-            'feed_type' => \App\Enums\FeedType::class,
+            'feed_type' => FeedType::class,
         ];
     }
 
