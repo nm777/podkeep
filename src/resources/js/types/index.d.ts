@@ -37,6 +37,7 @@ export interface LibraryItem {
     title: string;
     description?: string;
     source_type: string;
+    media_type: 'audio' | 'video';
     source_url?: string;
     is_duplicate: boolean;
     duplicate_detected_at?: string;

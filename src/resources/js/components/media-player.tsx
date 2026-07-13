@@ -26,6 +26,7 @@ interface LibraryItem {
     description?: string;
     source_type: string;
     source_url?: string;
+    media_type?: string;
     processing_status: ProcessingStatusType;
     processing_started_at?: string;
     processing_completed_at?: string;
@@ -45,7 +46,11 @@ interface MediaPlayerProps {
 export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlayerProps) {
     const [error, setError] = useState<string | null>(null);
 
-    const audioRef = useRef<HTMLAudioElement>(null);
+    const audioRef = useRef<HTMLMediaElement>(null);
+
+    const isVideo =
+        libraryItem.media_type === 'video' ||
+        libraryItem.media_file?.mime_type?.startsWith('video/');
 
     useEffect(() => {
         if (!isOpen || !libraryItem.media_file) return;
@@ -53,7 +58,7 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
         const audio = audioRef.current;
         if (audio) {
             // Listen to media events
-            audio.addEventListener('error', () => setError('Audio loading failed'));
+            audio.addEventListener('error', () => setError('Media loading failed'));
             audio.addEventListener('canplay', () => setError(null));
         }
     }, [isOpen, libraryItem.media_file]);
@@ -77,14 +82,25 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {/* Audio element */}
-                            <audio
-                                ref={audioRef}
-                                src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
-                                className="w-full"
-                                controls
-                                preload="metadata"
-                            />
+                            {/* Media element */}
+                            {isVideo ? (
+                                <video
+                                    ref={audioRef as React.RefObject<HTMLVideoElement>}
+                                    src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
+                                    className="max-h-[60vh] w-full"
+                                    controls
+                                    autoPlay
+                                    preload="metadata"
+                                />
+                            ) : (
+                                <audio
+                                    ref={audioRef}
+                                    src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
+                                    className="w-full"
+                                    controls
+                                    preload="metadata"
+                                />
+                            )}
 
                             {libraryItem.description && (
                                 <div className="mt-4 rounded bg-gray-50 p-4 dark:bg-gray-800">

@@ -19,6 +19,7 @@ class LibraryItemFactory
             'published_at' => $validated['published_at'] ?? null,
             'user_id' => $userId ?? auth()->id(),
             'source_type' => $sourceType,
+            'media_type' => $validated['media_type'] ?? 'audio',
             'source_url' => $sourceUrl,
             'processing_status' => ProcessingStatusType::PENDING,
         ]);
@@ -39,6 +40,7 @@ class LibraryItemFactory
             'published_at' => $validated['published_at'] ?? null,
             'user_id' => $userId ?? auth()->id(),
             'source_type' => $sourceType,
+            'media_type' => $validated['media_type'] ?? 'audio',
             'processing_status' => ProcessingStatusType::PENDING,
         ] + $mediaFileData);
 
@@ -59,6 +61,7 @@ class LibraryItemFactory
             'published_at' => $validated['published_at'] ?? null,
             'user_id' => $currentUserId,
             'source_type' => $sourceType,
+            'media_type' => $validated['media_type'] ?? 'audio',
             'source_url' => $sourceUrl,
             'media_file_id' => $mediaFile->id,
             'is_duplicate' => false,

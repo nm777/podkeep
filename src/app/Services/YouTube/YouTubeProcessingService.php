@@ -20,7 +20,7 @@ class YouTubeProcessingService
     /**
      * Process YouTube URL and create/update library item.
      */
-    public function processYouTubeUrl(LibraryItem $libraryItem, string $youtubeUrl): array
+    public function processYouTubeUrl(LibraryItem $libraryItem, string $youtubeUrl, ?string $mediaType = 'audio'): array
     {
         Log::info('ProcessYouTubeAudio job started', [
             'library_item_id' => $libraryItem->id,
@@ -68,19 +68,21 @@ class YouTubeProcessingService
         }
 
         // Download and process the video
-        return $this->downloadAndProcess($libraryItem, $youtubeUrl);
+        return $this->downloadAndProcess($libraryItem, $youtubeUrl, $mediaType);
     }
 
     /**
      * Download and process YouTube video.
      */
-    private function downloadAndProcess(LibraryItem $libraryItem, string $youtubeUrl): array
+    private function downloadAndProcess(LibraryItem $libraryItem, string $youtubeUrl, string $mediaType = 'audio'): array
     {
         $tempDir = 'temp-youtube/'.uniqid();
 
         try {
             // Download the video
-            $downloadedFile = $this->downloader->downloadAudio($youtubeUrl, $tempDir);
+            $downloadedFile = $mediaType === 'video'
+                ? $this->downloader->downloadVideo($youtubeUrl, $tempDir)
+                : $this->downloader->downloadAudio($youtubeUrl, $tempDir);
 
             if (! $downloadedFile) {
                 $libraryItem->update([
