@@ -1,5 +1,7 @@
 import FeedFormFields from '@/components/feed-form-fields';
+import SearchInput from '@/components/search-input';
 import { Button } from '@/components/ui/button';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useFeedItemReorder } from '@/hooks/use-feed-item-reorder';
 import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/format';
@@ -57,6 +59,20 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
     });
 
     const [displayDates, setDisplayDates] = useState<Record<number, string>>({});
+    const [itemSearch, setItemSearch] = useState('');
+    const debouncedItemSearch = useDebouncedValue(itemSearch);
+
+    const getLibraryItem = (libraryItemId: number) => {
+        return userLibraryItems.find((item) => item.id === libraryItemId);
+    };
+
+    const visibleItems = data.items
+        .map((item, originalIndex) => ({ item, originalIndex }))
+        .filter(({ item }) => {
+            if (!debouncedItemSearch) return true;
+            const libItem = getLibraryItem(item.library_item_id);
+            return libItem?.title.toLowerCase().includes(debouncedItemSearch.toLowerCase()) ?? false;
+        });
 
     const { handleDragStart, handleDragOver, handleDrop } = useFeedItemReorder(data.items, (items) => {
         const count = items.length;
@@ -95,10 +111,6 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             'items',
             filtered.map((item, i) => ({ ...item, sequence: data.feed_type === 'append' ? count - 1 - i : i })),
         );
-    };
-
-    const getLibraryItem = (libraryItemId: number) => {
-        return userLibraryItems.find((item) => item.id === libraryItemId);
     };
 
     const availableLibraryItems = userLibraryItems.filter((item) => !data.items.some((feedItem) => feedItem.library_item_id === item.id));
@@ -210,11 +222,21 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                     </div>
                 )}
 
+                {data.items.length > 0 && (
+                    <div className="mb-2">
+                        <SearchInput value={itemSearch} onChange={setItemSearch} placeholder="Search items..." />
+                    </div>
+                )}
+
                 {data.items.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-muted-foreground">No items in this feed yet. Add items from your library below.</p>
+                    <p className="py-8 text-center text-sm text-muted-foreground">
+                        No items in this feed yet. Add items from your library below.
+                    </p>
+                ) : debouncedItemSearch && visibleItems.length === 0 ? (
+                    <p className="py-4 text-center text-sm text-muted-foreground">No items match your search.</p>
                 ) : (
                     <div className="divide-y rounded-lg border">
-                        {data.items.map((item, index) => {
+                        {visibleItems.map(({ item, originalIndex: index }) => {
                             const libraryItem = getLibraryItem(item.library_item_id);
                             if (!libraryItem) return null;
 

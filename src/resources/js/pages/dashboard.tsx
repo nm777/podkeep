@@ -4,6 +4,7 @@ import FeedCard from '@/components/feed-card';
 import LibraryItemRow from '@/components/library-item-row';
 import MediaPlayer from '@/components/media-player';
 import MediaUploadButton from '@/components/media-upload-button';
+import SearchInput from '@/components/search-input';
 import SheetPanel from '@/components/sheet-panel';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useDashboardActions } from '@/hooks/use-dashboard-actions';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useIsMobile } from '@/hooks/use-mobile';
 import AppLayout from '@/layouts/app-layout';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
@@ -30,6 +32,13 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
     const flash: { success?: string; warning?: string } | undefined = pageProps.flash;
     const activeTab = activeTabProp ?? 'feeds';
     const [playingItem, setPlayingItem] = useState<LibraryItem | null>(null);
+    const [feedSearch, setFeedSearch] = useState('');
+    const [librarySearch, setLibrarySearch] = useState('');
+    const debouncedFeedSearch = useDebouncedValue(feedSearch);
+    const debouncedLibrarySearch = useDebouncedValue(librarySearch);
+
+    const filteredFeeds = feeds.filter((feed) => feed.title.toLowerCase().includes(debouncedFeedSearch.toLowerCase()));
+    const filteredLibraryItems = libraryItems.filter((item) => item.title.toLowerCase().includes(debouncedLibrarySearch.toLowerCase()));
 
     const {
         deleteFeedDialogOpen,
@@ -132,43 +141,67 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
 
             <div className="mt-4">
                 {activeTab === 'feeds' ? (
-                    feeds.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16">
-                            <Rss className="mb-4 h-10 w-10 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">No feeds yet. Create your first feed to get started.</p>
-                        </div>
-                    ) : (
-                        <div className="divide-y rounded-lg border">
-                            {feeds.map((feed) => (
-                                <FeedCard
-                                    key={feed.id}
-                                    feed={feed}
-                                    onCopyUrl={handleCopyUrl}
-                                    onCopyShareUrl={handleCopyShareUrl}
-                                    onDelete={handleDeleteFeedClick}
-                                />
-                            ))}
-                        </div>
-                    )
-                ) : libraryItems.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16">
-                        <FileAudio className="mb-4 h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">No media files yet. Upload your first file to get started.</p>
-                    </div>
+                    <>
+                        {feeds.length > 0 && (
+                            <div className="mb-3">
+                                <SearchInput value={feedSearch} onChange={setFeedSearch} placeholder="Search feeds..." />
+                            </div>
+                        )}
+                        {feeds.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16">
+                                <Rss className="mb-4 h-10 w-10 text-muted-foreground" />
+                                <p className="text-sm text-muted-foreground">No feeds yet. Create your first feed to get started.</p>
+                            </div>
+                        ) : filteredFeeds.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16">
+                                <p className="text-sm text-muted-foreground">No feeds match your search.</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y rounded-lg border">
+                                {filteredFeeds.map((feed) => (
+                                    <FeedCard
+                                        key={feed.id}
+                                        feed={feed}
+                                        onCopyUrl={handleCopyUrl}
+                                        onCopyShareUrl={handleCopyShareUrl}
+                                        onDelete={handleDeleteFeedClick}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 ) : (
-                    <div className="divide-y rounded-lg border">
-                        {libraryItems.map((item) => (
-                            <LibraryItemRow
-                                key={item.id}
-                                item={item}
-                                onPlay={setPlayingItem}
-                                onEdit={handleEditClick}
-                                onDelete={handleDeleteItemClick}
-                                onRetry={handleRetry}
-                                onRedownload={handleRedownload}
-                            />
-                        ))}
-                    </div>
+                    <>
+                        {libraryItems.length > 0 && (
+                            <div className="mb-3">
+                                <SearchInput value={librarySearch} onChange={setLibrarySearch} placeholder="Search library..." />
+                            </div>
+                        )}
+                        {libraryItems.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16">
+                                <FileAudio className="mb-4 h-10 w-10 text-muted-foreground" />
+                                <p className="text-sm text-muted-foreground">No media files yet. Upload your first file to get started.</p>
+                            </div>
+                        ) : filteredLibraryItems.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16">
+                                <p className="text-sm text-muted-foreground">No items match your search.</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y rounded-lg border">
+                                {filteredLibraryItems.map((item) => (
+                                    <LibraryItemRow
+                                        key={item.id}
+                                        item={item}
+                                        onPlay={setPlayingItem}
+                                        onEdit={handleEditClick}
+                                        onDelete={handleDeleteItemClick}
+                                        onRetry={handleRetry}
+                                        onRedownload={handleRedownload}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
