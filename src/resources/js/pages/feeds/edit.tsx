@@ -52,6 +52,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             id: item.id,
             library_item_id: item.library_item_id,
             sequence: item.sequence,
+            created_at: item.created_at,
         })),
     });
 
@@ -155,8 +156,8 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                         <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
                             onClick={() => {
                                 const sorted = [...data.items].sort((a, b) => {
-                                    const aDate = getLibraryItem(a.library_item_id)?.published_at ?? '';
-                                    const bDate = getLibraryItem(b.library_item_id)?.published_at ?? '';
+                                    const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
+                                    const bDate = getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '';
                                     return (aDate || '').localeCompare(bDate || '');
                                 });
                                 const count = sorted.length;
@@ -168,8 +169,8 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                         <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
                             onClick={() => {
                                 const sorted = [...data.items].sort((a, b) => {
-                                    const aDate = getLibraryItem(a.library_item_id)?.published_at ?? '';
-                                    const bDate = getLibraryItem(b.library_item_id)?.published_at ?? '';
+                                    const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
+                                    const bDate = getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '';
                                     return (bDate || '').localeCompare(aDate || '');
                                 });
                                 const count = sorted.length;
