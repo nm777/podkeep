@@ -229,9 +229,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                 )}
 
                 {data.items.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-muted-foreground">
-                        No items in this feed yet. Add items from your library below.
-                    </p>
+                    <p className="py-8 text-center text-sm text-muted-foreground">No items in this feed yet. Add items from your library below.</p>
                 ) : debouncedItemSearch && visibleItems.length === 0 ? (
                     <p className="py-4 text-center text-sm text-muted-foreground">No items match your search.</p>
                 ) : (
