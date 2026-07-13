@@ -70,7 +70,7 @@ export default function MediaUploadButton({
           : inputType === 'file'
             ? 'Upload'
             : inputType === 'youtube'
-              ? 'Extract Audio'
+              ? 'Add'
               : 'Add';
 
     return (
