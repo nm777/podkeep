@@ -20,5 +20,10 @@ fi
 
 su-exec www-data php artisan migrate --force
 
+echo "Clearing caches..."
+su-exec www-data php artisan view:clear
+su-exec www-data php artisan config:clear
+su-exec www-data php artisan cache:clear
+
 # Run the main process (php-fpm starts as root, drops to www-data via pool config)
 exec "$@"
