@@ -6,6 +6,7 @@ import { formatDuration, formatFileSize } from '@/lib/format';
 import { type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 function LibraryItemInfo({ item }: { item: LibraryItem }) {
     return (
@@ -46,13 +47,16 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
         description: feed.description || '',
         website_url: feed.website_url || '',
         is_public: feed.is_public,
-        episode_order: feed.episode_order || 'newest_first',
+        feed_type: feed.feed_type || 'append',
         items: (feed.items ?? []).map((item: FeedItem) => ({
             id: item.id,
             library_item_id: item.library_item_id,
             sequence: item.sequence,
+            created_at: item.created_at,
         })),
     });
+
+    const [displayDates, setDisplayDates] = useState<Record<number, string>>({});
 
     const { handleDragStart, handleDragOver, handleDrop } = useFeedItemReorder(data.items, (items) => {
         const count = items.length;
@@ -60,14 +64,16 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             'items',
             items.map((item, i) => ({
                 ...item,
-                sequence: data.episode_order === 'newest_first' ? count - 1 - i : i,
+                sequence: data.feed_type === 'append' ? count - 1 - i : i,
             })),
         );
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/feeds/${feed.id}`);
+        put(`/feeds/${feed.id}`, {
+            data: { ...data, display_dates: displayDates },
+        });
     };
 
     const addLibraryItem = (libraryItemId: number) => {
@@ -77,7 +83,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             {
                 id: Date.now(),
                 library_item_id: libraryItemId,
-                sequence: data.episode_order === 'newest_first' ? 0 : count,
+                sequence: data.feed_type === 'append' ? 0 : count,
             },
         ]);
     };
@@ -87,7 +93,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
         const count = filtered.length;
         setData(
             'items',
-            filtered.map((item, i) => ({ ...item, sequence: data.episode_order === 'newest_first' ? count - 1 - i : i })),
+            filtered.map((item, i) => ({ ...item, sequence: data.feed_type === 'append' ? count - 1 - i : i })),
         );
     };
 
@@ -118,6 +124,64 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             <div className="space-y-3">
                 <h2 className="text-base font-medium">Feed Items</h2>
 
+                {data.feed_type === 'static' && data.items.length > 1 && (
+                    <div className="flex flex-wrap gap-2">
+                        <span className="text-xs text-muted-foreground self-center">Quick sort:</span>
+                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
+                            onClick={() => {
+                                const sorted = [...data.items].sort((a, b) => {
+                                    const aTitle = getLibraryItem(a.library_item_id)?.title ?? '';
+                                    const bTitle = getLibraryItem(b.library_item_id)?.title ?? '';
+                                    return aTitle.localeCompare(bTitle);
+                                });
+                                const count = sorted.length;
+                                setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+                            }}
+                        >
+                            A→Z
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
+                            onClick={() => {
+                                const sorted = [...data.items].sort((a, b) => {
+                                    const aTitle = getLibraryItem(a.library_item_id)?.title ?? '';
+                                    const bTitle = getLibraryItem(b.library_item_id)?.title ?? '';
+                                    return bTitle.localeCompare(aTitle);
+                                });
+                                const count = sorted.length;
+                                setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+                            }}
+                        >
+                            Z→A
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
+                            onClick={() => {
+                                const sorted = [...data.items].sort((a, b) => {
+                                    const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
+                                    const bDate = getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '';
+                                    return (aDate || '').localeCompare(bDate || '');
+                                });
+                                const count = sorted.length;
+                                setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+                            }}
+                        >
+                            Oldest First
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
+                            onClick={() => {
+                                const sorted = [...data.items].sort((a, b) => {
+                                    const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
+                                    const bDate = getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '';
+                                    return (bDate || '').localeCompare(aDate || '');
+                                });
+                                const count = sorted.length;
+                                setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+                            }}
+                        >
+                            Newest First
+                        </Button>
+                    </div>
+                )}
+
                 {data.items.length === 0 ? (
                     <p className="py-8 text-center text-sm text-muted-foreground">No items in this feed yet. Add items from your library below.</p>
                 ) : (
@@ -137,6 +201,15 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                                 >
                                     <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
                                     <LibraryItemInfo item={libraryItem} />
+                                    {data.feed_type === 'append' && (
+                                        <input
+                                            type="date"
+                                            value={displayDates[item.library_item_id] ?? getLibraryItem(item.library_item_id)?.display_date ?? ''}
+                                            onChange={(e) => setDisplayDates((prev) => ({ ...prev, [item.library_item_id]: e.target.value }))}
+                                            className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
+                                            title="Display date (appears in RSS description)"
+                                        />
+                                    )}
                                     <Button
                                         variant="ghost"
                                         size="sm"

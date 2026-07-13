@@ -10,9 +10,9 @@ interface FeedFormFieldsProps {
         description: string;
         website_url: string;
         is_public: boolean;
-        episode_order: string;
+        feed_type: 'static' | 'append';
     };
-    setData: (key: 'title' | 'description' | 'website_url' | 'is_public' | 'episode_order', value: string | boolean) => void;
+    setData: (key: 'title' | 'description' | 'website_url' | 'is_public' | 'feed_type', value: string | boolean) => void;
     errors: Partial<Record<'title' | 'description' | 'website_url', string>>;
 }
 
@@ -56,23 +56,29 @@ export default function FeedFormFields({ data, setData, errors }: FeedFormFields
                 {errors.website_url && <InputError message={errors.website_url} />}
             </div>
 
-            <div className="flex items-center space-x-2">
-                <Checkbox id="is_public" checked={data.is_public} onCheckedChange={(checked) => setData('is_public', checked === true)} />
-                <Label htmlFor="is_public">Make this feed public</Label>
-            </div>
+            <div className="flex flex-col gap-4 md:flex-row md:items-start">
+                <div className="flex items-center space-x-2 md:pt-7">
+                    <Checkbox id="is_public" checked={data.is_public} onCheckedChange={(checked) => setData('is_public', checked === true)} />
+                    <Label htmlFor="is_public">Make this feed public</Label>
+                </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="episode_order">Episode Order</Label>
-                <select
-                    id="episode_order"
-                    value={data.episode_order}
-                    onChange={(e) => setData('episode_order', e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm"
-                >
-                    <option value="newest_first">Newest First</option>
-                    <option value="chronological">Chronological (oldest first)</option>
-                </select>
-                <p className="text-xs text-muted-foreground">Choose how episodes are ordered in this feed</p>
+                <div className="w-full space-y-2 md:flex-1">
+                    <Label htmlFor="feed_type">Feed Type</Label>
+                    <select
+                        id="feed_type"
+                        value={data.feed_type}
+                        onChange={(e) => setData('feed_type', e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm"
+                    >
+                        <option value="static">Static (Chapters)</option>
+                        <option value="append">Append (Ongoing)</option>
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                        {data.feed_type === 'static'
+                            ? 'Fixed chapter-based content (e.g., audiobooks). Manually order episodes.'
+                            : 'Ongoing content (e.g., podcasts). Newest episodes appear first automatically.'}
+                    </p>
+                </div>
             </div>
         </>
     );

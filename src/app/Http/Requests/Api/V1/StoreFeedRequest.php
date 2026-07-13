@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\V1;
 
-use App\Enums\EpisodeOrderType;
+use App\Enums\FeedType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,7 +29,7 @@ class StoreFeedRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'website_url' => ['nullable', 'string', 'url', 'max:255'],
             'is_public' => ['boolean'],
-            'episode_order' => ['nullable', 'string', Rule::enum(EpisodeOrderType::class)],
+            'feed_type' => ['nullable', 'string', Rule::enum(FeedType::class)],
         ];
     }
 }

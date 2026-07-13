@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
-use App\Enums\EpisodeOrderType;
+use App\Enums\FeedType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Feed extends Model
 {
     use HasFactory;
+
+    protected $attributes = [
+        'feed_type' => 'append',
+    ];
 
     protected $fillable = [
         'user_id',
@@ -17,7 +21,7 @@ class Feed extends Model
         'website_url',
         'cover_image_url',
         'is_public',
-        'episode_order',
+        'feed_type',
         'slug',
         'user_guid',
         'token',
@@ -26,7 +30,7 @@ class Feed extends Model
     protected function casts(): array
     {
         return [
-            'episode_order' => EpisodeOrderType::class,
+            'feed_type' => \App\Enums\FeedType::class,
         ];
     }
 
