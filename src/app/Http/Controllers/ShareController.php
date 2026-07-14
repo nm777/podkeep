@@ -19,7 +19,7 @@ class ShareController extends Controller
             abort(404);
         }
 
-        if (! $feed->is_public && $request->token !== $feed->token) {
+        if (! $feed->is_public && $request->token !== $feed->token && $request->user()?->id !== $feed->user_id) {
             abort(404);
         }
 

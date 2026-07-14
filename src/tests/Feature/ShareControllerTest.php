@@ -67,6 +67,36 @@ it('rejects private feed without token', function () {
     $response->assertNotFound();
 });
 
+it('grants owner access to private feed without token', function () {
+    $feed = Feed::factory()->create([
+        'user_id' => $this->user->id,
+        'is_public' => false,
+        'token' => 'secret-token',
+    ]);
+
+    $response = $this->actingAs($this->user)->get("/share/{$feed->user_guid}/{$feed->slug}");
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page->where('isPublic', false));
+});
+
+it('rejects other authenticated user from private feed without token', function () {
+    $feed = Feed::factory()->create([
+        'user_id' => $this->user->id,
+        'is_public' => false,
+        'token' => 'secret-token',
+    ]);
+
+    $other = User::factory()->create([
+        'email_verified_at' => now(),
+        'approval_status' => 'approved',
+    ]);
+
+    $response = $this->actingAs($other)->get("/share/{$feed->user_guid}/{$feed->slug}");
+
+    $response->assertNotFound();
+});
+
 it('grants access to private feed with valid token', function () {
     $feed = Feed::factory()->create([
         'user_id' => $this->user->id,
