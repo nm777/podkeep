@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ProcessingStatusType;
+use App\Jobs\ProcessYouTubeAudio;
 use App\Jobs\RedownloadMediaFile;
 use App\Models\Feed;
 use App\Models\LibraryItem;
@@ -85,8 +87,20 @@ class RedownloadMissingMedia extends Command
         $this->info("Dispatching {$recoverable->count()} redownload job(s)...");
 
         foreach ($recoverable as $item) {
-            RedownloadMediaFile::dispatch($item);
-            $this->line("  - Item #{$item->id}: {$item->title}");
+            $item->update([
+                'processing_status' => ProcessingStatusType::PROCESSING,
+                'processing_started_at' => now(),
+                'processing_completed_at' => null,
+                'processing_error' => null,
+            ]);
+
+            if ($item->source_type === 'youtube') {
+                ProcessYouTubeAudio::dispatch($item, $item->source_url);
+            } else {
+                RedownloadMediaFile::dispatch($item);
+            }
+
+            $this->line("  - Item #{$item->id} [{$item->source_type}]: {$item->title}");
         }
 
         $this->info("Dispatched {$recoverable->count()} redownload job(s). Check the queue worker and logs for results.");
