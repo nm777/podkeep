@@ -48,9 +48,7 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
 
     const audioRef = useRef<HTMLMediaElement>(null);
 
-    const isVideo =
-        libraryItem.media_type === 'video' ||
-        libraryItem.media_file?.mime_type?.startsWith('video/');
+    const isVideo = libraryItem.media_type === 'video' || libraryItem.media_file?.mime_type?.startsWith('video/');
 
     useEffect(() => {
         if (!isOpen || !libraryItem.media_file) return;

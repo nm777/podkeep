@@ -9,6 +9,7 @@ use App\Services\MediaProcessing\MediaProcessingService;
 use App\Services\MediaProcessing\MediaStorageManager;
 use App\Services\MediaProcessing\MediaValidator;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
+use App\Services\MediaProcessing\VideoToAudioConverter;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -25,7 +26,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             new MediaValidator,
             new MediaStorageManager,
             $this->processor,
-            new \App\Services\MediaProcessing\VideoToAudioConverter
+            new VideoToAudioConverter
         );
         $this->user = User::factory()->create();
     });
@@ -112,7 +113,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
                 new MediaValidator,
                 new MediaStorageManager,
                 $this->processor,
-                new \App\Services\MediaProcessing\VideoToAudioConverter
+                new VideoToAudioConverter
             );
 
             $result = $mockedService->processFromUrl($libraryItem, 'https://example.com/new-audio.mp3');
