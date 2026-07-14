@@ -5,6 +5,7 @@ use App\Models\FeedItem;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 test('rss feed includes items with proper enclosure', function () {
@@ -179,6 +180,50 @@ test('rss feed excludes youtube items without converted audio', function () {
 
     expect($content)->not->toContain('YouTube Video');
     expect($content)->not->toContain('<enclosure');
+});
+
+test('rss feed reflects updated library item title after cache invalidation', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+
+    $mediaFile = MediaFile::factory()->create([
+        'file_path' => 'media/test-audio.mp3',
+        'filesize' => 1234567,
+        'mime_type' => 'audio/mpeg',
+    ]);
+
+    Storage::disk('public')->put('media/test-audio.mp3', 'fake audio content');
+
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+        'title' => 'Original Title',
+        'source_type' => 'upload',
+    ]);
+
+    $feed = Feed::factory()->create([
+        'user_id' => $user->id,
+        'slug' => 'test-feed',
+        'user_guid' => 'test-guid',
+        'is_public' => true,
+    ]);
+
+    FeedItem::factory()->create([
+        'feed_id' => $feed->id,
+        'library_item_id' => $libraryItem->id,
+    ]);
+
+    $this->get("/rss/{$feed->user_guid}/{$feed->slug}");
+    expect(Cache::has("rss.{$feed->id}"))->toBeTrue();
+
+    $this->actingAs($user)
+        ->put("/library/{$libraryItem->id}", ['title' => 'Updated Title']);
+
+    $content = $this->get("/rss/{$feed->user_guid}/{$feed->slug}")->getContent();
+
+    expect($content)->toContain('<title>Updated Title</title>')
+        ->and($content)->not->toContain('Original Title');
 });
 
 test('rss feed excludes items without media files', function () {

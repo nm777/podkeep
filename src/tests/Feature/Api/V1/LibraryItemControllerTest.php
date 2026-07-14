@@ -1,8 +1,11 @@
 <?php
 
+use App\Models\Feed;
+use App\Models\FeedItem;
 use App\Models\LibraryItem;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -213,6 +216,25 @@ describe('library update', function () {
             'id' => $itemB->id,
             'title' => 'Original Title',
         ]);
+    });
+
+    it('invalidates the rss cache for feeds containing the item', function () {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+
+        $item = LibraryItem::factory()->create(['user_id' => $user->id]);
+        $feed = Feed::factory()->create(['user_id' => $user->id]);
+        FeedItem::factory()->create([
+            'feed_id' => $feed->id,
+            'library_item_id' => $item->id,
+        ]);
+
+        Cache::put("rss.{$feed->id}", 'stale-xml', now()->addMinutes(15));
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/library/'.$item->id, ['title' => 'New Title']);
+
+        expect(Cache::has("rss.{$feed->id}"))->toBeFalse();
     });
 });
 

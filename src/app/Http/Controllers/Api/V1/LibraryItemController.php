@@ -78,6 +78,10 @@ class LibraryItemController extends Controller
 
         $libraryItem->update($validated);
 
+        foreach ($libraryItem->feedItems()->pluck('feed_id') as $feedId) {
+            Cache::forget("rss.{$feedId}");
+        }
+
         return (new LibraryItemResource($libraryItem))
             ->response()
             ->setStatusCode(200);

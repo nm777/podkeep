@@ -130,6 +130,10 @@ class LibraryController extends Controller
 
         $libraryItem->update($validated);
 
+        foreach ($libraryItem->feedItems()->pluck('feed_id') as $feedId) {
+            Cache::forget("rss.{$feedId}");
+        }
+
         return back()->with('success', 'Media file details updated successfully.');
     }
 
