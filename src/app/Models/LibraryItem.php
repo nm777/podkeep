@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MediaType;
 use App\Enums\ProcessingStatusType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,7 @@ class LibraryItem extends Model
         'title',
         'description',
         'source_type',
+        'media_type',
         'source_url',
         'published_at',
         'display_date',
@@ -28,6 +30,10 @@ class LibraryItem extends Model
         'temp_file_path',
     ];
 
+    protected $attributes = [
+        'media_type' => 'audio',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -38,6 +44,7 @@ class LibraryItem extends Model
             'processing_started_at' => 'datetime',
             'processing_completed_at' => 'datetime',
             'processing_status' => ProcessingStatusType::class,
+            'media_type' => MediaType::class,
         ];
     }
 

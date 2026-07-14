@@ -31,7 +31,7 @@ class ProcessMediaFile implements ShouldQueue
     {
 
         if ($this->sourceUrl) {
-            $mediaProcessing->processFromUrl($this->libraryItem, $this->sourceUrl);
+            $mediaProcessing->processFromUrl($this->libraryItem, $this->sourceUrl, $this->libraryItem->media_type->value);
         } elseif ($this->filePath) {
             $mediaProcessing->processFromFile($this->libraryItem, $this->filePath, $this->sourceUrl);
         } else {

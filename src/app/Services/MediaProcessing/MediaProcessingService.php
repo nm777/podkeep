@@ -15,13 +15,14 @@ class MediaProcessingService
         private MediaDownloader $downloader,
         private MediaValidator $validator,
         private MediaStorageManager $storageManager,
-        private UnifiedDuplicateProcessor $duplicateProcessor
+        private UnifiedDuplicateProcessor $duplicateProcessor,
+        private VideoToAudioConverter $videoToAudioConverter
     ) {}
 
     /**
      * Process media file from URL.
      */
-    public function processFromUrl(LibraryItem $libraryItem, string $sourceUrl): array
+    public function processFromUrl(LibraryItem $libraryItem, string $sourceUrl, ?string $mediaType = null): array
     {
         try {
             $this->markAsProcessing($libraryItem);
@@ -32,6 +33,14 @@ class MediaProcessingService
             }
 
             $tempPath = $this->downloader->downloadFromUrl($sourceUrl);
+
+            // If user wants audio from a video source, convert it
+            if ($mediaType === 'audio') {
+                $mimeType = Storage::disk('public')->mimeType($tempPath);
+                if (str_starts_with($mimeType, 'video/')) {
+                    $tempPath = $this->videoToAudioConverter->convert($tempPath);
+                }
+            }
 
             try {
                 return $this->processFromFile($libraryItem, $tempPath, $sourceUrl);

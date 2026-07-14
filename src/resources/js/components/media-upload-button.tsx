@@ -9,7 +9,7 @@ import { useMediaUploadForm } from '@/hooks/use-media-upload-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { formatFileSize } from '@/lib/format';
 import { type Feed } from '@/types';
-import { AlertCircle, Globe, MonitorPlay, Upload, Volume2 } from 'lucide-react';
+import { AlertCircle, Globe, MonitorPlay, Upload, Video, Volume2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface MediaUploadButtonProps {
@@ -29,6 +29,7 @@ export default function MediaUploadButton({
 }: MediaUploadButtonProps) {
     const isMobile = useIsMobile();
     const [isOpen, setIsOpen] = useState(false);
+    const [mediaType, setMediaType] = useState<'audio' | 'video'>('audio');
 
     const {
         data,
@@ -48,7 +49,7 @@ export default function MediaUploadButton({
         handleSubmit,
         handleDrop,
         handleReset,
-    } = useMediaUploadForm({ onUploadSuccess, onClose: () => setIsOpen(false) });
+    } = useMediaUploadForm({ onUploadSuccess, onClose: () => setIsOpen(false), mediaType });
 
     const handleClose = () => {
         setIsOpen(false);
@@ -69,7 +70,7 @@ export default function MediaUploadButton({
           : inputType === 'file'
             ? 'Upload'
             : inputType === 'youtube'
-              ? 'Extract Audio'
+              ? 'Add'
               : 'Add';
 
     return (
@@ -187,6 +188,35 @@ export default function MediaUploadButton({
                                 onChange={(feedIds) => setData('feed_ids', feedIds)}
                                 error={errors.feed_ids}
                             />
+
+                            <div>
+                                <Label>Media Type</Label>
+                                <div className="mt-2 flex gap-2">
+                                    <Button
+                                        type="button"
+                                        variant={mediaType === 'audio' ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="h-8 flex-1"
+                                        onClick={() => setMediaType('audio')}
+                                    >
+                                        <Volume2 className="mr-1 h-3 w-3" />
+                                        Audio only
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant={mediaType === 'video' ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="h-8 flex-1"
+                                        onClick={() => setMediaType('video')}
+                                    >
+                                        <Video className="mr-1 h-3 w-3" />
+                                        Keep video
+                                    </Button>
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {mediaType === 'audio' ? 'Extracts audio from video sources' : 'Keeps video as-is'}
+                                </p>
+                            </div>
                         </div>
                         <div className="border-t px-4 py-3">
                             <div className="flex justify-end gap-2">

@@ -36,15 +36,19 @@ class MediaValidator
             "\xFF\xFB" => true,
             "\xFF\xF3" => true,
             "\xFF\xF2" => true,
+            // Video signatures
+            "\x1A\x45\xDF\xA3" => true, // WebM/Matroska (EBML header)
+            'ftyp' => true, // MP4/M4V (appears at offset 4)
         ];
 
         $fileSignature = substr($header, 0, 4);
         $isValidMedia = isset($validMediaSignatures[$fileSignature]) ||
                        isset($validMediaSignatures[substr($header, 0, 2)]) ||
-                       str_starts_with($fileSignature, 'ID3');
+                       str_starts_with($fileSignature, 'ID3') ||
+                       substr($header, 4, 4) === 'ftyp';
 
         if (! $isValidMedia && strlen($header) > 100) {
-            throw new \InvalidArgumentException('Content does not appear to be a valid audio file');
+            throw new \InvalidArgumentException('Content does not appear to be a valid media file');
         }
     }
 
@@ -77,6 +81,7 @@ class MediaValidator
             "\xFF\xF3" => 'audio/mpeg',
             "\xFF\xF2" => 'audio/mpeg',
             'ID3' => 'audio/mpeg',
+            "\x1A\x45\xDF\xA3" => 'video/webm',
         ];
 
         foreach ($signatures as $signature => $mimeType) {

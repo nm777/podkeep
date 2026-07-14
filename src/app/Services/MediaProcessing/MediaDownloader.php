@@ -171,6 +171,7 @@ class MediaDownloader
             "\xFF\xFB" => true, // MP3
             "\xFF\xF3" => true, // MP3
             "\xFF\xF2" => true, // MP3
+            "\x1A\x45\xDF\xA3" => true, // WebM/Matroska
         ];
 
         $fileSignature = substr($content, 0, 4);
@@ -178,8 +179,13 @@ class MediaDownloader
                        isset($validMediaSignatures[substr($content, 0, 2)]) ||
                        str_starts_with($fileSignature, 'ID3'); // MP3 with ID3 tag
 
+        // Check for MP4/M4V (ftyp box at byte offset 4)
+        if (! $isValidMedia && strlen($content) >= 8) {
+            $isValidMedia = substr($content, 4, 4) === 'ftyp';
+        }
+
         if (! $isValidMedia) {
-            throw new \Exception('Content does not appear to be a valid audio file');
+            throw new \Exception('Content does not appear to be a valid media file');
         }
     }
 

@@ -1,34 +1,55 @@
 # podkeep Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-25
+Auto-generated from all feature plans. Last updated: 2026-07-12
 
 ## Active Technologies
-- PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3, Laravel Sanctum v4 (NEW — for personal access tokens) (008-rest-api-keys)
-- MySQL 8.0+ (SQLite for tests), database-backed queues, local `public` disk for media files (008-rest-api-keys)
-- Cookie (`appearance`) + localStorage — both already wired by `useAppearance` hook (010-system-theme)
-- PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3, Laravel Sanctum v4 (personal access tokens for API) (011-stable-podcast-links)
-
-- PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3 (007-podcast-share-player)
+- PHP 8.4 (Laravel 13), TypeScript (React 19+) + Laravel Framework 13, Inertia.js v3, Tailwind CSS v4, Pest PHP v4
+- PostgreSQL (production), SQLite (tests), local `public` disk for media files
+- Laravel Sanctum v4 (personal access tokens for API)
+- yt-dlp + ffmpeg (in production image, for YouTube download and video-to-audio conversion)
 
 ## Project Structure
 
 ```text
-src/
-tests/
+src/                          # Laravel application root
+├── app/
+│   ├── Console/Commands/
+│   ├── Enums/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   ├── Requests/
+│   │   └── Resources/
+│   ├── Jobs/
+│   ├── Models/
+│   └── Services/
+├── database/
+│   ├── factories/
+│   ├── migrations/
+│   └── seeders/
+├── resources/
+│   ├── js/                   # React frontend (Inertia.js)
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── pages/
+│   │   └── types/
+│   └── views/                # Blade (RSS template)
+└── tests/
+    ├── Feature/
+    └── Unit/
 ```
 
 ## Commands
 
-npm test && npm run lint
+All tooling runs in ephemeral Docker containers (see Manual Additions below for details).
 
 ## Code Style
 
-PHP 8.4 (Laravel 12), TypeScript (React 19): Follow standard conventions
+PHP 8.4 (Laravel 13), TypeScript (React 19+): Follow standard conventions
 
 ## Recent Changes
-- 011-stable-podcast-links: Added PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3, Laravel Sanctum v4 (personal access tokens for API)
-- 010-system-theme: Added PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3
-- 009-feed-episode-order: Added PHP 8.4 (Laravel 12), TypeScript (React 19) + Laravel Framework, Inertia.js v2, Tailwind CSS v4, Pest PHP v3, Laravel Sanctum v4
+- 014-video-podcast-support: Video podcast support, media type selection (audio/video), ffmpeg conversion
+- 013-search: Client-side search on Library, Feeds, and feed edit page
+- 012-feed-type-ordering: Static vs Append feed types, quick-sort, sequence-based pubDates
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -38,7 +59,7 @@ PHP 8.4 (Laravel 12), TypeScript (React 19): Follow standard conventions
 - For any JavaScript change, when the task is complete, run [fallow](https://github.com/fallow-rs/fallow) and address any findings before proceeding.
 - For any PHP change, when the task is complete, run [PHPStan](https://github.com/phpstan/phpstan) and address any findings before proceeding.
 - When everything is clean, if there is a task list, mark the task complete, create a new commit for the change, then proceed to the next task.
-- Unless instructed otherwise, iterate until all tasks are complete and the feature is fully finished.
+- Unless instructed otherwise, iterate until all tasks is complete and the feature is fully finished.
 - If there are any questions along the way, choose the most likely choice and continue. Don't stop and prompt me.
 
 ### Subagent Scope

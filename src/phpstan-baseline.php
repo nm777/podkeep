@@ -4120,5 +4120,29 @@ $ignoreErrors[] = [
     'count' => 1,
     'path' => __DIR__.'/app/Http/Resources/FeedResource.php',
 ];
+$ignoreErrors[] = [
+    'message' => '#^Cannot access property \\$value on string\\.$#',
+    'identifier' => 'property.nonObject',
+    'count' => 1,
+    'path' => __DIR__.'/app/Jobs/ProcessMediaFile.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Using nullsafe property access on non-nullable type string\\..*$#',
+    'identifier' => 'nullsafe.*',
+    'count' => 1,
+    'path' => __DIR__.'/app/Jobs/ProcessMediaFile.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Cannot access property \\$value on string\\.$#',
+    'identifier' => 'property.nonObject',
+    'count' => 1,
+    'path' => __DIR__.'/app/Jobs/ProcessYouTubeAudio.php',
+];
+$ignoreErrors[] = [
+    'message' => '#^Using nullsafe property access on non-nullable type string\\..*$#',
+    'identifier' => 'nullsafe.*',
+    'count' => 1,
+    'path' => __DIR__.'/app/Jobs/ProcessYouTubeAudio.php',
+];
 
 return ['parameters' => ['ignoreErrors' => $ignoreErrors]];

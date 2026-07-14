@@ -7,9 +7,10 @@ type InputType = 'file' | 'url' | 'youtube';
 interface UseMediaUploadFormOptions {
     onUploadSuccess?: () => void;
     onClose?: () => void;
+    mediaType?: 'audio' | 'video';
 }
 
-export function useMediaUploadForm({ onUploadSuccess, onClose }: UseMediaUploadFormOptions) {
+export function useMediaUploadForm({ onUploadSuccess, onClose, mediaType = 'audio' }: UseMediaUploadFormOptions) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [inputType, setInputType] = useState<InputType>('file');
     const [isDragOver, setIsDragOver] = useState(false);
@@ -70,6 +71,7 @@ export function useMediaUploadForm({ onUploadSuccess, onClose }: UseMediaUploadF
                 description: data.description,
                 published_at: data.published_at || undefined,
                 feed_ids: data.feed_ids,
+                media_type: mediaType,
             };
             if (inputType === 'file') {
                 return { ...baseData, file: data.file };
