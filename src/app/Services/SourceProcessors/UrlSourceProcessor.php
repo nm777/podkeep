@@ -33,6 +33,8 @@ class UrlSourceProcessor
                 'description' => $validated['description'] ?? $existingItem->description,
             ]);
 
+            $this->libraryItemFactory->dispatchFeedJob($existingItem, $validated);
+
             return [$existingItem, $this->strategy->getSuccessMessage(true)];
         }
 

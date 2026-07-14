@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Feed;
+use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
@@ -97,5 +99,47 @@ describe('UrlSourceProcessor', function () {
         [$libraryItem, $message] = $result;
         expect($libraryItem->media_file_id)->toBe($mediaFile->id);
         expect($libraryItem->title)->toBe('Orphan Link');
+    });
+
+    it('adds duplicate URL item to selected feeds', function () {
+        $mediaFile = MediaFile::factory()->create(['user_id' => $this->user->id]);
+        $existingItem = LibraryItem::factory()->create([
+            'user_id' => $this->user->id,
+            'media_file_id' => $mediaFile->id,
+            'source_url' => 'https://example.com/dup.mp3',
+        ]);
+        $feed = Feed::factory()->create(['user_id' => $this->user->id]);
+
+        $duplicateProcessor = Mockery::mock(UnifiedDuplicateProcessor::class);
+        $duplicateProcessor->shouldReceive('analyzeUrlDuplicate')
+            ->once()
+            ->andReturn([
+                'should_link_to_user_duplicate' => true,
+                'should_link_to_user_media_file' => false,
+                'should_link_to_global_duplicate' => false,
+                'should_create_new_file' => false,
+                'user_duplicate_library_item' => $existingItem,
+                'global_duplicate_media_file' => null,
+                'is_user_duplicate' => true,
+                'is_global_duplicate' => false,
+                'user_media_file_only' => false,
+            ]);
+
+        $strategy = Mockery::mock(SourceStrategyInterface::class);
+        $strategy->shouldReceive('getSuccessMessage')->once()->andReturn('Already processed.');
+
+        $processor = new UrlSourceProcessor(
+            new LibraryItemFactory,
+            $strategy,
+            $duplicateProcessor
+        );
+
+        $processor->process(
+            ['title' => 'Re-add', 'description' => 'Desc', 'feed_ids' => [$feed->id]],
+            'url',
+            'https://example.com/dup.mp3'
+        );
+
+        expect($existingItem->fresh()->feedItems()->count())->toBe(1);
     });
 });

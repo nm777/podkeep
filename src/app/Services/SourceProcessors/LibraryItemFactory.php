@@ -77,7 +77,7 @@ class LibraryItemFactory
     /**
      * Dispatch job to add library item to feeds after processing completes.
      */
-    private function dispatchFeedJob(LibraryItem $libraryItem, array $validated): void
+    public function dispatchFeedJob(LibraryItem $libraryItem, array $validated): void
     {
         if (empty($validated['feed_ids'])) {
             return;

@@ -2838,7 +2838,7 @@ $ignoreErrors[] = [
 $ignoreErrors[] = [
     'message' => '#^Call to an undefined method Mockery\\\\ExpectationInterface\\|Mockery\\\\HigherOrderMessage\\:\\:once\\(\\)\\.$#',
     'identifier' => 'method.notFound',
-    'count' => 5,
+    'count' => 7,
     'path' => __DIR__.'/tests/Feature/UrlSourceProcessorTest.php',
 ];
 $ignoreErrors[] = [
@@ -2850,13 +2850,13 @@ $ignoreErrors[] = [
 $ignoreErrors[] = [
     'message' => '#^Parameter \\#2 \\$strategy of class App\\\\Services\\\\SourceProcessors\\\\UrlSourceProcessor constructor expects App\\\\Services\\\\SourceProcessors\\\\SourceStrategyInterface, Mockery\\\\MockInterface given\\.$#',
     'identifier' => 'argument.type',
-    'count' => 3,
+    'count' => 4,
     'path' => __DIR__.'/tests/Feature/UrlSourceProcessorTest.php',
 ];
 $ignoreErrors[] = [
     'message' => '#^Parameter \\#3 \\$duplicateProcessor of class App\\\\Services\\\\SourceProcessors\\\\UrlSourceProcessor constructor expects App\\\\Services\\\\MediaProcessing\\\\UnifiedDuplicateProcessor, Mockery\\\\MockInterface given\\.$#',
     'identifier' => 'argument.type',
-    'count' => 3,
+    'count' => 4,
     'path' => __DIR__.'/tests/Feature/UrlSourceProcessorTest.php',
 ];
 $ignoreErrors[] = [
