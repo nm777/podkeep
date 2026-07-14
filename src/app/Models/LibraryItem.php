@@ -6,6 +6,7 @@ use App\Enums\MediaType;
 use App\Enums\ProcessingStatusType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LibraryItem extends Model
 {
@@ -53,7 +54,10 @@ class LibraryItem extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function mediaFile()
+    /**
+     * @return BelongsTo<MediaFile, $this>
+     */
+    public function mediaFile(): BelongsTo
     {
         return $this->belongsTo(MediaFile::class);
     }
