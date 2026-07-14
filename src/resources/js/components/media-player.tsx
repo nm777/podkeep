@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProcessingStatusType } from '@/lib/processing-status';
 import { X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 interface MediaFile {
     id: number;
@@ -46,20 +46,9 @@ interface MediaPlayerProps {
 export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlayerProps) {
     const [error, setError] = useState<string | null>(null);
 
-    const audioRef = useRef<HTMLMediaElement>(null);
-
-    const isVideo = libraryItem.media_type === 'video' || libraryItem.media_file?.mime_type?.startsWith('video/');
-
-    useEffect(() => {
-        if (!isOpen || !libraryItem.media_file) return;
-
-        const audio = audioRef.current;
-        if (audio) {
-            // Listen to media events
-            audio.addEventListener('error', () => setError('Media loading failed'));
-            audio.addEventListener('canplay', () => setError(null));
-        }
-    }, [isOpen, libraryItem.media_file]);
+    const isVideo =
+        libraryItem.media_type === 'video' ||
+        libraryItem.media_file?.mime_type?.startsWith('video/');
 
     if (!isOpen || !libraryItem.media_file) return null;
 
@@ -83,20 +72,22 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
                             {/* Media element */}
                             {isVideo ? (
                                 <video
-                                    ref={audioRef as React.RefObject<HTMLVideoElement>}
                                     src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
                                     className="max-h-[60vh] w-full"
                                     controls
                                     autoPlay
                                     preload="metadata"
+                                    onError={() => setError('Media loading failed')}
+                                    onCanPlay={() => setError(null)}
                                 />
                             ) : (
                                 <audio
-                                    ref={audioRef}
                                     src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
                                     className="w-full"
                                     controls
                                     preload="metadata"
+                                    onError={() => setError('Media loading failed')}
+                                    onCanPlay={() => setError(null)}
                                 />
                             )}
 

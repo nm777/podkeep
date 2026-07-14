@@ -1,5 +1,5 @@
 import { type ShareEpisode } from '@/types';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface SharePlayerProps {
     episode: ShareEpisode | null;
@@ -8,10 +8,6 @@ interface SharePlayerProps {
 export default function SharePlayer({ episode }: SharePlayerProps) {
     const [error, setError] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
-
-    useEffect(() => {
-        setError(null);
-    }, [episode]);
 
     if (!episode) {
         return (

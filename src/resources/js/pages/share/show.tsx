@@ -50,7 +50,7 @@ export default function ShareShow({ feed, episodes, rssUrl }: SharePageProps & {
                 <FeedHeader feed={feed} />
 
                 <div className="mb-6">
-                    <SharePlayer episode={activeEpisode} />
+                    <SharePlayer key={activeEpisode?.id} episode={activeEpisode} />
                 </div>
 
                 <div className="mb-4 flex items-center justify-between">
@@ -58,7 +58,7 @@ export default function ShareShow({ feed, episodes, rssUrl }: SharePageProps & {
                     <CopyRssButton rssUrl={rssUrl} />
                 </div>
 
-                <ShareEpisodeList episodes={episodes} activeEpisodeId={activeEpisode?.id ?? null} onSelect={setActiveEpisode} />
+                <ShareEpisodeList episodes={episodes} activeEpisodeId={activeEpisode?.id} onSelect={setActiveEpisode} />
             </main>
         </div>
     );

@@ -4,7 +4,7 @@ import { Play } from 'lucide-react';
 
 interface ShareEpisodeListProps {
     episodes: ShareEpisode[];
-    activeEpisodeId: number | null;
+    activeEpisodeId?: number | null;
     onSelect: (episode: ShareEpisode) => void;
 }
 
