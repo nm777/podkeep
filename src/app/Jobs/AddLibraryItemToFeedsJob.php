@@ -30,7 +30,11 @@ class AddLibraryItemToFeedsJob implements ShouldQueue
 
         foreach ($feeds as $feed) {
             DB::transaction(function () use ($feed) {
-                $maxSequence = $feed->items()->lockForUpdate()->max('sequence') ?? 0;
+                // ponytail: lock the feed row to serialize concurrent sequence assignments.
+                // PostgreSQL rejects FOR UPDATE on aggregate queries, so we lock the parent row.
+                Feed::lockForUpdate()->find($feed->id);
+
+                $maxSequence = $feed->items()->max('sequence') ?? 0;
 
                 FeedItem::create([
                     'feed_id' => $feed->id,
