@@ -46,9 +46,7 @@ interface MediaPlayerProps {
 export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlayerProps) {
     const [error, setError] = useState<string | null>(null);
 
-    const isVideo =
-        libraryItem.media_type === 'video' ||
-        libraryItem.media_file?.mime_type?.startsWith('video/');
+    const isVideo = libraryItem.media_type === 'video' || libraryItem.media_file?.mime_type?.startsWith('video/');
 
     if (!isOpen || !libraryItem.media_file) return null;
 
