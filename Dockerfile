@@ -22,8 +22,11 @@ RUN apk add --no-cache \
     sqlite-dev \
     unzip \
     wget \
-    yt-dlp \
     zip
+
+RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux \
+        -o /usr/local/bin/yt-dlp \
+    && chmod a+rx /usr/local/bin/yt-dlp
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-configure intl --enable-intl \
