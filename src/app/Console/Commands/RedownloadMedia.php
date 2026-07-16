@@ -62,7 +62,7 @@ class RedownloadMedia extends Command
 
             if ($this->option('missing-only')) {
                 $storageManager = new MediaStorageManager;
-                if ($item->mediaFile && $storageManager->fileExists($item->mediaFile->file_path)) {
+                if ($storageManager->fileExists($item->mediaFile->file_path)) {
                     $this->line('  Skipped: File exists (missing-only mode)');
                     $skippedCount++;
 
