@@ -1,10 +1,12 @@
 <?php
 
+use App\Console\Commands\UpdateYtDlp;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\ApprovedUserMiddleware;
 use App\Http\Middleware\EnsureEligibleForApi;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -48,8 +50,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })
-    ->withSchedule(function ($schedule) {
+    ->withSchedule(function (Schedule $schedule) {
         $schedule->command('media:cleanup-orphaned')->daily();
         $schedule->command('media:retry-pending')->everyFiveMinutes();
+        $schedule->command('yt-dlp:update')
+            ->cron(UpdateYtDlp::dailyCronExpression(now()))
+            ->withoutOverlapping();
     })
     ->create();
