@@ -71,6 +71,21 @@ services:
     networks:
       - app
 
+  scheduler:
+    image: podkeep-app:latest
+    hostname: podkeep-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - podcast-storage:/var/www/html/storage
+    entrypoint: ["sh", "-c"]
+    command: ["echo '* * * * * /usr/local/bin/php /var/www/html/artisan schedule:run >> /dev/null 2>&1' > /etc/crontabs/root && chmod 600 /etc/crontabs/root && exec crond -f -l 8"]
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - app
+
 networks:
   app:
     driver: bridge
