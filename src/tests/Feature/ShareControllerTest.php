@@ -6,6 +6,7 @@ use App\Models\FeedItem;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->user = User::factory()->create([
@@ -95,6 +96,49 @@ it('rejects other authenticated user from private feed without token', function 
     $response = $this->actingAs($other)->get("/share/{$feed->user_guid}/{$feed->slug}");
 
     $response->assertNotFound();
+});
+
+it('serves media file to owner viewing private feed share page', function () {
+    Storage::fake('public');
+
+    $feed = Feed::factory()->create([
+        'user_id' => $this->user->id,
+        'is_public' => false,
+        'token' => 'secret-token',
+    ]);
+
+    $audioContent = str_repeat('fake audio data ', 500);
+    $filePath = 'media/private-audio.mp3';
+    Storage::disk('public')->put($filePath, $audioContent);
+
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $this->user->id,
+        'file_path' => $filePath,
+        'filesize' => strlen($audioContent),
+        'mime_type' => 'audio/mpeg',
+    ]);
+
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $this->user->id,
+        'media_file_id' => $mediaFile->id,
+        'processing_status' => ProcessingStatusType::COMPLETED,
+    ]);
+
+    FeedItem::factory()->create([
+        'feed_id' => $feed->id,
+        'library_item_id' => $libraryItem->id,
+        'sequence' => 1,
+    ]);
+
+    $page = $this->actingAs($this->user)->get("/share/{$feed->user_guid}/{$feed->slug}");
+    $page->assertSuccessful();
+
+    $mediaUrl = $page->inertiaProps()['episodes'][0]['media_url'];
+
+    $this->actingAs($this->user)
+        ->get($mediaUrl, ['Range' => 'bytes=0-1'])
+        ->assertSuccessful()
+        ->assertHeader('Content-Type', 'audio/mpeg');
 });
 
 it('grants access to private feed with valid token', function () {
