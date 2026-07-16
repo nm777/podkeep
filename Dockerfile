@@ -5,6 +5,7 @@ WORKDIR /var/www/html
 RUN apk add --no-cache \
     autoconf \
     curl \
+    ffmpeg \
     freetype-dev \
     g++ \
     git \
