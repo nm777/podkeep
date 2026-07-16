@@ -88,7 +88,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction \
 
 RUN apk add --no-cache su-exec
 
-FROM nginx:alpine AS web
+FROM nginx:1.31-alpine AS web
 
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=app /var/www/html/public /var/www/html/public
