@@ -24,4 +24,5 @@ yarn-error.log
 /.vscode
 /.zed
 .opencode/
+opencode.json
 .DS_Store
