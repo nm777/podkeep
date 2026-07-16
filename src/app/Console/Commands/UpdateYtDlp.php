@@ -30,8 +30,6 @@ class UpdateYtDlp extends Command
      * exactly once that day) and changes each following day, with no stored
      * state required. schedule:run re-evaluates the schedule every minute, so
      * the date-seeded value is recomputed correctly as days roll over.
-     *
-     * @return string
      */
     public static function dailyCronExpression(DateTimeInterface $date): string
     {
