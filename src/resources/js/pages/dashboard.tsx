@@ -131,7 +131,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                     />
                     <MediaUploadButton
                         onUploadSuccess={handleUploadSuccess}
-                        feeds={feeds}
+                        feeds={feeds.filter((feed) => !feed.is_hidden_from_selector)}
                         variant="default"
                         size={isMobile ? 'icon' : 'sm'}
                         iconOnly={isMobile}

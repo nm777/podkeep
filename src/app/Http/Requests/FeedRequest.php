@@ -30,6 +30,7 @@ class FeedRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'website_url' => ['nullable', 'string', 'url', 'max:255'],
             'is_public' => ['boolean'],
+            'is_hidden_from_selector' => ['boolean'],
             'feed_type' => ['nullable', 'string', Rule::enum(FeedType::class)],
             'items' => ['nullable', 'array'],
             'items.*.library_item_id' => ['required', 'integer', 'exists:library_items,id', function ($attribute, $value, $fail) {

@@ -21,6 +21,7 @@ class Feed extends Model
         'website_url',
         'cover_image_url',
         'is_public',
+        'is_hidden_from_selector',
         'feed_type',
         'slug',
         'user_guid',
@@ -31,6 +32,7 @@ class Feed extends Model
     {
         return [
             'feed_type' => FeedType::class,
+            'is_hidden_from_selector' => 'boolean',
         ];
     }
 

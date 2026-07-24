@@ -10,9 +10,13 @@ interface FeedFormFieldsProps {
         description: string;
         website_url: string;
         is_public: boolean;
+        is_hidden_from_selector: boolean;
         feed_type: 'static' | 'append';
     };
-    setData: (key: 'title' | 'description' | 'website_url' | 'is_public' | 'feed_type', value: string | boolean) => void;
+    setData: (
+        key: 'title' | 'description' | 'website_url' | 'is_public' | 'is_hidden_from_selector' | 'feed_type',
+        value: string | boolean,
+    ) => void;
     errors: Partial<Record<'title' | 'description' | 'website_url', string>>;
 }
 
@@ -57,9 +61,19 @@ export default function FeedFormFields({ data, setData, errors }: FeedFormFields
             </div>
 
             <div className="flex flex-col gap-4 md:flex-row md:items-start">
-                <div className="flex items-center space-x-2 md:pt-7">
-                    <Checkbox id="is_public" checked={data.is_public} onCheckedChange={(checked) => setData('is_public', checked === true)} />
-                    <Label htmlFor="is_public">Make this feed public</Label>
+                <div className="flex flex-col gap-4 md:pt-7">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="is_public" checked={data.is_public} onCheckedChange={(checked) => setData('is_public', checked === true)} />
+                        <Label htmlFor="is_public">Make this feed public</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="is_hidden_from_selector"
+                            checked={!data.is_hidden_from_selector}
+                            onCheckedChange={(checked) => setData('is_hidden_from_selector', checked !== true)}
+                        />
+                        <Label htmlFor="is_hidden_from_selector">Show in Add Media list</Label>
+                    </div>
                 </div>
 
                 <div className="w-full space-y-2 md:flex-1">

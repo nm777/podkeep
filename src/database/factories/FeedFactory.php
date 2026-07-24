@@ -25,6 +25,7 @@ class FeedFactory extends Factory
             'description' => fake()->paragraph(),
             'cover_image_url' => null,
             'is_public' => fake()->boolean(),
+            'is_hidden_from_selector' => false,
             'slug' => Str::slug(fake()->sentence(3)),
             'user_guid' => Str::uuid(),
             'token' => Str::random(64),

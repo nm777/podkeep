@@ -49,6 +49,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
         description: feed.description || '',
         website_url: feed.website_url || '',
         is_public: feed.is_public,
+        is_hidden_from_selector: feed.is_hidden_from_selector,
         feed_type: feed.feed_type || 'append',
         items: (feed.items ?? []).map((item: FeedItem) => ({
             id: item.id,
@@ -60,7 +61,10 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
 
     const [displayDates, setDisplayDates] = useState<Record<number, string>>({});
     const [itemSearch, setItemSearch] = useState('');
+    const [addMediaSearch, setAddMediaSearch] = useState('');
+    const [activeTab, setActiveTab] = useState<'items' | 'add'>('items');
     const debouncedItemSearch = useDebouncedValue(itemSearch);
+    const debouncedAddMediaSearch = useDebouncedValue(addMediaSearch);
 
     const getLibraryItem = (libraryItemId: number) => {
         return userLibraryItems.find((item) => item.id === libraryItemId);
@@ -115,6 +119,30 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
 
     const availableLibraryItems = userLibraryItems.filter((item) => !data.items.some((feedItem) => feedItem.library_item_id === item.id));
 
+    const filteredAvailableItems = availableLibraryItems.filter(
+        (item) => !debouncedAddMediaSearch || item.title.toLowerCase().includes(debouncedAddMediaSearch.toLowerCase()),
+    );
+
+    const sortByTitle = (direction: 'asc' | 'desc') => {
+        const sorted = [...data.items].sort((a, b) => {
+            const aTitle = getLibraryItem(a.library_item_id)?.title ?? '';
+            const bTitle = getLibraryItem(b.library_item_id)?.title ?? '';
+            return direction === 'asc' ? aTitle.localeCompare(bTitle) : bTitle.localeCompare(aTitle);
+        });
+        const count = sorted.length;
+        setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+    };
+
+    const sortByDate = (direction: 'asc' | 'desc') => {
+        const sorted = [...data.items].sort((a, b) => {
+            const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
+            const bDate = getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '';
+            return direction === 'asc' ? (aDate || '').localeCompare(bDate || '') : (bDate || '').localeCompare(aDate || '');
+        });
+        const count = sorted.length;
+        setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+    };
+
     return (
         <div className="space-y-6">
             <h1 className="text-xl font-semibold">{feed.title}</h1>
@@ -134,162 +162,124 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             </form>
 
             <div className="space-y-3">
-                <h2 className="text-base font-medium">Feed Items</h2>
+                <div className="flex items-center gap-1 border-b">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('items')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${
+                            activeTab === 'items' ? 'border-b-2 border-foreground text-foreground' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        Feed Items ({data.items.length})
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('add')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${
+                            activeTab === 'add' ? 'border-b-2 border-foreground text-foreground' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        Add Media ({availableLibraryItems.length})
+                    </button>
+                </div>
 
-                {data.feed_type === 'static' && data.items.length > 1 && (
-                    <div className="flex flex-wrap gap-2">
-                        <span className="self-center text-xs text-muted-foreground">Quick sort:</span>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => {
-                                const sorted = [...data.items].sort((a, b) => {
-                                    const aTitle = getLibraryItem(a.library_item_id)?.title ?? '';
-                                    const bTitle = getLibraryItem(b.library_item_id)?.title ?? '';
-                                    return aTitle.localeCompare(bTitle);
-                                });
-                                const count = sorted.length;
-                                setData(
-                                    'items',
-                                    sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
-                                );
-                            }}
-                        >
-                            A→Z
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => {
-                                const sorted = [...data.items].sort((a, b) => {
-                                    const aTitle = getLibraryItem(a.library_item_id)?.title ?? '';
-                                    const bTitle = getLibraryItem(b.library_item_id)?.title ?? '';
-                                    return bTitle.localeCompare(aTitle);
-                                });
-                                const count = sorted.length;
-                                setData(
-                                    'items',
-                                    sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
-                                );
-                            }}
-                        >
-                            Z→A
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => {
-                                const sorted = [...data.items].sort((a, b) => {
-                                    const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
-                                    const bDate = getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '';
-                                    return (aDate || '').localeCompare(bDate || '');
-                                });
-                                const count = sorted.length;
-                                setData(
-                                    'items',
-                                    sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
-                                );
-                            }}
-                        >
-                            Oldest First
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => {
-                                const sorted = [...data.items].sort((a, b) => {
-                                    const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
-                                    const bDate = getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '';
-                                    return (bDate || '').localeCompare(aDate || '');
-                                });
-                                const count = sorted.length;
-                                setData(
-                                    'items',
-                                    sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
-                                );
-                            }}
-                        >
-                            Newest First
-                        </Button>
-                    </div>
-                )}
+                {activeTab === 'items' ? (
+                    <>
+                        {data.feed_type === 'static' && data.items.length > 1 && (
+                            <div className="flex flex-wrap gap-2">
+                                <span className="self-center text-xs text-muted-foreground">Quick sort:</span>
+                                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => sortByTitle('asc')}>
+                                    A→Z
+                                </Button>
+                                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => sortByTitle('desc')}>
+                                    Z→A
+                                </Button>
+                                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => sortByDate('asc')}>
+                                    Oldest First
+                                </Button>
+                                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => sortByDate('desc')}>
+                                    Newest First
+                                </Button>
+                            </div>
+                        )}
 
-                {data.items.length > 0 && (
-                    <div className="mb-2">
-                        <SearchInput value={itemSearch} onChange={setItemSearch} placeholder="Search items..." />
-                    </div>
-                )}
+                        {data.items.length > 0 && (
+                            <div className="mb-2">
+                                <SearchInput value={itemSearch} onChange={setItemSearch} placeholder="Search items..." />
+                            </div>
+                        )}
 
-                {data.items.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-muted-foreground">No items in this feed yet. Add items from your library below.</p>
-                ) : debouncedItemSearch && visibleItems.length === 0 ? (
-                    <p className="py-4 text-center text-sm text-muted-foreground">No items match your search.</p>
+                        {data.items.length === 0 ? (
+                            <p className="py-8 text-center text-sm text-muted-foreground">
+                                No items in this feed yet. Switch to the Add Media tab to add some.
+                            </p>
+                        ) : debouncedItemSearch && visibleItems.length === 0 ? (
+                            <p className="py-4 text-center text-sm text-muted-foreground">No items match your search.</p>
+                        ) : (
+                            <div className="divide-y rounded-lg border">
+                                {visibleItems.map(({ item, originalIndex: index }) => {
+                                    const libraryItem = getLibraryItem(item.library_item_id);
+                                    if (!libraryItem) return null;
+
+                                    return (
+                                        <div
+                                            key={item.library_item_id}
+                                            draggable
+                                            onDragStart={() => handleDragStart(index)}
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleDrop(e, index)}
+                                            className="flex cursor-move items-center gap-3 px-4 py-3 hover:bg-muted/50"
+                                        >
+                                            <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                            <LibraryItemInfo item={libraryItem} />
+                                            {data.feed_type === 'append' && (
+                                                <input
+                                                    type="date"
+                                                    value={displayDates[item.library_item_id] ?? getLibraryItem(item.library_item_id)?.display_date ?? ''}
+                                                    onChange={(e) => setDisplayDates((prev) => ({ ...prev, [item.library_item_id]: e.target.value }))}
+                                                    className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
+                                                    title="Display date (appears in RSS description)"
+                                                />
+                                            )}
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => removeItem(index)}
+                                                className="shrink-0 text-destructive hover:text-destructive"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </>
                 ) : (
-                    <div className="divide-y rounded-lg border">
-                        {visibleItems.map(({ item, originalIndex: index }) => {
-                            const libraryItem = getLibraryItem(item.library_item_id);
-                            if (!libraryItem) return null;
+                    <>
+                        {availableLibraryItems.length > 0 && (
+                            <div className="mb-2">
+                                <SearchInput value={addMediaSearch} onChange={setAddMediaSearch} placeholder="Search library..." />
+                            </div>
+                        )}
 
-                            return (
-                                <div
-                                    key={item.library_item_id}
-                                    draggable
-                                    onDragStart={() => handleDragStart(index)}
-                                    onDragOver={handleDragOver}
-                                    onDrop={(e) => handleDrop(e, index)}
-                                    className="flex cursor-move items-center gap-3 px-4 py-3 hover:bg-muted/50"
-                                >
-                                    <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                    <LibraryItemInfo item={libraryItem} />
-                                    {data.feed_type === 'append' && (
-                                        <input
-                                            type="date"
-                                            value={displayDates[item.library_item_id] ?? getLibraryItem(item.library_item_id)?.display_date ?? ''}
-                                            onChange={(e) => setDisplayDates((prev) => ({ ...prev, [item.library_item_id]: e.target.value }))}
-                                            className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
-                                            title="Display date (appears in RSS description)"
-                                        />
-                                    )}
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => removeItem(index)}
-                                        className="shrink-0 text-destructive hover:text-destructive"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-
-                {availableLibraryItems.length > 0 && (
-                    <div className="space-y-2 border-t pt-4">
-                        <p className="text-sm font-medium">Add Library Items</p>
-                        <div className="max-h-48 space-y-1 overflow-y-auto">
-                            {availableLibraryItems.map((libraryItem) => (
-                                <div key={libraryItem.id} className="flex items-center gap-2 rounded-md border p-2">
-                                    <LibraryItemInfo item={libraryItem} />
-                                    <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)} className="shrink-0">
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {availableLibraryItems.length === 0 && data.items.length > 0 && (
-                    <p className="text-center text-sm text-muted-foreground">All library items are already in this feed</p>
+                        {availableLibraryItems.length === 0 ? (
+                            <p className="py-8 text-center text-sm text-muted-foreground">All library items are already in this feed.</p>
+                        ) : debouncedAddMediaSearch && filteredAvailableItems.length === 0 ? (
+                            <p className="py-4 text-center text-sm text-muted-foreground">No items match your search.</p>
+                        ) : (
+                            <div className="max-h-[60vh] divide-y overflow-y-auto rounded-lg border">
+                                {filteredAvailableItems.map((libraryItem) => (
+                                    <div key={libraryItem.id} className="flex items-center gap-2 px-4 py-3">
+                                        <LibraryItemInfo item={libraryItem} />
+                                        <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)} className="shrink-0">
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>
