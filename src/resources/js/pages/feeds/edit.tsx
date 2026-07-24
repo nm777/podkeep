@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 function LibraryItemInfo({ item }: { item: LibraryItem }) {
@@ -44,7 +44,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 }
 
 function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing, errors, isDirty } = useForm({
         title: feed.title,
         description: feed.description || '',
         website_url: feed.website_url || '',
@@ -145,7 +145,16 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-xl font-semibold">{feed.title}</h1>
+            <div>
+                <Link
+                    href={route('dashboard')}
+                    className="mb-1 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                </Link>
+                <h1 className="text-xl font-semibold">{feed.title}</h1>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <FeedFormFields data={data} setData={setData} errors={errors} />
@@ -155,7 +164,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                     </Button>
                     <Link href={route('dashboard')}>
                         <Button type="button" variant="outline">
-                            Cancel
+                            {isDirty ? 'Cancel' : 'Close'}
                         </Button>
                     </Link>
                 </div>
