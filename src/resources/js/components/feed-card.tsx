@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
 import { type Feed } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Copy, Edit, Eye, EyeOff, FileAudio, Share, Smartphone, Trash2 } from 'lucide-react';
+import { Copy, ExternalLink, Eye, EyeOff, FileAudio, Share, Smartphone, Trash2 } from 'lucide-react';
 
 interface FeedCardProps {
     feed: Feed;
@@ -15,14 +15,12 @@ interface FeedCardProps {
 export default function FeedCard({ feed, onCopyUrl, onCopyShareUrl, onDelete }: FeedCardProps) {
     return (
         <div className="px-4 py-3">
-            <a
-                href={`/share/${feed.user_guid}/${feed.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
+            <Link
+                href={route('feeds.edit', feed.id)}
                 className="font-medium text-foreground hover:underline md:truncate"
             >
                 {feed.title}
-            </a>
+            </Link>
             <div className="mt-1 flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">{feed.items_count ?? 0} items</span>
                 <span
@@ -75,12 +73,12 @@ export default function FeedCard({ feed, onCopyUrl, onCopyShareUrl, onDelete }: 
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                <Link href={route('feeds.edit', feed.id)}>
-                                    <Edit className="h-4 w-4" />
-                                </Link>
+                                <a href={`/share/${feed.user_guid}/${feed.slug}`} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-4 w-4" />
+                                </a>
                             </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Edit</TooltipContent>
+                        <TooltipContent>Open Share Page</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                         <TooltipTrigger asChild>
