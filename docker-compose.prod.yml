@@ -79,7 +79,7 @@ services:
     hostname: podkeep-chapters
     restart: unless-stopped
     working_dir: /var/www/html
-    command: php -d memory_limit=512M artisan queue:work --queue=chapters --sleep=5 --tries=1 --timeout=7200
+    command: php -d memory_limit=512M artisan queue:work --queue=chapters --sleep=5 --tries=1 --timeout=43200
     volumes:
       - podcast-storage:/var/www/html/storage
     depends_on:

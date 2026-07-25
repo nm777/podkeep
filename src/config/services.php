@@ -26,6 +26,7 @@ return [
     'whisper' => [
         'binary' => env('WHISPER_BINARY', '/usr/local/bin/whisper-cli'),
         'model_path' => env('WHISPER_MODEL_PATH', '/opt/whisper-models/ggml-small.en.bin'),
+        'chunk_seconds' => env('WHISPER_CHUNK_SECONDS', 1800),
     ],
 
 ];

@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @property array<int, array<string, mixed>>|null $transcript
+ * @property array<int, array<string, mixed>>|null $chapter_proposal
+ */
 class MediaFile extends Model
 {
     use HasFactory;

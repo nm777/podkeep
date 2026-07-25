@@ -7,32 +7,85 @@ use App\Models\MediaFile;
 use App\Services\Transcription\WhisperClient;
 use Illuminate\Support\Facades\Http;
 
-it('transcribes the media file and stores the transcript', function () {
+it('transcribes chunked audio and offsets each chunk by its start time', function () {
     $this->app->instance(WhisperClient::class, new class extends WhisperClient
     {
-        public function transcribe(MediaFile $mediaFile): array
+        public function chunk(string $source, int $chunkSeconds): array
         {
-            return [
-                ['start' => 0, 'end' => 5, 'text' => 'Welcome to the service.'],
-                ['start' => 5, 'end' => 10, 'text' => 'Let us pray.'],
-            ];
+            return ['dir' => '/tmp/fake', 'segments' => [
+                ['path' => '/tmp/c0.wav', 'offset' => 0],
+                ['path' => '/tmp/c1.wav', 'offset' => $chunkSeconds],
+            ]];
         }
+
+        public function transcribeFile(string $wavPath): array
+        {
+            return [['start' => 0, 'end' => 5, 'text' => 'Hello.'], ['start' => 5, 'end' => 10, 'text' => 'World.']];
+        }
+
+        public function cleanupChunks(string $dir): void {}
     });
 
-    $mediaFile = MediaFile::factory()->create(['duration' => 600, 'mime_type' => 'audio/mpeg']);
+    $mediaFile = MediaFile::factory()->create(['duration' => 3600, 'mime_type' => 'audio/mpeg']);
 
     dispatch_sync(new TranscribeMediaFile($mediaFile));
 
     $transcript = $mediaFile->fresh()->transcript;
-    expect($transcript)->not->toBeNull()->toHaveCount(2);
-    expect($transcript[0])->toHaveKey('text', 'Welcome to the service.');
+    expect($transcript)->toHaveCount(4);
+    expect($transcript[0])->toMatchArray(['start' => 0, 'text' => 'Hello.']);
+    expect($transcript[2])->toMatchArray(['start' => 1800, 'text' => 'Hello.']); // offset by second chunk
 });
 
-it('skips transcription when a transcript already exists', function () {
-    $existing = [['start' => 0, 'end' => 5, 'text' => 'cached']];
-    $mediaFile = MediaFile::factory()->create(['duration' => 600, 'transcript' => $existing]);
+it('resumes transcription from the saved checkpoint', function () {
+    $fake = new class extends WhisperClient
+    {
+        /** @var array<int, string> */
+        public array $transcribed = [];
+
+        public function chunk(string $source, int $chunkSeconds): array
+        {
+            return ['dir' => '/tmp/fake', 'segments' => [
+                ['path' => '/tmp/c0.wav', 'offset' => 0],
+                ['path' => '/tmp/c1.wav', 'offset' => $chunkSeconds],
+            ]];
+        }
+
+        public function transcribeFile(string $wavPath): array
+        {
+            $this->transcribed[] = $wavPath;
+
+            return [['start' => 0, 'end' => 5, 'text' => 'more.']];
+        }
+
+        public function cleanupChunks(string $dir): void {}
+    };
+    $this->app->instance(WhisperClient::class, $fake);
+
+    // Chunk 0 ([0,1800)) already transcribed; only chunk 1 should run.
+    $mediaFile = MediaFile::factory()->create([
+        'duration' => 3600,
+        'transcript' => [['start' => 0, 'end' => 1800, 'text' => 'chunk zero done']],
+    ]);
 
     dispatch_sync(new TranscribeMediaFile($mediaFile));
+
+    expect($fake->transcribed)->toBe(['/tmp/c1.wav']);
+    expect($mediaFile->fresh()->transcript)->toHaveCount(2);
+});
+
+it('skips transcription when the transcript already covers the file', function () {
+    $this->app->instance(WhisperClient::class, new class extends WhisperClient
+    {
+        public function chunk(string $source, int $chunkSeconds): array
+        {
+            throw new \RuntimeException('chunk() should not be called');
+        }
+    });
+
+    $existing = [['start' => 0, 'end' => 600, 'text' => 'complete']];
+    $mediaFile = MediaFile::factory()->create(['duration' => 600, 'transcript' => $existing]);
+
+    dispatch_sync(new TranscribeMediaFile($mediaFile)); // no exception => chunk() never called
 
     expect($mediaFile->fresh()->transcript)->toBe($existing);
 });
@@ -40,10 +93,17 @@ it('skips transcription when a transcript already exists', function () {
 it('marks status failed and rethrows when transcription fails', function () {
     $this->app->instance(WhisperClient::class, new class extends WhisperClient
     {
-        public function transcribe(MediaFile $mediaFile): array
+        public function chunk(string $source, int $chunkSeconds): array
+        {
+            return ['dir' => '/tmp/fake', 'segments' => [['path' => '/tmp/c0.wav', 'offset' => 0]]];
+        }
+
+        public function transcribeFile(string $wavPath): array
         {
             throw new \RuntimeException('whisper.cpp failed: model not found');
         }
+
+        public function cleanupChunks(string $dir): void {}
     });
 
     $mediaFile = MediaFile::factory()->create(['duration' => 600, 'mime_type' => 'audio/mpeg']);
@@ -56,10 +116,8 @@ it('marks status failed and rethrows when transcription fails', function () {
     }
 
     expect($thrown)->not->toBeNull();
-    $fresh = $mediaFile->fresh();
-    expect($fresh->chapter_generation_status)->toBe('failed');
-    expect($fresh->chapter_generation_error)->toContain('whisper.cpp');
-    expect($fresh->transcript)->toBeNull();
+    expect($mediaFile->fresh()->chapter_generation_status)->toBe('failed');
+    expect($mediaFile->fresh()->chapter_generation_error)->toContain('whisper.cpp');
 });
 
 it('segments the transcript into a sanitized proposal and does not publish chapters', function () {

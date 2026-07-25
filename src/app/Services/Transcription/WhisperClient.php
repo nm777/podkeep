@@ -3,35 +3,60 @@
 namespace App\Services\Transcription;
 
 use App\Models\MediaFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
-use Illuminate\Support\Facades\Storage;
 
 class WhisperClient
 {
     /**
-     * Transcribe a media file, returning timestamped segments.
+     * Split a source A/V file into 16 kHz mono WAV chunks of $chunkSeconds each,
+     * ready to feed to whisper-cli.
+     *
+     * @return array{dir: string, segments: array<int, array{path: string, offset: int}>}
+     */
+    public function chunk(string $source, int $chunkSeconds): array
+    {
+        $dir = sys_get_temp_dir().'/whisper-chunks-'.uniqid('', true);
+        File::ensureDirectoryExists($dir);
+
+        $result = Process::timeout(300)->run([
+            'ffmpeg', '-y', '-i', $source,
+            '-vn', '-ac', '1', '-ar', '16000',
+            '-f', 'segment', '-segment_time', (string) $chunkSeconds,
+            $dir.'/chunk_%03d.wav',
+        ]);
+
+        if (! $result->successful()) {
+            File::deleteDirectory($dir);
+            throw new \RuntimeException('ffmpeg chunking failed: '.$result->errorOutput());
+        }
+
+        $paths = glob($dir.'/chunk_*.wav') ?: [];
+        sort($paths);
+
+        return [
+            'dir' => $dir,
+            'segments' => collect($paths)->map(fn ($path, $i) => [
+                'path' => $path,
+                'offset' => $i * $chunkSeconds,
+            ])->all(),
+        ];
+    }
+
+    /**
+     * Transcribe a single WAV chunk, returning segments with times relative to the chunk start.
      *
      * @return array<int, array{start: int, end: int, text: string}>
      */
-    public function transcribe(MediaFile $mediaFile): array
+    public function transcribeFile(string $wavPath): array
     {
-        $source = Storage::disk('public')->path($mediaFile->file_path);
-
-        // whisper.cpp only reads WAV in this build, so always decode to 16 kHz mono WAV first.
-        $wav = $this->toWav($source);
-
-        try {
-            // Transcription is CPU-bound and can take many minutes; allow well under the
-            // queue job's --timeout=7200s so the process fails gracefully instead of being killed mid-run.
-            $result = Process::timeout(6600)->run([
-                config('services.whisper.binary'),
-                '-m', config('services.whisper.model_path'),
-                '-f', $wav,
-                '-np',
-            ]);
-        } finally {
-            @unlink($wav);
-        }
+        // Per-chunk transcription is bounded; keep well under the queue job timeout.
+        $result = Process::timeout(6600)->run([
+            config('services.whisper.binary'),
+            '-m', config('services.whisper.model_path'),
+            '-f', $wavPath,
+            '-np',
+        ]);
 
         if (! $result->successful()) {
             throw new \RuntimeException('whisper.cpp failed: '.$result->errorOutput());
@@ -40,23 +65,9 @@ class WhisperClient
         return $this->parse($result->output());
     }
 
-    /**
-     * Decode any A/V input to a 16 kHz mono WAV (the format whisper.cpp ingests).
-     */
-    protected function toWav(string $source): string
+    public function cleanupChunks(string $dir): void
     {
-        $wav = sys_get_temp_dir().'/whisper-'.uniqid('', true).'.wav';
-
-        $result = Process::timeout(300)->run([
-            'ffmpeg', '-y', '-i', $source,
-            '-vn', '-ac', '1', '-ar', '16000', '-f', 'wav', $wav,
-        ]);
-
-        if (! $result->successful() || ! file_exists($wav)) {
-            throw new \RuntimeException('ffmpeg audio conversion failed: '.$result->errorOutput());
-        }
-
-        return $wav;
+        File::deleteDirectory($dir);
     }
 
     /**
