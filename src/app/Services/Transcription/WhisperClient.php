@@ -16,15 +16,20 @@ class WhisperClient
     public function transcribe(MediaFile $mediaFile): array
     {
         $source = Storage::disk('public')->path($mediaFile->file_path);
-        $audio = str_starts_with((string) $mediaFile->mime_type, 'video/') ? $this->extractAudio($source) : $source;
 
-        $result = Process::run([
-            config('services.whisper.binary'),
-            '-m', config('services.whisper.model_path'),
-            '-f', $audio,
-            '-oj',
-            '--no-print-progress',
-        ]);
+        // whisper.cpp only reads WAV in this build, so always decode to 16 kHz mono WAV first.
+        $wav = $this->toWav($source);
+
+        try {
+            $result = Process::run([
+                config('services.whisper.binary'),
+                '-m', config('services.whisper.model_path'),
+                '-f', $wav,
+                '-np',
+            ]);
+        } finally {
+            @unlink($wav);
+        }
 
         if (! $result->successful()) {
             throw new \RuntimeException('whisper.cpp failed: '.$result->errorOutput());
@@ -34,51 +39,45 @@ class WhisperClient
     }
 
     /**
-     * Extract a 16 kHz mono WAV from a video file (whisper.cpp ingests audio only).
+     * Decode any A/V input to a 16 kHz mono WAV (the format whisper.cpp ingests).
      */
-    protected function extractAudio(string $source): string
+    protected function toWav(string $source): string
     {
-        $wav = sys_get_temp_dir().'/'.pathinfo($source, PATHINFO_FILENAME).'-'.uniqid().'.wav';
+        $wav = sys_get_temp_dir().'/whisper-'.uniqid('', true).'.wav';
 
         $result = Process::run([
             'ffmpeg', '-y', '-i', $source,
             '-vn', '-ac', '1', '-ar', '16000', '-f', 'wav', $wav,
         ]);
 
-        if (! $result->successful()) {
-            throw new \RuntimeException('ffmpeg audio extraction failed: '.$result->errorOutput());
+        if (! $result->successful() || ! file_exists($wav)) {
+            throw new \RuntimeException('ffmpeg audio conversion failed: '.$result->errorOutput());
         }
 
         return $wav;
     }
 
     /**
-     * Parse whisper.cpp `-oj` JSON output into segments.
+     * Parse whisper.cpp stdout segment format: `[H:MM:SS.mmm --> H:MM:SS.mmm]   text`.
      *
      * @return array<int, array{start: int, end: int, text: string}>
      */
-    protected function parse(string $output): array
+    public function parse(string $output): array
     {
-        // whisper.cpp writes JSON to stdout; tolerate leading noise by finding the JSON object.
-        if (preg_match('/\{.*\}/s', $output, $matches)) {
-            $output = $matches[0];
-        }
+        preg_match_all(
+            '/^\[(\d+):(\d+):(\d+(?:\.\d+)?)\s*-->\s*(\d+):(\d+):(\d+(?:\.\d+)?)\]\s*(.+)$/m',
+            $output,
+            $matches,
+            PREG_SET_ORDER
+        );
 
-        $decoded = json_decode($output, true);
-        if (! is_array($decoded) || ! isset($decoded['transcription'])) {
-            return [];
-        }
-
-        /** @var array<int, array<string, mixed>> $transcription */
-        $transcription = $decoded['transcription'];
-
-        return collect($transcription)
-            ->map(fn (array $seg) => [
-                'start' => (int) floor(($seg['offsets']['from'] ?? 0) / 1000),
-                'end' => (int) floor(($seg['offsets']['to'] ?? 0) / 1000),
-                'text' => trim((string) ($seg['text'] ?? '')),
+        return collect($matches)
+            ->map(fn ($m) => [
+                'start' => (int) round((int) $m[1] * 3600 + (int) $m[2] * 60 + (float) $m[3]),
+                'end' => (int) round((int) $m[4] * 3600 + (int) $m[5] * 60 + (float) $m[6]),
+                'text' => trim($m[7]),
             ])
-            ->filter(fn (array $seg) => $seg['text'] !== '')
+            ->filter(fn ($seg) => $seg['text'] !== '')
             ->values()
             ->all();
     }

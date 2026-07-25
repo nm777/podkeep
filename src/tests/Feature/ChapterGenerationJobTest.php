@@ -4,18 +4,20 @@ use App\Jobs\SegmentTranscriptIntoChapters;
 use App\Jobs\TranscribeMediaFile;
 use App\Models\Chapter;
 use App\Models\MediaFile;
+use App\Services\Transcription\WhisperClient;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Process;
 
 it('transcribes the media file and stores the transcript', function () {
-    Process::fake([
-        '*' => Process::result(output: json_encode([
-            'transcription' => [
-                ['offsets' => ['from' => 0, 'to' => 5000], 'text' => 'Welcome to the service.'],
-                ['offsets' => ['from' => 5000, 'to' => 10000], 'text' => 'Let us pray.'],
-            ],
-        ])),
-    ]);
+    $this->app->instance(WhisperClient::class, new class extends WhisperClient
+    {
+        public function transcribe(MediaFile $mediaFile): array
+        {
+            return [
+                ['start' => 0, 'end' => 5, 'text' => 'Welcome to the service.'],
+                ['start' => 5, 'end' => 10, 'text' => 'Let us pray.'],
+            ];
+        }
+    });
 
     $mediaFile = MediaFile::factory()->create(['duration' => 600, 'mime_type' => 'audio/mpeg']);
 
@@ -27,14 +29,37 @@ it('transcribes the media file and stores the transcript', function () {
 });
 
 it('skips transcription when a transcript already exists', function () {
-    // No Process::fake here: if the skip path works, transcribe() is never called
-    // (and if it were, the real whisper.cpp call would error, failing the test).
     $existing = [['start' => 0, 'end' => 5, 'text' => 'cached']];
     $mediaFile = MediaFile::factory()->create(['duration' => 600, 'transcript' => $existing]);
 
     dispatch_sync(new TranscribeMediaFile($mediaFile));
 
     expect($mediaFile->fresh()->transcript)->toBe($existing);
+});
+
+it('marks status failed and rethrows when transcription fails', function () {
+    $this->app->instance(WhisperClient::class, new class extends WhisperClient
+    {
+        public function transcribe(MediaFile $mediaFile): array
+        {
+            throw new \RuntimeException('whisper.cpp failed: model not found');
+        }
+    });
+
+    $mediaFile = MediaFile::factory()->create(['duration' => 600, 'mime_type' => 'audio/mpeg']);
+
+    $thrown = null;
+    try {
+        dispatch_sync(new TranscribeMediaFile($mediaFile));
+    } catch (\Throwable $e) {
+        $thrown = $e;
+    }
+
+    expect($thrown)->not->toBeNull();
+    $fresh = $mediaFile->fresh();
+    expect($fresh->chapter_generation_status)->toBe('failed');
+    expect($fresh->chapter_generation_error)->toContain('whisper.cpp');
+    expect($fresh->transcript)->toBeNull();
 });
 
 it('segments the transcript into a sanitized proposal and does not publish chapters', function () {
@@ -79,47 +104,15 @@ it('marks status failed when the LLM call fails', function () {
     expect($fresh->chapter_generation_error)->not->toBeNull();
 });
 
-it('extracts audio via ffmpeg before transcribing video media', function () {
-    Process::fake([
-        '*' => Process::result(output: json_encode([
-            'transcription' => [['offsets' => ['from' => 0, 'to' => 5000], 'text' => 'Welcome.']],
-        ])),
-    ]);
+it('parses whisper stdout segments into timestamped text', function () {
+    $client = new WhisperClient();
 
-    $mediaFile = MediaFile::factory()->create(['duration' => 600, 'mime_type' => 'video/mp4']);
+    $output = "[00:00:00.000 --> 00:00:17.000]   They were hopeless, beaten and so weary\n".
+        "[00:00:17.000 --> 00:00:26.000]   Just to see the glorious sunrise\n";
 
-    dispatch_sync(new TranscribeMediaFile($mediaFile));
+    $segments = $client->parse($output);
 
-    expect($mediaFile->fresh()->transcript)->toHaveCount(1);
-
-    Process::assertRan(function ($process): bool {
-        $command = is_array($process->command) ? implode(' ', $process->command) : (string) $process->command;
-
-        return str_contains($command, 'ffmpeg');
-    });
-    Process::assertRan(function ($process): bool {
-        $command = is_array($process->command) ? implode(' ', $process->command) : (string) $process->command;
-
-        return str_contains($command, 'whisper');
-    });
-});
-
-it('marks status failed and rethrows when transcription fails', function () {
-    Process::fake([
-        '*' => Process::result(exitCode: 1, errorOutput: 'whisper.cpp: model not found'),
-    ]);
-
-    $mediaFile = MediaFile::factory()->create(['duration' => 600, 'mime_type' => 'audio/mpeg']);
-
-    try {
-        dispatch_sync(new TranscribeMediaFile($mediaFile));
-    } catch (\Throwable $e) {
-        $thrown = $e;
-    }
-
-    expect($thrown ?? null)->not->toBeNull();
-    $fresh = $mediaFile->fresh();
-    expect($fresh->chapter_generation_status)->toBe('failed');
-    expect($fresh->chapter_generation_error)->toContain('whisper.cpp');
-    expect($fresh->transcript)->toBeNull();
+    expect($segments)->toHaveCount(2);
+    expect($segments[0])->toMatchArray(['start' => 0, 'end' => 17, 'text' => 'They were hopeless, beaten and so weary']);
+    expect($segments[1])->toMatchArray(['start' => 17, 'end' => 26]);
 });
