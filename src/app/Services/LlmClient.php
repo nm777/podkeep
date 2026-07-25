@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class LlmClient
 {
@@ -33,19 +34,36 @@ class LlmClient
         {$transcriptText}
         TEXT;
 
-        $response = Http::withToken(config('services.llm.api_key'))
-            ->timeout(120)
-            ->post(rtrim((string) config('services.llm.base_url'), '/').'/chat/completions', [
-                'model' => config('services.llm.model'),
-                'response_format' => ['type' => 'json_object'],
-                'messages' => [
-                    ['role' => 'system', 'content' => 'You are a helpful assistant that outputs only JSON.'],
-                    ['role' => 'user', 'content' => $prompt],
-                ],
-            ]);
+        $url = rtrim((string) config('services.llm.base_url'), '/').'/chat/completions';
+        $payload = [
+            'model' => config('services.llm.model'),
+            'response_format' => ['type' => 'json_object'],
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are a helpful assistant that outputs only JSON.'],
+                ['role' => 'user', 'content' => $prompt],
+            ],
+        ];
+
+        // Retry on rate limits (429) with backoff; other errors fail immediately.
+        $response = null;
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            $response = Http::withToken(config('services.llm.api_key'))->timeout(120)->post($url, $payload);
+
+            if ($response->successful() || $response->status() !== 429) {
+                break;
+            }
+
+            if ($attempt < 3) {
+                sleep($attempt * 3); // 3s, 6s
+            }
+        }
 
         if (! $response->successful()) {
-            throw new \RuntimeException('LLM request failed: '.$response->status());
+            $reason = $response->json('error.message')
+                ?? $response->json('error.code')
+                ?? Str::limit((string) $response->body(), 300);
+
+            throw new \RuntimeException('LLM request failed: '.$response->status().' - '.trim((string) $reason));
         }
 
         $content = (string) $response->json('choices.0.message.content', '');
