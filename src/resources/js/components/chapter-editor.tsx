@@ -57,9 +57,7 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     };
 
     const save = () => {
-        const sorted = [...data.chapters].sort((a, b) => Number(a.start_time) - Number(b.start_time));
         put(route('library.chapters.sync', libraryItem.id), {
-            data: { chapters: sorted },
             preserveScroll: true,
         });
     };

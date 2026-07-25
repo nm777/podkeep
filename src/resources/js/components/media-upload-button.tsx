@@ -1,5 +1,6 @@
 import FeedSelector from '@/components/feed-selector';
 import SourceInputSection from '@/components/source-input-section';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
