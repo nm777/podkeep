@@ -22,13 +22,19 @@ class LlmClient
         $maxChapters = min(20, max(1, (int) ceil($duration / 300)));
 
         $prompt = <<<TEXT
-        You segment podcast/audio transcripts into topical chapters for listeners.
+        You segment audio recordings (often church services / sermons) into chapters for listeners.
         Return ONLY JSON: {"chapters":[{"start":<seconds int>,"title":"<short title>"}]}.
+
+        Group content into coherent sections — prefer fewer, broader chapters over many small ones:
+        - Consecutive singing, worship, hymns, or music MUST be ONE chapter titled for the whole block (e.g., "Song service", "Worship set"). Do NOT make a separate chapter per song.
+        - Each chapter covers one coherent section (e.g., Announcements, Scripture reading, Prayer, Sermon, Benediction).
+        - A long sermon may use a few chapters for genuine topic shifts, but do not over-segment.
+
         Rules:
-        - Produce between 1 and {$maxChapters} chapters, aligned to the ACTUAL content/topic changes (not even time splits).
+        - Produce between 1 and {$maxChapters} chapters, aligned to ACTUAL content/topic changes (never even time splits).
         - The first chapter MUST start at 0.
         - "start" is an integer number of seconds, must be < {$duration}, and each must be unique.
-        - Titles must be short, descriptive, and non-empty (<= 60 chars).
+        - Titles: short, descriptive, non-empty (<= 60 chars).
 
         Transcript (start time in [m:ss], then text):
         {$transcriptText}
