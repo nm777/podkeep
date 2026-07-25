@@ -18,7 +18,11 @@ if [ -f database/database.sqlite ]; then
     chmod 664 database/database.sqlite
 fi
 
-su-exec www-data php artisan migrate --force
+if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
+    su-exec www-data php artisan migrate --force
+else
+    echo "Skipping migrations (RUN_MIGRATIONS is not set; only the app service migrates)."
+fi
 
 echo "Clearing caches..."
 su-exec www-data php artisan view:clear
