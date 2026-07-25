@@ -313,3 +313,36 @@ it('handles redownload when content is html redirect page', function () {
 
     Storage::disk('public')->assertExists('media/'.$fileHash.'.mp3');
 });
+
+it('clears cached transcript and chapter proposal when redownloading', function () {
+    $user = User::factory()->create();
+
+    $fileContent = 'RIFFfake audio content';
+    $fileHash = hash('sha256', $fileContent);
+    Storage::disk('public')->put('media/'.$fileHash.'.mp3', $fileContent);
+
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'file_path' => 'media/'.$fileHash.'.mp3',
+        'file_hash' => $fileHash,
+        'source_url' => 'https://example.com/audio.mp3',
+        'transcript' => [['start' => 0, 'end' => 5, 'text' => 'cached']],
+        'chapter_generation_status' => 'completed',
+        'chapter_proposal' => [['start_time' => 0, 'title' => 'Intro']],
+    ]);
+
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+        'source_type' => 'url',
+    ]);
+
+    actingAs($user)
+        ->post("/library/{$libraryItem->id}/redownload")
+        ->assertRedirect();
+
+    $mediaFile->refresh();
+    expect($mediaFile->transcript)->toBeNull();
+    expect($mediaFile->chapter_proposal)->toBeNull();
+    expect($mediaFile->chapter_generation_status)->toBeNull();
+});

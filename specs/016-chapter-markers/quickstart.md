@@ -14,8 +14,8 @@ Chapters attach to **MediaFile** (shared by duplicate items). Proposals are draf
 
 ## Deployment prerequisites (user-driven — AGENTS.md)
 
-- Production image includes **whisper.cpp + model** (default `small.en`) alongside yt-dlp/ffmpeg.
-- Production runs a **`chapters`-queue worker**: `php artisan queue:work --queue=chapters` (low concurrency, optionally `nice`d).
+- **whisper.cpp + model are now built into the image** via the `whisper` build stage in `Dockerfile` (defaults: whisper.cpp `v1.7.4`, model `ggml-small.en.bin`; override with `--build-arg WHISPER_VERSION=…`/`WHISPER_MODEL=…`). A rebuild pulls them in — nothing else to install.
+- Production must run a **`chapters`-queue worker**: `php artisan queue:work --queue=chapters` (low concurrency, optionally `nice`d).
 - `.env` sets `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` (z.ai's OpenAI-compatible endpoint today).
 
 The app dispatches to the `chapters` queue; without that worker, generate requests stay `pending`.

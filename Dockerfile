@@ -13,6 +13,8 @@ RUN apk add --no-cache \
     icu-dev \
     libjpeg-turbo-dev \
     libpng-dev \
+    libgomp \
+    libstdc++ \
     libwebp-dev \
     libxml2-dev \
     libzip-dev \
@@ -70,10 +72,29 @@ RUN npm ci
 COPY src/ .
 RUN npm run build
 
+# ---- whisper.cpp + model (content-aware chapter generation) ----
+# Built in its own stage so only the binary + model land in the app image.
+# Binary name is `whisper-cli` since the v1.6 rename (previously `main`).
+FROM alpine:3.20 AS whisper
+
+ARG WHISPER_VERSION=v1.7.4
+ARG WHISPER_MODEL=ggml-small.en.bin
+
+RUN apk add --no-cache git build-base curl
+
+WORKDIR /build
+RUN git clone --depth 1 --branch ${WHISPER_VERSION} https://github.com/ggerganov/whisper.cpp.git . \
+    && make -j"$(nproc)"
+
+RUN mkdir -p /models \
+    && curl -fsSL "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${WHISPER_MODEL}" -o "/models/${WHISPER_MODEL}"
+
 FROM base AS app
 
 COPY src/ .
 COPY --from=frontend /app/public/build /var/www/html/public/build
+COPY --from=whisper /build/whisper-cli /usr/local/bin/whisper-cli
+COPY --from=whisper /models/ggml-small.en.bin /opt/whisper-models/ggml-small.en.bin
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && mkdir -p storage/app/public/temp-youtube \

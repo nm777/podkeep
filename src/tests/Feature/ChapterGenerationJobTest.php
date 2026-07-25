@@ -78,3 +78,28 @@ it('marks status failed when the LLM call fails', function () {
     expect($fresh->chapter_generation_status)->toBe('failed');
     expect($fresh->chapter_generation_error)->not->toBeNull();
 });
+
+it('extracts audio via ffmpeg before transcribing video media', function () {
+    Process::fake([
+        '*' => Process::result(output: json_encode([
+            'transcription' => [['offsets' => ['from' => 0, 'to' => 5000], 'text' => 'Welcome.']],
+        ])),
+    ]);
+
+    $mediaFile = MediaFile::factory()->create(['duration' => 600, 'mime_type' => 'video/mp4']);
+
+    dispatch_sync(new TranscribeMediaFile($mediaFile));
+
+    expect($mediaFile->fresh()->transcript)->toHaveCount(1);
+
+    Process::assertRan(function ($process): bool {
+        $command = is_array($process->command) ? implode(' ', $process->command) : (string) $process->command;
+
+        return str_contains($command, 'ffmpeg');
+    });
+    Process::assertRan(function ($process): bool {
+        $command = is_array($process->command) ? implode(' ', $process->command) : (string) $process->command;
+
+        return str_contains($command, 'whisper');
+    });
+});
