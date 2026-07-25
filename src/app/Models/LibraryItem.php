@@ -19,6 +19,7 @@ class LibraryItem extends Model
         'description',
         'source_type',
         'media_type',
+        'auto_generate_chapters',
         'source_url',
         'published_at',
         'display_date',
@@ -46,6 +47,7 @@ class LibraryItem extends Model
             'processing_completed_at' => 'datetime',
             'processing_status' => ProcessingStatusType::class,
             'media_type' => MediaType::class,
+            'auto_generate_chapters' => 'boolean',
         ];
     }
 

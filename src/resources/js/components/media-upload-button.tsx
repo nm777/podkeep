@@ -217,6 +217,17 @@ export default function MediaUploadButton({
                                     {mediaType === 'audio' ? 'Extracts audio from video sources' : 'Keeps video as-is'}
                                 </p>
                             </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="auto_generate_chapters"
+                                    checked={data.auto_generate_chapters}
+                                    onCheckedChange={(checked) => setData('auto_generate_chapters', checked === true)}
+                                />
+                                <Label htmlFor="auto_generate_chapters" className="text-sm font-normal leading-none">
+                                    Auto-generate chapters (transcribes & segments in the background)
+                                </Label>
+                            </div>
                         </div>
                         <div className="border-t px-4 py-3">
                             <div className="flex justify-end gap-2">

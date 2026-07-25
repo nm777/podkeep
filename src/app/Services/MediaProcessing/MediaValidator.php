@@ -3,6 +3,7 @@
 namespace App\Services\MediaProcessing;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 
 class MediaValidator
 {
@@ -19,8 +20,30 @@ class MediaValidator
         return [
             'mime_type' => $this->detectMimeType($filePath, $header),
             'filesize' => file_exists($filePath) ? filesize($filePath) : 0,
+            'duration' => $this->probeDuration($filePath),
             'is_valid' => true,
         ];
+    }
+
+    /**
+     * Probe media duration in whole seconds via ffprobe. Returns null if unavailable.
+     */
+    public function probeDuration(string $filePath): ?int
+    {
+        $result = Process::run([
+            'ffprobe', '-v', 'error',
+            '-show_entries', 'format=duration',
+            '-of', 'default=noprint_wrappers=1:nokey=1',
+            $filePath,
+        ]);
+
+        if (! $result->successful()) {
+            return null;
+        }
+
+        $duration = trim($result->output());
+
+        return is_numeric($duration) ? (int) round((float) $duration) : null;
     }
 
     /**

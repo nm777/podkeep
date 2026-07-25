@@ -24,6 +24,7 @@ export function useMediaUploadForm({ onUploadSuccess, onClose, mediaType = 'audi
         url: '',
         source_url: '',
         feed_ids: [] as number[],
+        auto_generate_chapters: false,
     });
 
     const handleFileSelect = (file: File) => {
@@ -72,6 +73,7 @@ export function useMediaUploadForm({ onUploadSuccess, onClose, mediaType = 'audi
                 published_at: data.published_at || undefined,
                 feed_ids: data.feed_ids,
                 media_type: mediaType,
+                auto_generate_chapters: data.auto_generate_chapters,
             };
             if (inputType === 'file') {
                 return { ...baseData, file: data.file };

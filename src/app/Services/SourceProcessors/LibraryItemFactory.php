@@ -20,6 +20,7 @@ class LibraryItemFactory
             'user_id' => $userId ?? auth()->id(),
             'source_type' => $sourceType,
             'media_type' => $validated['media_type'] ?? 'audio',
+            'auto_generate_chapters' => $validated['auto_generate_chapters'] ?? false,
             'source_url' => $sourceUrl,
             'processing_status' => ProcessingStatusType::PENDING,
         ]);
@@ -41,6 +42,7 @@ class LibraryItemFactory
             'user_id' => $userId ?? auth()->id(),
             'source_type' => $sourceType,
             'media_type' => $validated['media_type'] ?? 'audio',
+            'auto_generate_chapters' => $validated['auto_generate_chapters'] ?? false,
             'processing_status' => ProcessingStatusType::PENDING,
         ] + $mediaFileData);
 
@@ -62,6 +64,7 @@ class LibraryItemFactory
             'user_id' => $currentUserId,
             'source_type' => $sourceType,
             'media_type' => $validated['media_type'] ?? 'audio',
+            'auto_generate_chapters' => $validated['auto_generate_chapters'] ?? false,
             'source_url' => $sourceUrl,
             'media_file_id' => $mediaFile->id,
             'is_duplicate' => false,
