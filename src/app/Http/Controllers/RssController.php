@@ -24,7 +24,7 @@ class RssController extends Controller
             'items' => fn ($q) => $feed->feed_type->isStatic()
                 ? $q->reorder()->orderBy('sequence', 'asc')
                 : $q->reorder()->orderBy('created_at', 'desc'),
-            'items.libraryItem.mediaFile',
+            'items.libraryItem.mediaFile.chapters',
         ]);
 
         if (! $feed->is_public && $request->token !== $feed->token) {

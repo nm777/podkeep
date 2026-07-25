@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class MediaFile extends Model
@@ -18,7 +19,19 @@ class MediaFile extends Model
         'filesize',
         'duration',
         'source_url',
+        'transcript',
+        'chapter_generation_status',
+        'chapter_proposal',
+        'chapter_generation_error',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'transcript' => 'array',
+            'chapter_proposal' => 'array',
+        ];
+    }
 
     public function user()
     {
@@ -28,6 +41,11 @@ class MediaFile extends Model
     public function libraryItems()
     {
         return $this->hasMany(LibraryItem::class);
+    }
+
+    public function chapters(): HasMany
+    {
+        return $this->hasMany(Chapter::class)->orderBy('start_time');
     }
 
     public function getPublicUrlAttribute(): string

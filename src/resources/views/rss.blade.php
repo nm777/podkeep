@@ -1,6 +1,7 @@
 <?= '<?xml version="1.0" encoding="UTF-8"?>' ?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:psc="http://podlove.org/simple-chapters"
     xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>{{ $feed->title }}</title>
@@ -29,6 +30,11 @@
             <enclosure url="{{ $item->libraryItem->mediaFile->rss_url }}{{ $feed->is_public ? '' : '?feed_token=' . $feed->token }}"
                 length="{{ $item->libraryItem->mediaFile->filesize }}"
                 type="{{ $item->libraryItem->mediaFile->mime_type }}" />
+            @if($item->libraryItem->mediaFile->chapters->isNotEmpty())
+            <psc:chapters version="1.2">@foreach($item->libraryItem->mediaFile->chapters as $chapter)
+                <psc:chapter start="{{ $chapter->formattedStart() }}" title="{{ $chapter->title }}" />@endforeach
+            </psc:chapters>
+            @endif
         </item>
             @php($episodeIndex++)
             @endif

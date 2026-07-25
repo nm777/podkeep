@@ -17,4 +17,15 @@ return [
     // Removed unused service configurations (postmark, ses, resend, slack)
     // Add them back when needed for email or notification services
 
+    'llm' => [
+        'base_url' => env('LLM_BASE_URL', 'https://api.openai.com/v1'),
+        'api_key' => env('LLM_API_KEY'),
+        'model' => env('LLM_MODEL', 'gpt-4o-mini'),
+    ],
+
+    'whisper' => [
+        'binary' => env('WHISPER_BINARY', '/usr/local/bin/whisper-cli'),
+        'model_path' => env('WHISPER_MODEL_PATH', '/opt/whisper-models/ggml-small.en.bin'),
+    ],
+
 ];

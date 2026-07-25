@@ -12,7 +12,7 @@ class ShareController extends Controller
     {
         $feed = Feed::where('user_guid', $user_guid)
             ->where('slug', $feed_slug)
-            ->with(['items.libraryItem.mediaFile'])
+            ->with(['items.libraryItem.mediaFile.chapters'])
             ->first();
 
         if (! $feed) {
@@ -40,6 +40,10 @@ class ShareController extends Controller
                 'published_at' => $item->libraryItem->published_at?->format('Y-m-d'),
                 'duration' => $item->libraryItem->mediaFile->duration,
                 'media_url' => $this->buildMediaUrl($item->libraryItem->mediaFile->file_path, $token),
+                'chapters' => $item->libraryItem->mediaFile->chapters->map(fn ($chapter) => [
+                    'start_time' => $chapter->start_time,
+                    'title' => $chapter->title,
+                ]),
             ])
             ->values()
             ->all();

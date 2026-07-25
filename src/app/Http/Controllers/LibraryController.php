@@ -104,6 +104,14 @@ class LibraryController extends Controller
             return back()->with('error', 'Cannot redownload: no source URL available for this media file.');
         }
 
+        // Invalidate any cached transcription/proposal — the audio is about to change.
+        $libraryItem->mediaFile->update([
+            'transcript' => null,
+            'chapter_proposal' => null,
+            'chapter_generation_status' => null,
+            'chapter_generation_error' => null,
+        ]);
+
         $libraryItem->update([
             'processing_status' => ProcessingStatusType::PROCESSING,
             'processing_started_at' => now(),

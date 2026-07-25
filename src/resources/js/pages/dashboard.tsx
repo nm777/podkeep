@@ -1,3 +1,4 @@
+import ChapterEditor from '@/components/chapter-editor';
 import CreateFeedForm from '@/components/create-feed-form';
 import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
 import FeedCard from '@/components/feed-card';
@@ -46,6 +47,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
         deleteItemDialogOpen,
         setDeleteItemDialogOpen,
         editDialogOpen,
+        itemToEdit,
         itemProcessing,
         errors,
         data,
@@ -66,7 +68,10 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
     useEffect(() => {
         const hasProcessingItems = libraryItems.some(
             (item) =>
-                ProcessingStatusHelper.from(item.processing_status).isPending() || ProcessingStatusHelper.from(item.processing_status).isProcessing(),
+                ProcessingStatusHelper.from(item.processing_status).isPending() ||
+                ProcessingStatusHelper.from(item.processing_status).isProcessing() ||
+                item.media_file?.chapter_generation_status === 'pending' ||
+                item.media_file?.chapter_generation_status === 'processing',
         );
 
         if (!hasProcessingItems) return;
@@ -77,6 +82,9 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
 
         return () => clearInterval(interval);
     }, [libraryItems]);
+
+    // Prefer the freshly-reloaded library item (so chapter generation status/proposal is current).
+    const editingItem = itemToEdit ? libraryItems.find((i) => i.id === itemToEdit.id) ?? itemToEdit : null;
 
     const handleUploadSuccess = () => {
         router.reload({ only: ['feeds', 'libraryItems'] });
@@ -273,6 +281,15 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                     <Input id="edit-published_at" type="date" value={data.published_at} onChange={(e) => setData('published_at', e.target.value)} />
                     {errors.published_at && <p className="text-sm text-destructive">{errors.published_at}</p>}
                 </div>
+
+                {editingItem?.media_file?.duration && (
+                    <div className="border-t pt-4">
+                        <ChapterEditor
+                            key={`${editingItem.id}-${editingItem.media_file?.chapter_generation_status ?? 'none'}`}
+                            libraryItem={editingItem}
+                        />
+                    </div>
+                )}
             </SheetPanel>
         </AppLayout>
     );
