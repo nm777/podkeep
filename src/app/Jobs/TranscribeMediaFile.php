@@ -27,8 +27,18 @@ class TranscribeMediaFile implements ShouldQueue
 
         $this->mediaFile->update(['chapter_generation_status' => 'processing']);
 
-        $transcript = $whisper->transcribe($this->mediaFile);
+        try {
+            $transcript = $whisper->transcribe($this->mediaFile);
 
-        $this->mediaFile->update(['transcript' => $transcript]);
+            $this->mediaFile->update(['transcript' => $transcript]);
+        } catch (\Throwable $e) {
+            // Mark failed and rethrow so the chain stops (SegmentTranscript won't run with no transcript).
+            $this->mediaFile->update([
+                'chapter_generation_status' => 'failed',
+                'chapter_generation_error' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
     }
 }

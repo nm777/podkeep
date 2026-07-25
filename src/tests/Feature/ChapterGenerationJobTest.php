@@ -103,3 +103,23 @@ it('extracts audio via ffmpeg before transcribing video media', function () {
         return str_contains($command, 'whisper');
     });
 });
+
+it('marks status failed and rethrows when transcription fails', function () {
+    Process::fake([
+        '*' => Process::result(exitCode: 1, errorOutput: 'whisper.cpp: model not found'),
+    ]);
+
+    $mediaFile = MediaFile::factory()->create(['duration' => 600, 'mime_type' => 'audio/mpeg']);
+
+    try {
+        dispatch_sync(new TranscribeMediaFile($mediaFile));
+    } catch (\Throwable $e) {
+        $thrown = $e;
+    }
+
+    expect($thrown ?? null)->not->toBeNull();
+    $fresh = $mediaFile->fresh();
+    expect($fresh->chapter_generation_status)->toBe('failed');
+    expect($fresh->chapter_generation_error)->toContain('whisper.cpp');
+    expect($fresh->transcript)->toBeNull();
+});
