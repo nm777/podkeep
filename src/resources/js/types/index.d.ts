@@ -67,6 +67,7 @@ export interface Feed {
     description?: string;
     website_url?: string;
     is_public: boolean;
+    is_hidden_from_selector: boolean;
     feed_type: 'static' | 'append';
     slug: string;
     user_guid: string;

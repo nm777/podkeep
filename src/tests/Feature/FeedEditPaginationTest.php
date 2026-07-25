@@ -5,7 +5,7 @@ use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 
-it('limits user library items on feed edit page', function () {
+it('returns the full user library on feed edit page (no cap)', function () {
     $user = User::factory()->create([
         'email_verified_at' => now(),
         'approval_status' => 'approved',
@@ -26,5 +26,5 @@ it('limits user library items on feed edit page', function () {
     $response->assertSuccessful();
 
     $userLibraryItems = $response->inertiaProps('userLibraryItems');
-    expect(count($userLibraryItems))->toBeLessThanOrEqual(100);
+    expect(count($userLibraryItems))->toBe(120);
 });

@@ -44,6 +44,7 @@ class FeedController extends Controller
             'user_guid' => Str::uuid(),
             'token' => Str::random(64),
             'is_public' => $validated['is_public'] ?? false,
+            'is_hidden_from_selector' => $validated['is_hidden_from_selector'] ?? false,
             'feed_type' => $validated['feed_type'] ?? 'append',
         ]);
 
@@ -67,7 +68,7 @@ class FeedController extends Controller
             'items.libraryItem.mediaFile',
         ]);
 
-        $userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->limit(100)->get();
+        $userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->orderBy('created_at', 'desc')->get();
 
         return Inertia::render('feeds/edit', [
             'feed' => $feed,
@@ -91,6 +92,7 @@ class FeedController extends Controller
             'description' => $validated['description'] ?? null,
             'website_url' => $validated['website_url'] ?? null,
             'is_public' => $validated['is_public'] ?? false,
+            'is_hidden_from_selector' => $validated['is_hidden_from_selector'] ?? false,
             'feed_type' => $validated['feed_type'] ?? $feed->feed_type,
         ]);
 

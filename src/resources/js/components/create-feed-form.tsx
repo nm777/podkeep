@@ -18,11 +18,13 @@ export default function CreateFeedForm({ renderTrigger }: CreateFeedFormProps) {
         description: string;
         website_url: string;
         is_public: boolean;
+        is_hidden_from_selector: boolean;
     }>({
         title: '',
         description: '',
         website_url: '',
         is_public: false,
+        is_hidden_from_selector: false,
     });
 
     const handleSubmit = (e: React.FormEvent) => {

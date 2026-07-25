@@ -235,3 +235,47 @@ it('shows user library items on edit page', function () {
                 ->where('userLibraryItems.0.id', $libraryItem->id)
         );
 });
+
+it('allows hiding a feed from the add-media selector', function () {
+    $user = User::factory()->create();
+    $feed = Feed::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->put("/feeds/{$feed->id}", [
+        'title' => $feed->title,
+        'is_public' => $feed->is_public,
+        'is_hidden_from_selector' => true,
+    ]);
+
+    $response->assertRedirect("/feeds/{$feed->id}/edit");
+    $this->assertDatabaseHas('feeds', [
+        'id' => $feed->id,
+        'is_hidden_from_selector' => true,
+    ]);
+});
+
+it('defaults is_hidden_from_selector to false for a new feed', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/feeds', [
+        'title' => 'Selector Default Feed',
+    ]);
+
+    $this->assertDatabaseHas('feeds', [
+        'user_id' => $user->id,
+        'title' => 'Selector Default Feed',
+        'is_hidden_from_selector' => false,
+    ]);
+});
+
+it('validates is_hidden_from_selector must be boolean', function () {
+    $user = User::factory()->create();
+    $feed = Feed::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->putJson("/feeds/{$feed->id}", [
+        'title' => $feed->title,
+        'is_hidden_from_selector' => 'not-a-boolean',
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonValidationErrors(['is_hidden_from_selector']);
+});
