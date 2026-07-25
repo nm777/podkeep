@@ -85,7 +85,7 @@ WORKDIR /build
 # whisper.cpp builds with cmake; the CLI binary lands somewhere under build/.
 # Locate it and copy to a known path so the app stage can COPY it reliably.
 RUN git clone --depth 1 --branch ${WHISPER_VERSION} https://github.com/ggerganov/whisper.cpp.git . \
-    && cmake -B build -DWHISPER_BUILD_TESTS=OFF -DWHISPER_BUILD_EXAMPLES=ON \
+    && cmake -B build -DWHISPER_BUILD_TESTS=OFF -DWHISPER_BUILD_EXAMPLES=ON -DBUILD_SHARED_LIBS=OFF \
     && cmake --build build -j"$(nproc)" \
     && cp "$(find build -type f -name 'whisper-cli' | head -1)" /usr/local/bin/whisper-cli \
     && test -x /usr/local/bin/whisper-cli
