@@ -21,7 +21,9 @@ class WhisperClient
         $wav = $this->toWav($source);
 
         try {
-            $result = Process::run([
+            // Transcription is CPU-bound and can take many minutes; allow well under the
+            // queue job's --timeout=7200s so the process fails gracefully instead of being killed mid-run.
+            $result = Process::timeout(6600)->run([
                 config('services.whisper.binary'),
                 '-m', config('services.whisper.model_path'),
                 '-f', $wav,
@@ -45,7 +47,7 @@ class WhisperClient
     {
         $wav = sys_get_temp_dir().'/whisper-'.uniqid('', true).'.wav';
 
-        $result = Process::run([
+        $result = Process::timeout(300)->run([
             'ffmpeg', '-y', '-i', $source,
             '-vn', '-ac', '1', '-ar', '16000', '-f', 'wav', $wav,
         ]);
