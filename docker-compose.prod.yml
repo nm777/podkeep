@@ -74,11 +74,13 @@ services:
 
   # Low-priority worker for chapter generation (transcription + LLM segmentation).
   # Isolated on its own queue so slow transcription never blocks the default worker.
+  # Scale with: docker compose up -d --scale chapters=N  (or change deploy.replicas).
   chapters:
     image: podkeep-app:latest
-    hostname: podkeep-chapters
     restart: unless-stopped
     working_dir: /var/www/html
+    deploy:
+      replicas: 2
     command: php -d memory_limit=512M artisan queue:work --queue=chapters --sleep=5 --tries=1 --timeout=43200
     volumes:
       - podcast-storage:/var/www/html/storage
