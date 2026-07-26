@@ -121,8 +121,24 @@ it('marks status failed and rethrows when transcription fails', function () {
     expect($mediaFile->fresh()->chapter_generation_error)->toContain('whisper.cpp');
 });
 
-it('segments the transcript into a sanitized proposal and does not publish chapters', function () {
-    Http::fake([
+it('skips re-segmentation when a proposal already exists for the current transcript', function () {
+    Http::fake();
+
+    $transcript = [['start' => 0, 'end' => 5, 'text' => 'Hi.']];
+    $mediaFile = MediaFile::factory()->create([
+        'duration' => 600,
+        'transcript' => $transcript,
+        'chapter_proposal' => [['start_time' => 0, 'title' => 'Existing']],
+        'chapter_proposal_for_hash' => md5(json_encode($transcript)),
+    ]);
+
+    dispatch_sync(new SegmentTranscriptIntoChapters($mediaFile));
+
+    Http::assertNothingSent(); // LLM was not called
+    expect($mediaFile->fresh()->chapter_generation_status)->toBe('completed');
+});
+
+it('segments the transcript into a sanitized proposal and does not publish chapters', function () {    Http::fake([
         '*/chat/completions' => Http::response([
             'choices' => [[
                 'message' => ['content' => json_encode(['chapters' => [

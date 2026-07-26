@@ -22,18 +22,31 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
 
     public function handle(LlmClient $llm): void
     {
-        $this->mediaFile->update(['chapter_generation_status' => 'processing']);
+        $mediaFile = $this->mediaFile->fresh();
+        $transcript = $mediaFile->transcript ?? [];
+        $transcriptHash = md5(json_encode($transcript));
+
+        // Idempotent: a proposal already exists for this exact transcript, so skip the
+        // (costly) LLM call. Re-running because of duplicate/retry dispatches is harmless.
+        if ($mediaFile->chapter_proposal !== null && $mediaFile->chapter_proposal_for_hash === $transcriptHash) {
+            $mediaFile->update(['chapter_generation_status' => 'completed']);
+
+            return;
+        }
+
+        $mediaFile->update(['chapter_generation_status' => 'processing']);
 
         try {
-            $proposed = $llm->proposeChapters($this->mediaFile->fresh()->transcript ?? [], (int) $this->mediaFile->duration);
+            $proposed = $llm->proposeChapters($transcript, (int) $mediaFile->duration);
 
-            $this->mediaFile->update([
-                'chapter_proposal' => $this->sanitize($proposed, (int) $this->mediaFile->duration),
+            $mediaFile->update([
+                'chapter_proposal' => $this->sanitize($proposed, (int) $mediaFile->duration),
+                'chapter_proposal_for_hash' => $transcriptHash,
                 'chapter_generation_status' => 'completed',
                 'chapter_generation_error' => null,
             ]);
         } catch (\Throwable $e) {
-            $this->mediaFile->update([
+            $mediaFile->update([
                 'chapter_generation_status' => 'failed',
                 'chapter_generation_error' => $e->getMessage(),
             ]);

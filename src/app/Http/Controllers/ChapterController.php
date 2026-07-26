@@ -54,7 +54,14 @@ class ChapterController extends Controller
             return back()->with('warning', 'Chapters require a processed media file with a known duration.');
         }
 
-        $mediaFile->update(['chapter_generation_status' => 'pending', 'chapter_generation_error' => null]);
+        // "Regenerate" (already completed) forces a fresh proposal by clearing the cached one,
+        // so the segmentation job re-runs the LLM instead of skipping it as a duplicate.
+        $updates = ['chapter_generation_status' => 'pending', 'chapter_generation_error' => null];
+        if ($mediaFile->chapter_generation_status === 'completed') {
+            $updates['chapter_proposal'] = null;
+            $updates['chapter_proposal_for_hash'] = null;
+        }
+        $mediaFile->update($updates);
 
         TranscribeMediaFile::withChain([new SegmentTranscriptIntoChapters($mediaFile)])
             ->onQueue('chapters')

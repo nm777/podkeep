@@ -26,6 +26,7 @@ class MediaFile extends Model
         'transcript',
         'chapter_generation_status',
         'chapter_proposal',
+        'chapter_proposal_for_hash',
         'chapter_generation_error',
     ];
 
