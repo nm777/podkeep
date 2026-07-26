@@ -49,12 +49,12 @@ description: "Task list for feature 018-admin-queue-panel"
 
 ### Tests for User Story 1
 
-- [ ] T003 [P] [US1] Feature tests in `src/tests/Feature/AdminQueueTest.php`: (a) admin sees the queue page with pending/executing/failed sections; (b) non-admin gets 403 on `GET /admin/queue`; (c) unauthenticated redirected to login.
+- [X] T003 [P] [US1] Feature tests in `src/tests/Feature/AdminQueueTest.php`: (a) admin sees the queue page with pending/executing/failed sections; (b) non-admin gets 403 on `GET /admin/queue`; (c) unauthenticated redirected to login.
 
 ### Implementation for User Story 1
 
-- [ ] T004 [P] [US1] Create `src/app/Http/Controllers/AdminQueueController.php` with `index()`: reads pending (`jobs` where `reserved_at IS NULL`), executing (`jobs` where `reserved_at IS NOT NULL`), and failed (`failed_jobs` paginated 10/page). Parses `displayName` from each job's JSON payload for the job type. Does NOT include the raw `payload` in the response. Returns Inertia `admin/queue/index` with `{ pending, executing, failed }` props.
-- [ ] T005 [US1] Add `Route::get('queue', [AdminQueueController::class, 'index'])->name('queue.index')` inside the `['auth', 'admin']` group in `src/routes/web.php`. Import the controller.
+- [X] T004 [P] [US1] Create `src/app/Http/Controllers/AdminQueueController.php` with `index()`: reads pending (`jobs` where `reserved_at IS NULL`), executing (`jobs` where `reserved_at IS NOT NULL`), and failed (`failed_jobs` paginated 10/page). Parses `displayName` from each job's JSON payload for the job type. Does NOT include the raw `payload` in the response. Returns Inertia `admin/queue/index` with `{ pending, executing, failed }` props.
+- [X] T005 [US1] Add `Route::get('queue', [AdminQueueController::class, 'index'])->name('queue.index')` inside the `['auth', 'admin']` group in `src/routes/web.php`. Import the controller.
 - [ ] T006 [US1] Create `src/resources/js/pages/admin/queue/index.tsx`: renders three sections (Pending, Executing, Failed) as tables or lists. Each job row shows: type (short class name), queue name, attempts, created/reserved/failed timestamp. Failed rows show truncated exception (first 200 chars). Uses `AdminLayout`. Auto-refreshes via `router.reload({ only: [...] })` every 10 seconds.
 - [ ] T007 [US1] Register the new page in the Inertia page resolver (verify `src/resources/js/pages/admin/queue/index.tsx` is picked up by the `import.meta.glob` in the SSR/CSR bootstrap — it should be automatic).
 

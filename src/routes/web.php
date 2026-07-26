@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminQueueController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\FeedController;
@@ -78,6 +79,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('queue', [AdminQueueController::class, 'index'])->name('queue.index');
+
     Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
     Route::post('users/{user}/approve', [UserManagementController::class, 'approve'])->name('users.approve');
     Route::post('users/{user}/reject', [UserManagementController::class, 'reject'])->name('users.reject');
