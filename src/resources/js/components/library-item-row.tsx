@@ -3,23 +3,27 @@ import StatusBadge from '@/components/library-item-status-badge';
 import { Button } from '@/components/ui/button';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
-import { type LibraryItem } from '@/types';
+import { type Feed, type LibraryItem } from '@/types';
 import { AlertCircle, Play } from 'lucide-react';
 
 interface LibraryItemRowProps {
     item: LibraryItem;
+    feeds: Feed[];
     onPlay: (item: LibraryItem) => void;
     onEdit: (item: LibraryItem) => void;
     onDelete: (id: number) => void;
     onRetry: (id: number) => void;
     onRedownload: (id: number) => void;
+    onAddToFeed: (itemId: number, feedId: number) => void;
 }
 
-export default function LibraryItemRow({ item, onPlay, onEdit, onDelete, onRetry, onRedownload }: LibraryItemRowProps) {
+export default function LibraryItemRow({ item, feeds, onPlay, onEdit, onDelete, onRetry, onRedownload, onAddToFeed }: LibraryItemRowProps) {
     const status = ProcessingStatusHelper.from(item.processing_status);
     const isComplete = status.hasCompleted();
     const isActive = status.isPending() || status.isProcessing();
     const isFailed = status.hasFailed();
+
+    const availableFeeds = feeds.filter((f) => !item.feeds?.some((ef) => ef.id === f.id));
 
     return (
         <div className="flex items-center gap-4 px-4 py-3">
@@ -55,6 +59,21 @@ export default function LibraryItemRow({ item, onPlay, onEdit, onDelete, onRetry
 
             <div className="flex items-center gap-1">
                 <StatusBadge item={item} isComplete={isComplete} isActive={isActive} isFailed={isFailed} />
+                {isComplete && availableFeeds.length > 0 && (
+                    <select
+                        className="h-8 max-w-32 truncate rounded-md border border-input bg-transparent px-2 text-xs"
+                        value=""
+                        onChange={(e) => {
+                            if (e.target.value) onAddToFeed(item.id, Number(e.target.value));
+                        }}
+                        title="Add to feed"
+                    >
+                        <option value="">+ Feed</option>
+                        {availableFeeds.map((f) => (
+                            <option key={f.id} value={f.id}>{f.title}</option>
+                        ))}
+                    </select>
+                )}
                 <ItemActions
                     item={item}
                     isComplete={isComplete}

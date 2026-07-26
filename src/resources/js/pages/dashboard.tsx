@@ -63,6 +63,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
         handleEditClick,
         handleEditSubmit,
         handleEditDialogClose,
+        handleAddToFeed,
     } = useDashboardActions();
 
     useEffect(() => {
@@ -200,11 +201,13 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                                     <LibraryItemRow
                                         key={item.id}
                                         item={item}
+                                        feeds={feeds}
                                         onPlay={setPlayingItem}
                                         onEdit={handleEditClick}
                                         onDelete={handleDeleteItemClick}
                                         onRetry={handleRetry}
                                         onRedownload={handleRedownload}
+                                        onAddToFeed={handleAddToFeed}
                                     />
                                 ))}
                             </div>
@@ -288,6 +291,38 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                             key={`${editingItem.id}-${editingItem.media_file?.chapter_generation_status ?? 'none'}`}
                             libraryItem={editingItem}
                         />
+                    </div>
+                )}
+
+                {editingItem && (
+                    <div className="border-t pt-4">
+                        <Label className="text-sm font-medium">Feeds</Label>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                            {editingItem.feeds?.map((f) => (
+                                <span key={f.id} className="rounded-full bg-muted px-2 py-0.5 text-xs">{f.title}</span>
+                            ))}
+                            {(!editingItem.feeds || editingItem.feeds.length === 0) && (
+                                <span className="text-xs text-muted-foreground">Not in any feed.</span>
+                            )}
+                        </div>
+                        {(() => {
+                            const used = new Set(editingItem.feeds?.map((f) => f.id) ?? []);
+                            const available = feeds.filter((f) => !used.has(f.id));
+                            return available.length > 0 ? (
+                                <select
+                                    className="mt-2 h-8 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                                    value=""
+                                    onChange={(e) => {
+                                        if (e.target.value) handleAddToFeed(editingItem.id, Number(e.target.value));
+                                    }}
+                                >
+                                    <option value="">Add to feed…</option>
+                                    {available.map((f) => (
+                                        <option key={f.id} value={f.id}>{f.title}</option>
+                                    ))}
+                                </select>
+                            ) : null;
+                        })()}
                     </div>
                 )}
             </SheetPanel>
