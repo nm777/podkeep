@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ProcessingStatusType;
+use App\Models\Chapter;
 use App\Models\Feed;
 use App\Models\FeedItem;
 use App\Models\LibraryItem;
@@ -326,5 +327,57 @@ it('does not include feed_token in media URL for public feeds', function () {
     $response->assertInertia(fn ($page) => $page
         ->where('episodes.0.media_url', '/files/media/public-audio.mp3')
         ->where('rssUrl', url("/rss/{$feed->user_guid}/{$feed->slug}"))
+    );
+});
+
+it('includes chapters for episodes whose media file has chapters', function () {
+    $feed = Feed::factory()->create(['user_id' => $this->user->id, 'is_public' => true]);
+
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $this->user->id,
+        'mime_type' => 'audio/mpeg',
+        'duration' => 600,
+    ]);
+
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $this->user->id,
+        'media_file_id' => $mediaFile->id,
+        'processing_status' => ProcessingStatusType::COMPLETED,
+    ]);
+
+    FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $libraryItem->id, 'sequence' => 1]);
+
+    Chapter::factory()->create(['media_file_id' => $mediaFile->id, 'start_time' => 0, 'title' => 'Intro']);
+    Chapter::factory()->create(['media_file_id' => $mediaFile->id, 'start_time' => 300, 'title' => 'Main Point']);
+
+    $response = $this->get("/share/{$feed->user_guid}/{$feed->slug}");
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->has('episodes.0.chapters', 2)
+        ->where('episodes.0.chapters.0.start_time', 0)
+        ->where('episodes.0.chapters.0.title', 'Intro')
+        ->where('episodes.0.chapters.1.title', 'Main Point')
+    );
+});
+
+it('returns an empty chapter list for episodes without chapters', function () {
+    $feed = Feed::factory()->create(['user_id' => $this->user->id, 'is_public' => true]);
+
+    $mediaFile = MediaFile::factory()->create(['user_id' => $this->user->id, 'duration' => 600]);
+
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $this->user->id,
+        'media_file_id' => $mediaFile->id,
+        'processing_status' => ProcessingStatusType::COMPLETED,
+    ]);
+
+    FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $libraryItem->id, 'sequence' => 1]);
+
+    $response = $this->get("/share/{$feed->user_guid}/{$feed->slug}");
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->has('episodes.0.chapters', 0)
     );
 });

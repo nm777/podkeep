@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\MediaController;
@@ -33,7 +34,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
             ->latest()
             ->get();
         $libraryItems = Auth::user()->libraryItems()
-            ->with('mediaFile', 'feeds')
+            ->with('mediaFile.chapters', 'feeds')
             ->latest()
             ->get();
 
@@ -59,6 +60,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('feeds/{feed}/edit', [FeedController::class, 'edit'])->name('feeds.edit');
 
     Route::resource('library', LibraryController::class)->only(['store', 'update', 'destroy']);
+    Route::put('library/{library_item}/chapters', [ChapterController::class, 'sync'])->name('library.chapters.sync');
+    Route::post('library/{library_item}/chapters/generate', [ChapterController::class, 'generate'])->name('library.chapters.generate');
     Route::post('library', [LibraryController::class, 'store'])
         ->name('library.store')
         ->middleware('throttle:10,1');

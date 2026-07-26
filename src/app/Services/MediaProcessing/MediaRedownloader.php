@@ -46,6 +46,7 @@ class MediaRedownloader
                 'file_hash' => $storageInfo['file_hash'],
                 'filesize' => $storageInfo['filesize'],
                 'mime_type' => $metadata['mime_type'],
+                'duration' => $metadata['duration'] ?? null,
             ]);
 
             if ($hashChanged && $fileExisted && $oldFilePath !== $storageInfo['file_path']) {

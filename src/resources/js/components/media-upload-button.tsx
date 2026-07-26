@@ -1,5 +1,6 @@
 import FeedSelector from '@/components/feed-selector';
 import SourceInputSection from '@/components/source-input-section';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -216,6 +217,17 @@ export default function MediaUploadButton({
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     {mediaType === 'audio' ? 'Extracts audio from video sources' : 'Keeps video as-is'}
                                 </p>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="auto_generate_chapters"
+                                    checked={data.auto_generate_chapters}
+                                    onCheckedChange={(checked) => setData('auto_generate_chapters', checked === true)}
+                                />
+                                <Label htmlFor="auto_generate_chapters" className="text-sm font-normal leading-none">
+                                    Auto-generate chapters (transcribes & segments in the background)
+                                </Label>
                             </div>
                         </div>
                         <div className="border-t px-4 py-3">

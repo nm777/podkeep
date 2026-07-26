@@ -3,6 +3,8 @@
 namespace App\Services\MediaProcessing;
 
 use App\Enums\ProcessingStatusType;
+use App\Jobs\SegmentTranscriptIntoChapters;
+use App\Jobs\TranscribeMediaFile;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Services\DuplicateDetectionService;
@@ -108,6 +110,7 @@ class MediaProcessingService
                 'file_hash' => $fileData['file_hash'],
                 'mime_type' => $fileData['mime_type'],
                 'filesize' => $fileData['filesize'],
+                'duration' => $fileData['duration'] ?? null,
                 'source_url' => $sourceUrl,
             ]);
 
@@ -118,6 +121,13 @@ class MediaProcessingService
                 'processing_completed_at' => now(),
                 'temp_file_path' => null,
             ]);
+
+            // Honor the add-time opt-in for automatic chapter generation.
+            if ($libraryItem->fresh()?->auto_generate_chapters && $mediaFile->duration) {
+                TranscribeMediaFile::withChain([new SegmentTranscriptIntoChapters($mediaFile)])
+                    ->onQueue('chapters')
+                    ->dispatch($mediaFile);
+            }
 
             return [
                 'is_duplicate' => false,

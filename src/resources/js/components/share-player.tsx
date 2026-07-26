@@ -1,3 +1,4 @@
+import ChapterList from '@/components/chapter-list';
 import { type ShareEpisode } from '@/types';
 import { useRef, useState } from 'react';
 
@@ -23,15 +24,27 @@ export default function SharePlayer({ episode }: SharePlayerProps) {
             {error ? (
                 <p className="py-4 text-center text-sm text-red-500">{error}</p>
             ) : (
-                <audio
-                    ref={audioRef}
-                    src={episode.media_url}
-                    className="w-full"
-                    controls
-                    preload="metadata"
-                    onError={() => setError('Audio loading failed')}
-                    onCanPlay={() => setError(null)}
-                />
+                <>
+                    <audio
+                        ref={audioRef}
+                        src={episode.media_url}
+                        className="w-full"
+                        controls
+                        preload="metadata"
+                        onError={() => setError('Audio loading failed')}
+                        onCanPlay={() => setError(null)}
+                    />
+                    {episode.chapters && episode.chapters.length > 0 && (
+                        <div className="mt-3">
+                            <ChapterList
+                                chapters={episode.chapters}
+                                onSeek={(t) => {
+                                    if (audioRef.current) audioRef.current.currentTime = t;
+                                }}
+                            />
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

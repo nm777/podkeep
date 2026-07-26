@@ -7,6 +7,10 @@ Auto-generated from all feature plans. Last updated: 2026-07-12
 - PostgreSQL (production), SQLite (tests), local `public` disk for media files
 - Laravel Sanctum v4 (personal access tokens for API)
 - yt-dlp + ffmpeg (in production image, for YouTube download and video-to-audio conversion)
+- PHP 8.4 (Laravel 13), TypeScript (React 19+) + Laravel 13, Inertia.js v3, Tailwind CSS v4, Pest PHP v4, lucide-react; existing `rss.blade.php` feed view + DOMDocument XML validation (016-chapter-markers)
+- PostgreSQL (production) / SQLite (tests); new `chapters` table; local `public` disk for media (unchanged) (016-chapter-markers)
+- PHP 8.4 (Laravel 13), TypeScript (React 19+) + Laravel 13, Inertia.js v3, Tailwind CSS v4, Pest PHP v4, lucide-react; existing `rss.blade.php` + DOMDocument XML validation; **whisper.cpp** (new, transcription); OpenAI-compatible LLM via `Http` (new) (016-chapter-markers)
+- PostgreSQL (production) / SQLite (tests); new `chapters` table + nullable generation-state columns on `media_files` (`transcript`, `chapter_generation_status`, `chapter_proposal`, `chapter_generation_error`); local `public` disk for media (unchanged) (016-chapter-markers)
 
 ## Project Structure
 
@@ -47,9 +51,9 @@ All tooling runs in ephemeral Docker containers (see Manual Additions below for 
 PHP 8.4 (Laravel 13), TypeScript (React 19+): Follow standard conventions
 
 ## Recent Changes
+- 016-chapter-markers: Added PHP 8.4 (Laravel 13), TypeScript (React 19+) + Laravel 13, Inertia.js v3, Tailwind CSS v4, Pest PHP v4, lucide-react; existing `rss.blade.php` + DOMDocument XML validation; **whisper.cpp** (new, transcription); OpenAI-compatible LLM via `Http` (new)
+- 016-chapter-markers: Added PHP 8.4 (Laravel 13), TypeScript (React 19+) + Laravel 13, Inertia.js v3, Tailwind CSS v4, Pest PHP v4, lucide-react; existing `rss.blade.php` feed view + DOMDocument XML validation
 - 014-video-podcast-support: Video podcast support, media type selection (audio/video), ffmpeg conversion
-- 013-search: Client-side search on Library, Feeds, and feed edit page
-- 012-feed-type-ordering: Static vs Append feed types, quick-sort, sequence-based pubDates
 
 
 <!-- MANUAL ADDITIONS START -->

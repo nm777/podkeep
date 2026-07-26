@@ -26,6 +26,20 @@ export interface MediaFile {
     filesize: number;
     duration?: number;
     source_url?: string;
+    chapters?: Chapter[];
+    transcript?: { start: number; end: number; text: string }[] | null;
+    chapter_generation_status?: 'pending' | 'processing' | 'completed' | 'failed' | null;
+    chapter_proposal?: { start_time: number; title: string }[] | null;
+    chapter_generation_error?: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Chapter {
+    id: number;
+    media_file_id: number;
+    start_time: number;
+    title: string;
     created_at: string;
     updated_at: string;
 }
@@ -112,6 +126,7 @@ export interface ShareEpisode {
     published_at: string | null;
     duration: number | null;
     media_url: string;
+    chapters?: { start_time: number; title: string }[];
 }
 
 export interface SharePageProps {

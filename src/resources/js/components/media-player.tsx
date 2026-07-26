@@ -1,10 +1,11 @@
 'use client';
 
+import ChapterList from '@/components/chapter-list';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProcessingStatusType } from '@/lib/processing-status';
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface MediaFile {
     id: number;
@@ -14,6 +15,7 @@ interface MediaFile {
     filesize: number;
     duration?: number;
     public_url?: string;
+    chapters?: { start_time: number; title: string }[];
     created_at: string;
     updated_at: string;
 }
@@ -45,8 +47,10 @@ interface MediaPlayerProps {
 
 export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlayerProps) {
     const [error, setError] = useState<string | null>(null);
+    const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement>(null);
 
     const isVideo = libraryItem.media_type === 'video' || libraryItem.media_file?.mime_type?.startsWith('video/');
+    const chapters = libraryItem.media_file?.chapters ?? [];
 
     if (!isOpen || !libraryItem.media_file) return null;
 
@@ -70,6 +74,7 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
                             {/* Media element */}
                             {isVideo ? (
                                 <video
+                                    ref={mediaRef as React.RefObject<HTMLVideoElement>}
                                     src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
                                     className="max-h-[60vh] w-full"
                                     controls
@@ -80,12 +85,23 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
                                 />
                             ) : (
                                 <audio
+                                    ref={mediaRef as React.RefObject<HTMLAudioElement>}
                                     src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
                                     className="w-full"
                                     controls
                                     preload="metadata"
                                     onError={() => setError('Media loading failed')}
                                     onCanPlay={() => setError(null)}
+                                />
+                            )}
+
+                            {chapters.length > 0 && (
+                                <ChapterList
+                                    chapters={chapters}
+                                    onSeek={(t) => {
+                                        if (mediaRef.current) mediaRef.current.currentTime = t;
+                                    }}
+                                    className="max-h-48 rounded border p-2"
                                 />
                             )}
 

@@ -2,9 +2,12 @@
 
 namespace App\Services\YouTube;
 
+use App\Jobs\SegmentTranscriptIntoChapters;
+use App\Jobs\TranscribeMediaFile;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Services\DuplicateDetectionService;
+use App\Services\MediaProcessing\MediaValidator;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
@@ -15,6 +18,7 @@ class YouTubeFileProcessor
 {
     public function __construct(
         private UnifiedDuplicateProcessor $duplicateProcessor,
+        private MediaValidator $validator,
     ) {}
 
     /**
@@ -71,6 +75,7 @@ class YouTubeFileProcessor
 
         $mimeType = File::mimeType(Storage::disk('public')->path($finalPath));
         $fileSize = File::size(Storage::disk('public')->path($finalPath));
+        $duration = $this->validator->probeDuration(Storage::disk('public')->path($finalPath));
 
         Log::info('Creating media file record', [
             'library_item_id' => $libraryItem->id,
@@ -86,8 +91,16 @@ class YouTubeFileProcessor
             'file_hash' => $fileHash,
             'mime_type' => $mimeType,
             'filesize' => $fileSize,
+            'duration' => $duration,
             'source_url' => $youtubeUrl,
         ]);
+
+        // Honor the add-time opt-in for automatic chapter generation.
+        if ($libraryItem->auto_generate_chapters && $mediaFile->duration) {
+            TranscribeMediaFile::withChain([new SegmentTranscriptIntoChapters($mediaFile)])
+                ->onQueue('chapters')
+                ->dispatch($mediaFile);
+        }
 
         return [
             'is_duplicate' => false,
