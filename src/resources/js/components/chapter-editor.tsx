@@ -105,8 +105,8 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
                 <div className="space-y-1 text-center">
                     <p className="text-xs text-muted-foreground">
                         {segmenting
-                            ? 'Segmenting chapters via the language model…'
-                            : `Transcribing… ${progress}%. You can leave this page; it keeps running.`}
+                            ? 'Segmenting via the language model — you can leave this page.'
+                            : 'You can leave this page; it keeps running even if you navigate away.'}
                     </p>
                     {!segmenting && (
                         <p className="text-xs text-muted-foreground">
