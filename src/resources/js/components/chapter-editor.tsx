@@ -25,6 +25,7 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     const proposal = mediaFile?.chapter_proposal ?? [];
     const generationError = mediaFile?.chapter_generation_error;
     const isGenerating = status === 'pending' || status === 'processing';
+    const isQueued = status === 'pending';
 
     const transcribedSeconds = mediaFile?.transcript?.length ? Math.max(...mediaFile.transcript.map((s) => s.end)) : 0;
     const progress = duration > 0 ? Math.min(100, Math.round((transcribedSeconds / duration) * 100)) : 0;
@@ -90,25 +91,29 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
 
             <Button type="button" variant="outline" size="sm" className="w-full" onClick={generate} disabled={isGenerating}>
                 <WandSparkles className="mr-2 h-4 w-4" />
-                {segmenting
-                    ? 'Segmenting…'
-                    : isGenerating
-                      ? `Transcribing… ${progress}%`
-                      : status === 'completed'
-                        ? 'Regenerate from content'
-                        : status === 'failed'
-                          ? 'Retry generation'
-                          : 'Generate from content'}
+                {isQueued
+                    ? 'Queued…'
+                    : segmenting
+                      ? 'Segmenting…'
+                      : isGenerating
+                        ? `Transcribing… ${progress}%`
+                        : status === 'completed'
+                          ? 'Regenerate from content'
+                          : status === 'failed'
+                            ? 'Retry generation'
+                            : 'Generate from content'}
             </Button>
 
             {isGenerating && (
                 <div className="space-y-1 text-center">
                     <p className="text-xs text-muted-foreground">
-                        {segmenting
-                            ? 'Segmenting via the language model — you can leave this page.'
-                            : 'You can leave this page; it keeps running even if you navigate away.'}
+                        {isQueued
+                            ? 'Waiting in the queue — starts automatically when a worker is free. You can leave this page.'
+                            : segmenting
+                              ? 'Segmenting via the language model — you can leave this page.'
+                              : 'You can leave this page; it keeps running even if you navigate away.'}
                     </p>
-                    {!segmenting && (
+                    {!isQueued && !segmenting && (
                         <p className="text-xs text-muted-foreground">
                             Looks stalled?{' '}
                             <button type="button" className="underline hover:text-foreground" onClick={generate}>
