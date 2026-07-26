@@ -137,6 +137,14 @@ export function useDashboardActions() {
         setData('published_at', '');
     };
 
+    const handleAddToFeed = (itemId: number, feedId: number) => {
+        router.post(route('library.feeds.attach', itemId), { feed_id: feedId }, {
+            onSuccess: () => {
+                router.reload({ only: ['libraryItems', 'feeds'] });
+            },
+        });
+    };
+
     return {
         deleteFeedDialogOpen,
         setDeleteFeedDialogOpen,
@@ -163,5 +171,6 @@ export function useDashboardActions() {
         handleEditClick,
         handleEditSubmit,
         handleEditDialogClose,
+        handleAddToFeed,
     };
 }

@@ -73,6 +73,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::post('library/{id}/redownload', [LibraryController::class, 'redownload'])
         ->name('library.redownload')
         ->middleware('throttle:10,1');
+
+    Route::post('library/{id}/feeds', [LibraryController::class, 'attachFeed'])->name('library.feeds.attach');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

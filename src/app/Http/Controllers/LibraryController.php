@@ -7,12 +7,16 @@ use App\Http\Requests\LibraryItemRequest;
 use App\Http\Requests\UpdateLibraryItemRequest;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Jobs\RedownloadMediaFile;
+use App\Models\Feed;
+use App\Models\FeedItem;
 use App\Models\LibraryItem;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class LibraryController extends Controller
 {
@@ -143,6 +147,36 @@ class LibraryController extends Controller
         }
 
         return back()->with('success', 'Media file details updated successfully.');
+    }
+
+    public function attachFeed(Request $request, int $id): RedirectResponse
+    {
+        $libraryItem = LibraryItem::findOrFail($id);
+        Gate::authorize('update', $libraryItem);
+
+        $validated = $request->validate([
+            'feed_id' => ['required', 'integer', Rule::exists('feeds', 'id')->where('user_id', $libraryItem->user_id)],
+        ]);
+
+        $feed = Feed::find($validated['feed_id']);
+
+        $alreadyInFeed = FeedItem::where('feed_id', $feed->id)
+            ->where('library_item_id', $libraryItem->id)
+            ->exists();
+
+        if (! $alreadyInFeed) {
+            $maxSequence = $feed->items()->max('sequence') ?? 0;
+
+            FeedItem::create([
+                'feed_id' => $feed->id,
+                'library_item_id' => $libraryItem->id,
+                'sequence' => $maxSequence + 1,
+            ]);
+
+            Cache::forget("rss.{$feed->id}");
+        }
+
+        return back()->with('success', "Added to {$feed->title}.");
     }
 
     private function getSourceTypeAndUrl(LibraryItemRequest $request): array
