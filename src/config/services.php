@@ -21,6 +21,9 @@ return [
         'base_url' => env('LLM_BASE_URL', 'https://api.openai.com/v1'),
         'api_key' => env('LLM_API_KEY'),
         'model' => env('LLM_MODEL', 'gpt-4o-mini'),
+        // Max chars of transcript text per LLM section (map-reduce). Conservative default
+        // (~6k tokens) so each call fits any model's context window. Raise for big-context models.
+        'section_chars' => env('LLM_SECTION_CHARS', 24000),
     ],
 
     'whisper' => [

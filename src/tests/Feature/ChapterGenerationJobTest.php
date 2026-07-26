@@ -4,6 +4,7 @@ use App\Jobs\SegmentTranscriptIntoChapters;
 use App\Jobs\TranscribeMediaFile;
 use App\Models\Chapter;
 use App\Models\MediaFile;
+use App\Services\LlmClient;
 use App\Services\Transcription\WhisperClient;
 use Illuminate\Support\Facades\Http;
 
@@ -160,6 +161,56 @@ it('marks status failed when the LLM call fails', function () {
     $fresh = $mediaFile->fresh();
     expect($fresh->chapter_generation_status)->toBe('failed');
     expect($fresh->chapter_generation_error)->not->toBeNull();
+});
+
+it('splits long transcripts into multiple LLM calls and merges the chapters', function () {
+    // Tiny budget forces one section per segment -> multiple LLM calls (map-reduce).
+    config(['services.llm.section_chars' => 5]);
+
+    Http::fake([
+        '*/chat/completions' => Http::response([
+            'choices' => [['message' => ['content' => json_encode(['chapters' => [
+                ['start' => 0, 'title' => 'A topic'],
+            ]])]]],
+        ]),
+    ]);
+
+    $transcript = [
+        ['start' => 0, 'end' => 5, 'text' => 'first segment here'],
+        ['start' => 5, 'end' => 10, 'text' => 'second segment here'],
+        ['start' => 10, 'end' => 15, 'text' => 'third segment here'],
+    ];
+
+    $chapters = (new LlmClient)->proposeChapters($transcript, 600);
+
+    // Three sections -> three calls; every call returned start 0, so dedup collapses to one.
+    Http::assertSentCount(3);
+    expect($chapters)->toHaveCount(1);
+    expect($chapters[0])->toMatchArray(['start' => 0, 'title' => 'A topic']);
+});
+
+it('keeps distinct chapters across merged sections and dedupes boundary duplicates', function () {
+    // Two sections; each returns a chapter at a distinct time -> both kept.
+    config(['services.llm.section_chars' => 100]);
+
+    Http::fakeSequence('*/chat/completions')
+        ->push(['choices' => [['message' => ['content' => json_encode(['chapters' => [
+            ['start' => 0, 'title' => 'Opening'],
+        ]])]]]])
+        ->push(['choices' => [['message' => ['content' => json_encode(['chapters' => [
+            ['start' => 200, 'title' => 'Main point'],
+        ]])]]]]);
+
+    $transcript = [
+        ['start' => 0, 'end' => 60, 'text' => str_repeat('a', 80)],
+        ['start' => 200, 'end' => 260, 'text' => str_repeat('b', 80)],
+    ];
+
+    $chapters = (new LlmClient)->proposeChapters($transcript, 600);
+
+    expect($chapters)->toHaveCount(2);
+    expect($chapters[0])->toMatchArray(['start' => 0, 'title' => 'Opening']);
+    expect($chapters[1])->toMatchArray(['start' => 200, 'title' => 'Main point']);
 });
 
 it('parses whisper stdout segments into timestamped text', function () {
