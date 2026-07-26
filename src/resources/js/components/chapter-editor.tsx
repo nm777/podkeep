@@ -26,6 +26,10 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     const generationError = mediaFile?.chapter_generation_error;
     const isGenerating = status === 'pending' || status === 'processing';
 
+    const transcribedSeconds = mediaFile?.transcript?.length ? Math.max(...mediaFile.transcript.map((s) => s.end)) : 0;
+    const progress = duration > 0 ? Math.min(100, Math.round((transcribedSeconds / duration) * 100)) : 0;
+    const segmenting = isGenerating && progress >= 100;
+
     const initialChapters =
         status === 'completed' && proposal.length > 0
             ? proposal.map((p) => ({ start_time: p.start_time, title: p.title }))
@@ -86,17 +90,42 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
 
             <Button type="button" variant="outline" size="sm" className="w-full" onClick={generate} disabled={isGenerating}>
                 <WandSparkles className="mr-2 h-4 w-4" />
-                {isGenerating ? 'Generating…' : status === 'completed' ? 'Regenerate from content' : 'Generate from content'}
+                {segmenting
+                    ? 'Segmenting…'
+                    : isGenerating
+                      ? `Transcribing… ${progress}%`
+                      : status === 'completed'
+                        ? 'Regenerate from content'
+                        : status === 'failed'
+                          ? 'Retry generation'
+                          : 'Generate from content'}
             </Button>
 
             {isGenerating && (
-                <p className="text-center text-xs text-muted-foreground">
-                    Generating in the background — you can leave this page and check back later; it keeps running even if you navigate away.
-                </p>
+                <div className="space-y-1 text-center">
+                    <p className="text-xs text-muted-foreground">
+                        {segmenting
+                            ? 'Segmenting chapters via the language model…'
+                            : `Transcribing… ${progress}%. You can leave this page; it keeps running.`}
+                    </p>
+                    {!segmenting && (
+                        <p className="text-xs text-muted-foreground">
+                            Looks stalled?{' '}
+                            <button type="button" className="underline hover:text-foreground" onClick={generate}>
+                                Retry from the last checkpoint
+                            </button>
+                            .
+                        </p>
+                    )}
+                </div>
             )}
             {status === 'failed' && (
                 <p className="text-center text-xs text-destructive">
-                    {generationError || 'Generation failed.'} You can retry or add chapters manually.
+                    {generationError || 'Generation failed.'}{' '}
+                    <button type="button" className="underline" onClick={generate}>
+                        Retry
+                    </button>{' '}
+                    or add chapters manually.
                 </p>
             )}
 
