@@ -60,6 +60,6 @@ class ChapterController extends Controller
             ->onQueue('chapters')
             ->dispatch($mediaFile);
 
-        return back()->with('success', 'Generating chapters — this runs in the background.');
+        return back()->with('success', 'Generating chapters in the background — you can leave the page; it keeps running even if you navigate away.');
     }
 }

@@ -91,7 +91,7 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
 
             {isGenerating && (
                 <p className="text-center text-xs text-muted-foreground">
-                    Transcribing and segmenting in the background — this page refreshes automatically.
+                    Generating in the background — you can leave this page and check back later; it keeps running even if you navigate away.
                 </p>
             )}
             {status === 'failed' && (
