@@ -27,48 +27,49 @@ export default function LibraryItemRow({ item, feeds, onPlay, onEdit, onDelete, 
     const availableFeeds = feeds.filter((f) => !item.feeds?.some((ef) => ef.id === f.id));
 
     return (
-        <div className="flex items-center gap-4 px-4 py-3">
-            <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                disabled={!isComplete || !item.media_file}
-                onClick={() => item.media_file && onPlay(item)}
-            >
-                <Play className="h-4 w-4" />
-            </Button>
-            <div className="min-w-0 flex-1">
-                <p className={`text-sm font-medium md:truncate ${!isComplete ? 'text-muted-foreground' : ''}`}>
-                    {item.title}
-                    {item.media_file?.chapters?.length ? (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <ListMusic className="ml-1.5 inline h-3 w-3 text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent>Has chapters</TooltipContent>
-                        </Tooltip>
-                    ) : null}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                    {(item.published_at || item.created_at).split('T')[0]}
-                    {item.media_file && (
-                        <>
-                            {' '}
-                            · {formatFileSize(item.media_file.filesize)}
-                            {item.media_file.duration && <> · {formatDuration(item.media_file.duration)}</>}
-                        </>
-                    )}
-                </p>
+        <div className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-center md:gap-4">
+            <div className="flex items-center gap-3">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    disabled={!isComplete || !item.media_file}
+                    onClick={() => item.media_file && onPlay(item)}
+                >
+                    <Play className="h-4 w-4" />
+                </Button>
+                <div className="min-w-0 flex-1">
+                    <p className={`text-sm font-medium md:truncate ${!isComplete ? 'text-muted-foreground' : ''}`}>
+                        {item.title}
+                        {item.media_file?.chapters?.length ? (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <ListMusic className="ml-1.5 inline h-3 w-3 text-muted-foreground" />
+                                </TooltipTrigger>
+                                <TooltipContent>Has chapters</TooltipContent>
+                            </Tooltip>
+                        ) : null}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        {(item.published_at || item.created_at).split('T')[0]}
+                        {item.media_file && (
+                            <>
+                                {' '}
+                                · {formatFileSize(item.media_file.filesize)}
+                                {item.media_file.duration && <> · {formatDuration(item.media_file.duration)}</>}
+                            </>
+                        )}
+                    </p>
+                </div>
             </div>
 
-            {item.is_duplicate && (
-                <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-                    <AlertCircle className="h-3 w-3" />
-                    Dup
-                </span>
-            )}
-
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1 md:ml-auto">
+                {item.is_duplicate && (
+                    <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                        <AlertCircle className="h-3 w-3" />
+                        Dup
+                    </span>
+                )}
                 <StatusBadge item={item} isComplete={isComplete} isActive={isActive} isFailed={isFailed} />
                 {isComplete && availableFeeds.length > 0 && (
                     <select
