@@ -90,9 +90,9 @@ description: "Task list for feature 018-admin-queue-panel"
 
 ### Implementation for User Story 3
 
-- [ ] T012 [P] [US3] Create migration `src/database/migrations/2026_07_26_000000_create_completed_job_log_table.php`: `id`, `job_type` string(255), `queue` string(255), `completed_at` timestamp (useCurrent), timestamps. Index on `completed_at`.
-- [ ] T013 [P] [US3] Create `src/app/Listeners/LogCompletedJob.php`: listens to `Illuminate\Queue\Events\JobProcessed`, inserts a row into `completed_job_log` with `job_type` from `$event->job->resolveName()`, `queue` from `$event->job->getQueue()`, `completed_at` = now.
-- [ ] T014 [P] [US3] Create `src/app/Console/Commands/PruneCompletedJobs.php`: deletes `completed_job_log` rows older than the retention window (`config('admin.completed_retention_days', 3)`). Daily scheduled.
+- [X] T012 [P] [US3] Create migration `src/database/migrations/2026_07_26_000000_create_completed_job_log_table.php`: `id`, `job_type` string(255), `queue` string(255), `completed_at` timestamp (useCurrent), timestamps. Index on `completed_at`.
+- [X] T013 [P] [US3] Create `src/app/Listeners/LogCompletedJob.php`: listens to `Illuminate\Queue\Events\JobProcessed`, inserts a row into `completed_job_log` with `job_type` from `$event->job->resolveName()`, `queue` from `$event->job->getQueue()`, `completed_at` = now.
+- [X] T014 [P] [US3] Create `src/app/Console/Commands/PruneCompletedJobs.php`: deletes `completed_job_log` rows older than the retention window (`config('admin.completed_retention_days', 3)`). Daily scheduled.
 - [ ] T015 [US3] Register the listener in `src/app/Providers/AppServiceProvider.php` (or `EventServiceProvider` if present) and schedule the prune command daily in `src/routes/console.php` (or the scheduler). Add `completed_retention_days` to `src/config/services.php` under a new `admin` key.
 - [ ] T016 [US3] Add a "Recently Completed" section to `src/app/Http/Controllers/AdminQueueController.php` `index()`: reads `completed_job_log` (latest 20, ordered by `completed_at DESC`) and passes it as a prop. Update `src/resources/js/pages/admin/queue/index.tsx` to render the section.
 
