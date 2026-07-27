@@ -1,5 +1,6 @@
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, router } from '@inertiajs/react';
+import { Copy } from 'lucide-react';
 import { useEffect } from 'react';
 
 interface QueueJob {
@@ -140,6 +141,16 @@ export default function QueueIndex({
                                             </Link>
                                         </div>
                                     </summary>
+                                    <div className="flex items-center justify-between px-4 pb-1 pt-2">
+                                        <button
+                                            type="button"
+                                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                                            onClick={() => navigator.clipboard.writeText(job.exception)}
+                                        >
+                                            <Copy className="h-3 w-3" />
+                                            Copy error
+                                        </button>
+                                    </div>
                                     <pre className="whitespace-pre-wrap break-all px-4 pb-3 text-xs text-muted-foreground">{job.exception}</pre>
                                 </details>
                             ))}
