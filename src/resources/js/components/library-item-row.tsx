@@ -1,10 +1,11 @@
 import ItemActions from '@/components/library-item-actions';
 import StatusBadge from '@/components/library-item-status-badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
 import { type Feed, type LibraryItem } from '@/types';
-import { AlertCircle, Play } from 'lucide-react';
+import { AlertCircle, ListMusic, Play } from 'lucide-react';
 
 interface LibraryItemRowProps {
     item: LibraryItem;
@@ -37,7 +38,17 @@ export default function LibraryItemRow({ item, feeds, onPlay, onEdit, onDelete, 
                 <Play className="h-4 w-4" />
             </Button>
             <div className="min-w-0 flex-1">
-                <p className={`text-sm font-medium md:truncate ${!isComplete ? 'text-muted-foreground' : ''}`}>{item.title}</p>
+                <p className={`text-sm font-medium md:truncate ${!isComplete ? 'text-muted-foreground' : ''}`}>
+                    {item.title}
+                    {item.media_file?.chapters?.length ? (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <ListMusic className="ml-1.5 inline h-3 w-3 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>Has chapters</TooltipContent>
+                        </Tooltip>
+                    ) : null}
+                </p>
                 <p className="text-xs text-muted-foreground">
                     {(item.published_at || item.created_at).split('T')[0]}
                     {item.media_file && (

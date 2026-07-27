@@ -1,19 +1,30 @@
 import FeedFormFields from '@/components/feed-form-fields';
 import SearchInput from '@/components/search-input';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useFeedItemReorder } from '@/hooks/use-feed-item-reorder';
 import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, GripVertical, ListMusic, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 function LibraryItemInfo({ item }: { item: LibraryItem }) {
     return (
         <div className="min-w-0 flex-1">
-            <p className="line-clamp-2 break-words text-sm font-medium">{item.title}</p>
+            <p className="line-clamp-2 break-words text-sm font-medium">
+                {item.title}
+                {item.media_file?.chapters?.length ? (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <ListMusic className="ml-1.5 inline h-3 w-3 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>Has chapters</TooltipContent>
+                    </Tooltip>
+                ) : null}
+            </p>
             <p className="text-xs text-muted-foreground">
                 {item.media_file ? (
                     <>

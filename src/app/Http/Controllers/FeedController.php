@@ -65,10 +65,10 @@ class FeedController extends Controller
                 ? $q->reorder()->orderBy('sequence', 'asc')
                 : $q->reorder()->orderBy('created_at', 'desc'),
             'items.libraryItem',
-            'items.libraryItem.mediaFile',
+            'items.libraryItem.mediaFile.chapters',
         ]);
 
-        $userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->orderBy('created_at', 'desc')->get();
+        $userLibraryItems = Auth::user()->libraryItems()->with('mediaFile.chapters')->orderBy('created_at', 'desc')->get();
 
         return Inertia::render('feeds/edit', [
             'feed' => $feed,
