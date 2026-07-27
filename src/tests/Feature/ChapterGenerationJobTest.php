@@ -121,16 +121,16 @@ it('marks status failed and rethrows when transcription fails', function () {
     expect($mediaFile->fresh()->chapter_generation_error)->toContain('whisper.cpp');
 });
 
-it('skips re-segmentation when a proposal already exists for the current transcript', function () {
+it('skips re-segmentation when chapters already exist for the current transcript', function () {
     Http::fake();
 
     $transcript = [['start' => 0, 'end' => 5, 'text' => 'Hi.']];
     $mediaFile = MediaFile::factory()->create([
         'duration' => 600,
         'transcript' => $transcript,
-        'chapter_proposal' => [['start_time' => 0, 'title' => 'Existing']],
         'chapter_proposal_for_hash' => md5(json_encode($transcript)),
     ]);
+    Chapter::factory()->create(['media_file_id' => $mediaFile->id, 'start_time' => 0, 'title' => 'Existing']);
 
     dispatch_sync(new SegmentTranscriptIntoChapters($mediaFile));
 
@@ -138,7 +138,8 @@ it('skips re-segmentation when a proposal already exists for the current transcr
     expect($mediaFile->fresh()->chapter_generation_status)->toBe('completed');
 });
 
-it('segments the transcript into a sanitized proposal and does not publish chapters', function () {    Http::fake([
+it('writes generated chapters directly to the chapters table (not a proposal)', function () {
+    Http::fake([
         '*/chat/completions' => Http::response([
             'choices' => [[
                 'message' => ['content' => json_encode(['chapters' => [
@@ -160,9 +161,9 @@ it('segments the transcript into a sanitized proposal and does not publish chapt
 
     $fresh = $mediaFile->fresh();
     expect($fresh->chapter_generation_status)->toBe('completed');
-    expect($fresh->chapter_proposal)->toHaveCount(2);
-    expect($fresh->chapter_proposal[0])->toMatchArray(['start_time' => 0, 'title' => 'Intro']);
-    expect(Chapter::where('media_file_id', $mediaFile->id)->count())->toBe(0);
+    $chapters = Chapter::where('media_file_id', $mediaFile->id)->get();
+    expect($chapters)->toHaveCount(2);
+    expect($chapters[0])->toMatchArray(['start_time' => 0, 'title' => 'Intro']);
 });
 
 it('marks status failed when the LLM call fails', function () {

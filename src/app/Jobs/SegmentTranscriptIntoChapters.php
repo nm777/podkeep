@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Chapter;
 use App\Models\MediaFile;
 use App\Services\LlmClient;
 use Illuminate\Bus\Queueable;
@@ -10,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SegmentTranscriptIntoChapters implements ShouldQueue
 {
@@ -26,9 +28,8 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
         $transcript = $mediaFile->transcript ?? [];
         $transcriptHash = md5(json_encode($transcript));
 
-        // Idempotent: a proposal already exists for this exact transcript, so skip the
-        // (costly) LLM call. Re-running because of duplicate/retry dispatches is harmless.
-        if ($mediaFile->chapter_proposal !== null && $mediaFile->chapter_proposal_for_hash === $transcriptHash) {
+        // Idempotent: chapters already exist for this exact transcript, so skip.
+        if ($mediaFile->chapter_proposal_for_hash === $transcriptHash && $mediaFile->chapters()->exists()) {
             $mediaFile->update(['chapter_generation_status' => 'completed']);
 
             return;
@@ -38,13 +39,31 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
 
         try {
             $proposed = $llm->proposeChapters($transcript, (int) $mediaFile->duration);
+            $chapters = $this->sanitize($proposed, (int) $mediaFile->duration);
 
-            $mediaFile->update([
-                'chapter_proposal' => $this->sanitize($proposed, (int) $mediaFile->duration),
-                'chapter_proposal_for_hash' => $transcriptHash,
-                'chapter_generation_status' => 'completed',
-                'chapter_generation_error' => null,
-            ]);
+            DB::transaction(function () use ($mediaFile, $chapters, $transcriptHash) {
+                $mediaFile->chapters()->delete();
+
+                foreach ($chapters as $chapter) {
+                    $mediaFile->chapters()->create([
+                        'start_time' => $chapter['start_time'],
+                        'title' => $chapter['title'],
+                    ]);
+                }
+
+                $mediaFile->update([
+                    'chapter_proposal_for_hash' => $transcriptHash,
+                    'chapter_generation_status' => 'completed',
+                    'chapter_generation_error' => null,
+                ]);
+            });
+
+            // Invalidate RSS cache for affected feeds.
+            foreach ($mediaFile->libraryItems()->with('feedItems')->get() as $libItem) {
+                foreach ($libItem->feedItems as $feedItem) {
+                    \Illuminate\Support\Facades\Cache::forget("rss.{$feedItem->feed_id}");
+                }
+            }
         } catch (\Throwable $e) {
             $mediaFile->update([
                 'chapter_generation_status' => 'failed',

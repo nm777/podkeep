@@ -22,7 +22,6 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     const mediaFile = libraryItem.media_file;
     const duration = mediaFile?.duration ?? 0;
     const status = mediaFile?.chapter_generation_status ?? null;
-    const proposal = mediaFile?.chapter_proposal ?? [];
     const generationError = mediaFile?.chapter_generation_error;
     const isGenerating = status === 'pending' || status === 'processing';
     const isQueued = status === 'pending';
@@ -31,10 +30,7 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     const progress = duration > 0 ? Math.min(100, Math.round((transcribedSeconds / duration) * 100)) : 0;
     const segmenting = isGenerating && progress >= 100;
 
-    const initialChapters =
-        status === 'completed' && proposal.length > 0
-            ? proposal.map((p) => ({ start_time: p.start_time, title: p.title }))
-            : (mediaFile?.chapters ?? []).map((c) => ({ start_time: c.start_time, title: c.title }));
+    const initialChapters = (mediaFile?.chapters ?? []).map((c) => ({ start_time: c.start_time, title: c.title }));
 
     const { data, setData, put, processing, errors, recentlySuccessful } = useForm<{
         chapters: { start_time: number | string; title: string }[];
