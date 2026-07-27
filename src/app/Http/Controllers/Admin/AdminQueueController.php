@@ -56,10 +56,22 @@ class AdminQueueController extends Controller
                 'exception' => Str::limit($job->exception, 500),
             ]);
 
+        $recentlyCompleted = DB::table('completed_job_log')
+            ->orderBy('completed_at', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(fn ($job) => [
+                'id' => $job->id,
+                'job_type' => $job->job_type,
+                'queue' => $job->queue,
+                'completed_at' => $job->completed_at,
+            ]);
+
         return Inertia::render('admin/queue/index', [
             'pending' => $pending,
             'executing' => $executing,
             'failed' => $failed,
+            'recentlyCompleted' => $recentlyCompleted,
         ]);
     }
 

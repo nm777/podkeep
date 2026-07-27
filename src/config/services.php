@@ -32,4 +32,8 @@ return [
         'chunk_seconds' => env('WHISPER_CHUNK_SECONDS', 1800),
     ],
 
+    'admin' => [
+        'completed_retention_days' => env('ADMIN_COMPLETED_RETENTION_DAYS', 3),
+    ],
+
 ];

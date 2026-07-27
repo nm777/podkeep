@@ -23,6 +23,13 @@ interface FailedJob {
     exception: string;
 }
 
+interface CompletedJob {
+    id: number;
+    job_type: string;
+    queue: string;
+    completed_at: string;
+}
+
 function shortenClassName(fqn: string): string {
     const parts = fqn.split('\\');
 
@@ -37,14 +44,16 @@ export default function QueueIndex({
     pending,
     executing,
     failed,
+    recentlyCompleted,
 }: {
     pending: QueueJob[];
     executing: ExecutingJob[];
     failed: FailedJob[];
+    recentlyCompleted: CompletedJob[];
 }) {
     useEffect(() => {
         const interval = setInterval(() => {
-            router.reload({ only: ['pending', 'executing', 'failed'] });
+            router.reload({ only: ['pending', 'executing', 'failed', 'recentlyCompleted'] });
         }, 10000);
 
         return () => clearInterval(interval);
@@ -141,6 +150,23 @@ export default function QueueIndex({
                                         </div>
                                     </div>
                                     <p className="text-xs text-muted-foreground">{truncate(job.exception)}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                <section className="mb-6">
+                    <h2 className="mb-2 text-base font-medium">Recently Completed ({recentlyCompleted.length})</h2>
+                    {recentlyCompleted.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No recently completed jobs.</p>
+                    ) : (
+                        <div className="divide-y rounded-lg border">
+                            {recentlyCompleted.map((job) => (
+                                <div key={job.id} className="flex items-center gap-3 px-4 py-3">
+                                    <span className="text-sm font-medium">{shortenClassName(job.job_type)}</span>
+                                    <span className="text-xs text-muted-foreground">{job.queue}</span>
+                                    <span className="text-xs text-muted-foreground">{job.completed_at}</span>
                                 </div>
                             ))}
                         </div>
