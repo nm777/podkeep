@@ -36,10 +36,6 @@ function shortenClassName(fqn: string): string {
     return parts[parts.length - 1];
 }
 
-function truncate(text: string, max = 200): string {
-    return text.length > max ? `${text.slice(0, max)}...` : text;
-}
-
 function formatDate(value: string | number): string {
     const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value);
 
@@ -89,7 +85,6 @@ export default function QueueIndex({
                                     </div>
                                     <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                                         <span>{job.queue}</span>
-                                        <span>attempts: {job.attempts}</span>
                                     </div>
                                 </div>
                             ))}
@@ -129,13 +124,14 @@ export default function QueueIndex({
                     ) : (
                         <div className="divide-y rounded-lg border">
                             {failed.map((job) => (
-                                <div key={job.id} className="flex flex-col gap-1 px-4 py-3">
-                                    <div className="flex items-center justify-between">
+                                <details key={job.id} className="flex flex-col">
+                                    <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 [&::-webkit-details-marker]:hidden">
                                         <div className="flex flex-wrap items-center gap-x-3">
                                             <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
                                             <span className="text-xs text-muted-foreground">{job.queue}</span>
+                                            <span className="text-xs text-muted-foreground">failed: {formatDate(job.failed_at)}</span>
                                         </div>
-                                        <div className="flex shrink-0 items-center gap-3">
+                                        <div className="flex shrink-0 items-center gap-3" onClick={(e) => e.preventDefault()}>
                                             <Link href={route('admin.queue.retry', job.uuid)} method="post" as="button" className="text-xs text-muted-foreground hover:text-foreground hover:underline">
                                                 Retry
                                             </Link>
@@ -143,10 +139,9 @@ export default function QueueIndex({
                                                 Delete
                                             </Link>
                                         </div>
-                                    </div>
-                                    <span className="text-xs text-muted-foreground">failed: {formatDate(job.failed_at)}</span>
-                                    <p className="text-xs text-muted-foreground">{truncate(job.exception)}</p>
-                                </div>
+                                    </summary>
+                                    <pre className="whitespace-pre-wrap break-all px-4 pb-3 text-xs text-muted-foreground">{job.exception}</pre>
+                                </details>
                             ))}
                         </div>
                     )}
