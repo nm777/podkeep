@@ -70,12 +70,12 @@ description: "Task list for feature 018-admin-queue-panel"
 
 ### Tests for User Story 2
 
-- [ ] T008 [P] [US2] Feature tests in `src/tests/Feature/AdminQueueTest.php`: (a) cancel a pending job → deleted from `jobs`; (b) release an executing job → `reserved_at` cleared; (c) retry a failed job → re-queued (appears in `jobs`); (d) delete a failed job → removed from `failed_jobs`; (e) non-admin gets 403 on all action routes.
+- [X] T008 [P] [US2] Feature tests in `src/tests/Feature/AdminQueueTest.php`: (a) cancel a pending job → deleted from `jobs`; (b) release an executing job → `reserved_at` cleared; (c) retry a failed job → re-queued (appears in `jobs`); (d) delete a failed job → removed from `failed_jobs`; (e) non-admin gets 403 on all action routes.
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Add management methods to `src/app/Http/Controllers/AdminQueueController.php`: `cancel($id)` deletes pending job from `jobs` (where `reserved_at IS NULL`); `release($id)` clears `reserved_at` on an executing job; `retry($uuid)` re-dispatches a failed job's payload to its queue then forgets the failed record; `delete($uuid)` forgets the failed record. Each redirects back with a flash message.
-- [ ] T010 [US2] Add routes in `src/routes/web.php` under the admin group: `POST queue/{id}/cancel`, `POST queue/{id}/release`, `POST queue/failed/{uuid}/retry`, `POST queue/failed/{uuid}/delete`.
+- [X] T009 [US2] Add management methods to `src/app/Http/Controllers/AdminQueueController.php`: `cancel($id)` deletes pending job from `jobs` (where `reserved_at IS NULL`); `release($id)` clears `reserved_at` on an executing job; `retry($uuid)` re-dispatches a failed job's payload to its queue then forgets the failed record; `delete($uuid)` forgets the failed record. Each redirects back with a flash message.
+- [X] T010 [US2] Add routes in `src/routes/web.php` under the admin group: `POST queue/{id}/cancel`, `POST queue/{id}/release`, `POST queue/failed/{uuid}/retry`, `POST queue/failed/{uuid}/delete`.
 - [ ] T011 [US2] Add action buttons to `src/resources/js/pages/admin/queue/index.tsx`: "Cancel" on pending rows, "Release" on executing rows, "Retry" + "Delete" on failed rows. Each POSTs to the corresponding route and lets the auto-refresh show the result.
 
 **Checkpoint**: US1 + US2 functional — admin can view and manage jobs.

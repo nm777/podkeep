@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -71,5 +72,45 @@ class AdminQueueController extends Controller
         $decoded = json_decode($payload, true);
 
         return $decoded['displayName'] ?? 'Unknown';
+    }
+
+    public function cancel(int $id): RedirectResponse
+    {
+        DB::table('jobs')->where('id', $id)->whereNull('reserved_at')->delete();
+
+        return back()->with('success', 'Job cancelled.');
+    }
+
+    public function release(int $id): RedirectResponse
+    {
+        DB::table('jobs')->where('id', $id)->whereNotNull('reserved_at')->update(['reserved_at' => null]);
+
+        return back()->with('success', 'Job released for re-processing.');
+    }
+
+    public function retry(string $uuid): RedirectResponse
+    {
+        $failed = app('queue.failer')->find($uuid);
+
+        if ($failed) {
+            DB::table('jobs')->insert([
+                'queue' => $failed->queue,
+                'payload' => $failed->payload,
+                'attempts' => 0,
+                'reserved_at' => null,
+                'available_at' => now()->timestamp,
+                'created_at' => now()->timestamp,
+            ]);
+            app('queue.failer')->forget($uuid);
+        }
+
+        return back()->with('success', 'Job re-queued.');
+    }
+
+    public function delete(string $uuid): RedirectResponse
+    {
+        app('queue.failer')->forget($uuid);
+
+        return back()->with('success', 'Failed job deleted.');
     }
 }

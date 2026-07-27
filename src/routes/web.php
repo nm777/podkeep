@@ -80,6 +80,10 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('queue', [AdminQueueController::class, 'index'])->name('queue.index');
+    Route::post('queue/{id}/cancel', [AdminQueueController::class, 'cancel'])->name('queue.cancel');
+    Route::post('queue/{id}/release', [AdminQueueController::class, 'release'])->name('queue.release');
+    Route::post('queue/failed/{uuid}/retry', [AdminQueueController::class, 'retry'])->name('queue.retry');
+    Route::post('queue/failed/{uuid}/delete', [AdminQueueController::class, 'delete'])->name('queue.delete');
 
     Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
     Route::post('users/{user}/approve', [UserManagementController::class, 'approve'])->name('users.approve');
