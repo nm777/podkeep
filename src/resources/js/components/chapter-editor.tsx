@@ -175,14 +175,12 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
                 <p className="text-sm text-destructive">{(errors as Record<string, string>).chapters}</p>
             )}
 
-            {data.chapters.length > 0 && (
-                <div className="flex items-center justify-end gap-2">
-                    {recentlySuccessful && <span className="text-xs text-muted-foreground">Saved</span>}
-                    <Button type="button" size="sm" disabled={processing} onClick={save}>
-                        {processing ? 'Saving...' : 'Save Chapters'}
-                    </Button>
-                </div>
-            )}
+            <div className="flex items-center justify-end gap-2">
+                {recentlySuccessful && <span className="text-xs text-muted-foreground">Saved</span>}
+                <Button type="button" size="sm" disabled={processing} onClick={save}>
+                    {processing ? 'Saving...' : 'Save Chapters'}
+                </Button>
+            </div>
         </div>
     );
 }
