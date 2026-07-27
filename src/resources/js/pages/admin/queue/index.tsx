@@ -80,18 +80,17 @@ export default function QueueIndex({
                         // ponytail: pending/executing rows differ by one field; inline dup beats a 1-file component for 2 callers
                         <div className="divide-y rounded-lg border">
                             {pending.map((job) => (
-                                <div key={job.id} className="flex items-center gap-3 px-4 py-3">
-                                    <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
-                                    <span className="text-xs text-muted-foreground">{job.queue}</span>
-                                    <span className="text-xs text-muted-foreground">attempts: {job.attempts}</span>
-                                    <Link
-                                        href={route('admin.queue.cancel', job.id)}
-                                        method="post"
-                                        as="button"
-                                        className="ml-auto text-xs text-destructive hover:underline"
-                                    >
-                                        Cancel
-                                    </Link>
+                                <div key={job.id} className="flex flex-col gap-1 px-4 py-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
+                                        <Link href={route('admin.queue.cancel', job.id)} method="post" as="button" className="text-xs text-destructive hover:underline">
+                                            Cancel
+                                        </Link>
+                                    </div>
+                                    <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                                        <span>{job.queue}</span>
+                                        <span>attempts: {job.attempts}</span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -105,19 +104,18 @@ export default function QueueIndex({
                     ) : (
                         <div className="divide-y rounded-lg border">
                             {executing.map((job) => (
-                                <div key={job.id} className="flex items-center gap-3 px-4 py-3">
-                                    <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
-                                    <span className="text-xs text-muted-foreground">{job.queue}</span>
-                                    <span className="text-xs text-muted-foreground">attempts: {job.attempts}</span>
-                                    <span className="text-xs text-muted-foreground">reserved: {formatDate(job.reserved_at)}</span>
-                                    <Link
-                                        href={route('admin.queue.release', job.id)}
-                                        method="post"
-                                        as="button"
-                                        className="ml-auto text-xs text-muted-foreground hover:text-foreground hover:underline"
-                                    >
-                                        Release
-                                    </Link>
+                                <div key={job.id} className="flex flex-col gap-1 px-4 py-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
+                                        <Link href={route('admin.queue.release', job.id)} method="post" as="button" className="text-xs text-muted-foreground hover:text-foreground hover:underline">
+                                            Release
+                                        </Link>
+                                    </div>
+                                    <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                                        <span>{job.queue}</span>
+                                        <span>attempts: {job.attempts}</span>
+                                        <span>reserved: {formatDate(job.reserved_at)}</span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -132,29 +130,21 @@ export default function QueueIndex({
                         <div className="divide-y rounded-lg border">
                             {failed.map((job) => (
                                 <div key={job.id} className="flex flex-col gap-1 px-4 py-3">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
-                                        <span className="text-xs text-muted-foreground">{job.queue}</span>
-                                        <span className="text-xs text-muted-foreground">failed: {formatDate(job.failed_at)}</span>
-                                        <div className="ml-auto flex items-center gap-3">
-                                            <Link
-                                                href={route('admin.queue.retry', job.uuid)}
-                                                method="post"
-                                                as="button"
-                                                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
-                                            >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex flex-wrap items-center gap-x-3">
+                                            <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
+                                            <span className="text-xs text-muted-foreground">{job.queue}</span>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-3">
+                                            <Link href={route('admin.queue.retry', job.uuid)} method="post" as="button" className="text-xs text-muted-foreground hover:text-foreground hover:underline">
                                                 Retry
                                             </Link>
-                                            <Link
-                                                href={route('admin.queue.delete', job.uuid)}
-                                                method="post"
-                                                as="button"
-                                                className="text-xs text-destructive hover:underline"
-                                            >
+                                            <Link href={route('admin.queue.delete', job.uuid)} method="post" as="button" className="text-xs text-destructive hover:underline">
                                                 Delete
                                             </Link>
                                         </div>
                                     </div>
+                                    <span className="text-xs text-muted-foreground">failed: {formatDate(job.failed_at)}</span>
                                     <p className="text-xs text-muted-foreground">{truncate(job.exception)}</p>
                                 </div>
                             ))}
@@ -169,10 +159,12 @@ export default function QueueIndex({
                     ) : (
                         <div className="divide-y rounded-lg border">
                             {recentlyCompleted.map((job) => (
-                                <div key={job.id} className="flex items-center gap-3 px-4 py-3">
+                                <div key={job.id} className="flex flex-col gap-1 px-4 py-3">
                                     <span className="text-sm font-medium">{shortenClassName(job.job_type)}</span>
-                                    <span className="text-xs text-muted-foreground">{job.queue}</span>
-                                    <span className="text-xs text-muted-foreground">{formatDate(job.completed_at)}</span>
+                                    <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                                        <span>{job.queue}</span>
+                                        <span>{formatDate(job.completed_at)}</span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
