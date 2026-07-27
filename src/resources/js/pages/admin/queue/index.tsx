@@ -1,5 +1,5 @@
 import AdminLayout from '@/layouts/admin-layout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useEffect } from 'react';
 
 interface QueueJob {
@@ -69,6 +69,14 @@ export default function QueueIndex({
                                     <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
                                     <span className="text-xs text-muted-foreground">{job.queue}</span>
                                     <span className="text-xs text-muted-foreground">attempts: {job.attempts}</span>
+                                    <Link
+                                        href={route('admin.queue.cancel', job.id)}
+                                        method="post"
+                                        as="button"
+                                        className="ml-auto text-xs text-destructive hover:underline"
+                                    >
+                                        Cancel
+                                    </Link>
                                 </div>
                             ))}
                         </div>
@@ -87,6 +95,14 @@ export default function QueueIndex({
                                     <span className="text-xs text-muted-foreground">{job.queue}</span>
                                     <span className="text-xs text-muted-foreground">attempts: {job.attempts}</span>
                                     <span className="text-xs text-muted-foreground">reserved: {job.reserved_at}</span>
+                                    <Link
+                                        href={route('admin.queue.release', job.id)}
+                                        method="post"
+                                        as="button"
+                                        className="ml-auto text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                    >
+                                        Release
+                                    </Link>
                                 </div>
                             ))}
                         </div>
@@ -105,6 +121,24 @@ export default function QueueIndex({
                                         <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
                                         <span className="text-xs text-muted-foreground">{job.queue}</span>
                                         <span className="text-xs text-muted-foreground">failed: {job.failed_at}</span>
+                                        <div className="ml-auto flex items-center gap-3">
+                                            <Link
+                                                href={route('admin.queue.retry', job.uuid)}
+                                                method="post"
+                                                as="button"
+                                                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                            >
+                                                Retry
+                                            </Link>
+                                            <Link
+                                                href={route('admin.queue.delete', job.uuid)}
+                                                method="post"
+                                                as="button"
+                                                className="text-xs text-destructive hover:underline"
+                                            >
+                                                Delete
+                                            </Link>
+                                        </div>
                                     </div>
                                     <p className="text-xs text-muted-foreground">{truncate(job.exception)}</p>
                                 </div>

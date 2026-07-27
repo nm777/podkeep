@@ -76,7 +76,7 @@ description: "Task list for feature 018-admin-queue-panel"
 
 - [X] T009 [US2] Add management methods to `src/app/Http/Controllers/AdminQueueController.php`: `cancel($id)` deletes pending job from `jobs` (where `reserved_at IS NULL`); `release($id)` clears `reserved_at` on an executing job; `retry($uuid)` re-dispatches a failed job's payload to its queue then forgets the failed record; `delete($uuid)` forgets the failed record. Each redirects back with a flash message.
 - [X] T010 [US2] Add routes in `src/routes/web.php` under the admin group: `POST queue/{id}/cancel`, `POST queue/{id}/release`, `POST queue/failed/{uuid}/retry`, `POST queue/failed/{uuid}/delete`.
-- [ ] T011 [US2] Add action buttons to `src/resources/js/pages/admin/queue/index.tsx`: "Cancel" on pending rows, "Release" on executing rows, "Retry" + "Delete" on failed rows. Each POSTs to the corresponding route and lets the auto-refresh show the result.
+- [X] T011 [US2] Add action buttons to `src/resources/js/pages/admin/queue/index.tsx`: "Cancel" on pending rows, "Release" on executing rows, "Retry" + "Delete" on failed rows. Each POSTs to the corresponding route and lets the auto-refresh show the result.
 
 **Checkpoint**: US1 + US2 functional — admin can view and manage jobs.
 
