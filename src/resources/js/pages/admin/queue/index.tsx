@@ -177,21 +177,21 @@ export default function QueueIndex({
                                     </div>
                                     <div className="flex shrink-0 items-center gap-3">
                                         {job.status === 'pending' && job.jobId && (
-                                            <Link href={route('admin.queue.cancel', job.jobId)} method="post" as="button" className="text-xs text-destructive hover:underline">
+                                            <Link href={route('admin.queue.cancel', job.jobId)} method="post" as="button" preserveScroll className="text-xs text-destructive hover:underline">
                                                 Cancel
                                             </Link>
                                         )}
                                         {job.status === 'executing' && job.jobId && (
-                                            <Link href={route('admin.queue.release', job.jobId)} method="post" as="button" className="text-xs text-muted-foreground hover:text-foreground hover:underline">
+                                            <Link href={route('admin.queue.release', job.jobId)} method="post" as="button" preserveScroll className="text-xs text-muted-foreground hover:text-foreground hover:underline">
                                                 Release
                                             </Link>
                                         )}
                                         {job.status === 'failed' && job.uuid && (
                                             <>
-                                                <Link href={route('admin.queue.retry', job.uuid)} method="post" as="button" className="text-xs text-muted-foreground hover:text-foreground hover:underline">
+                                                <Link href={route('admin.queue.retry', job.uuid)} method="post" as="button" preserveScroll className="text-xs text-muted-foreground hover:text-foreground hover:underline">
                                                     Retry
                                                 </Link>
-                                                <Link href={route('admin.queue.delete', job.uuid)} method="post" as="button" className="text-xs text-destructive hover:underline">
+                                                <Link href={route('admin.queue.delete', job.uuid)} method="post" as="button" preserveScroll className="text-xs text-destructive hover:underline">
                                                     Delete
                                                 </Link>
                                             </>
