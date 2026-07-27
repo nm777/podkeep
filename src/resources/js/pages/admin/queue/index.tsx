@@ -57,7 +57,7 @@ const STATUS_ORDER: Record<JobStatus, number> = {
     pending: 0,
     executing: 1,
     failed: 2,
-    completed: 3,
+    completed: 2,
 };
 
 function shortenClassName(fqn: string): string {
