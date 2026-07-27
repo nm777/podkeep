@@ -67,9 +67,19 @@ function shortenClassName(fqn: string): string {
 }
 
 function formatDate(value: string | number): string {
-    const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value);
+    return new Date(toMs(value)).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
 
-    return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+function toMs(value: string | number): number {
+    const str = String(value).trim();
+
+    if (/^-?\d+$/.test(str)) {
+        const num = Number(str);
+
+        return num > 1e12 ? num : num * 1000;
+    }
+
+    return new Date(str).getTime();
 }
 
 export default function QueueIndex({
@@ -98,7 +108,7 @@ export default function QueueIndex({
                 type: j.type,
                 queue: j.queue,
                 status: 'pending' as const,
-                timestamp: typeof j.created_at === 'number' ? j.created_at * 1000 : new Date(j.created_at).getTime(),
+                timestamp: toMs(j.created_at),
                 timestampLabel: formatDate(j.created_at),
                 jobId: j.id,
             })),
@@ -107,7 +117,7 @@ export default function QueueIndex({
                 type: j.type,
                 queue: j.queue,
                 status: 'executing' as const,
-                timestamp: typeof j.reserved_at === 'number' ? j.reserved_at * 1000 : new Date(j.reserved_at).getTime(),
+                timestamp: toMs(j.reserved_at),
                 timestampLabel: formatDate(j.reserved_at),
                 attempts: j.attempts,
                 jobId: j.id,
@@ -117,7 +127,7 @@ export default function QueueIndex({
                 type: j.type,
                 queue: j.queue,
                 status: 'failed' as const,
-                timestamp: new Date(j.failed_at).getTime(),
+                timestamp: toMs(j.failed_at),
                 timestampLabel: formatDate(j.failed_at),
                 exception: j.exception,
                 uuid: j.uuid,
@@ -127,7 +137,7 @@ export default function QueueIndex({
                 type: j.job_type,
                 queue: j.queue,
                 status: 'completed' as const,
-                timestamp: new Date(j.completed_at).getTime(),
+                timestamp: toMs(j.completed_at),
                 timestampLabel: formatDate(j.completed_at),
             })),
         ];
