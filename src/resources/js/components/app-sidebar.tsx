@@ -29,8 +29,8 @@ export function AppSidebar() {
     const adminNavItems: NavItem[] = user?.is_admin
         ? [
               {
-                  title: 'User Management',
-                  href: '/admin/users',
+                  title: 'Admin',
+                  href: '/admin/queue',
                   icon: Users,
               },
           ]

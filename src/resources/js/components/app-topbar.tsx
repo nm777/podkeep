@@ -139,9 +139,9 @@ export default function AppTopbar() {
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
                                     <DropdownMenuItem asChild>
-                                        <Link className="block w-full cursor-pointer" href="/admin/users" as="button" onClick={cleanup}>
+                                        <Link className="block w-full cursor-pointer" href="/admin/queue" as="button" onClick={cleanup}>
                                             <Users className="mr-2 h-4 w-4" />
-                                            User Management
+                                            Admin
                                         </Link>
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>

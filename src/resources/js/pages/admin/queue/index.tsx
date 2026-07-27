@@ -40,6 +40,12 @@ function truncate(text: string, max = 200): string {
     return text.length > max ? `${text.slice(0, max)}...` : text;
 }
 
+function formatDate(value: string | number): string {
+    const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value);
+
+    return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
 export default function QueueIndex({
     pending,
     executing,
@@ -63,7 +69,7 @@ export default function QueueIndex({
         <AdminLayout>
             <Head title="Queue Jobs" />
 
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <h1 className="text-3xl font-bold">Queue Jobs</h1>
 
                 <section className="mb-6">
@@ -103,7 +109,7 @@ export default function QueueIndex({
                                     <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
                                     <span className="text-xs text-muted-foreground">{job.queue}</span>
                                     <span className="text-xs text-muted-foreground">attempts: {job.attempts}</span>
-                                    <span className="text-xs text-muted-foreground">reserved: {job.reserved_at}</span>
+                                    <span className="text-xs text-muted-foreground">reserved: {formatDate(job.reserved_at)}</span>
                                     <Link
                                         href={route('admin.queue.release', job.id)}
                                         method="post"
@@ -129,7 +135,7 @@ export default function QueueIndex({
                                     <div className="flex items-center gap-3">
                                         <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
                                         <span className="text-xs text-muted-foreground">{job.queue}</span>
-                                        <span className="text-xs text-muted-foreground">failed: {job.failed_at}</span>
+                                        <span className="text-xs text-muted-foreground">failed: {formatDate(job.failed_at)}</span>
                                         <div className="ml-auto flex items-center gap-3">
                                             <Link
                                                 href={route('admin.queue.retry', job.uuid)}
@@ -166,7 +172,7 @@ export default function QueueIndex({
                                 <div key={job.id} className="flex items-center gap-3 px-4 py-3">
                                     <span className="text-sm font-medium">{shortenClassName(job.job_type)}</span>
                                     <span className="text-xs text-muted-foreground">{job.queue}</span>
-                                    <span className="text-xs text-muted-foreground">{job.completed_at}</span>
+                                    <span className="text-xs text-muted-foreground">{formatDate(job.completed_at)}</span>
                                 </div>
                             ))}
                         </div>
