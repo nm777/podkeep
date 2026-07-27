@@ -102,10 +102,10 @@ description: "Task list for feature 018-admin-queue-panel"
 
 ## Phase 6: Polish
 
-- [ ] T017 [P] Run PHPStan: `docker run --rm -v /home/nate/src/podkeep/src:/var/www/html -w /var/www/html --entrypoint vendor/bin/phpstan podkeep-app:latest analyse --no-progress`; resolve all findings.
-- [ ] T018 [P] Run Pint: `docker run --rm -v /home/nate/src/podkeep/src:/var/www/html -w /var/www/html --entrypoint vendor/bin/pint podkeep-app:latest --dirty`.
-- [ ] T019 [P] Run fallow: `docker run --rm -v /home/nate/src/podkeep:/repo -w /repo/src --entrypoint sh node:22 -c 'git config --global --add safe.directory /repo && ./node_modules/.bin/fallow audit --base main'`.
-- [ ] T020 Run the full Pest suite + complete the manual verification steps in `src/specs/018-admin-queue-panel/quickstart.md`.
+- [X] T017 [P] Run PHPStan: `docker run --rm -v /home/nate/src/podkeep/src:/var/www/html -w /var/www/html --entrypoint vendor/bin/phpstan podkeep-app:latest analyse --no-progress`; resolve all findings.
+- [X] T018 [P] Run Pint: `docker run --rm -v /home/nate/src/podkeep/src:/var/www/html -w /var/www/html --entrypoint vendor/bin/pint podkeep-app:latest --dirty`.
+- [X] T019 [P] Run fallow: `docker run --rm -v /home/nate/src/podkeep:/repo -w /repo/src --entrypoint sh node:22 -c 'git config --global --add safe.directory /repo && ./node_modules/.bin/fallow audit --base main'`.
+- [X] T020 Run the full Pest suite + complete the manual verification steps in `src/specs/018-admin-queue-panel/quickstart.md`.
 
 ---
 
