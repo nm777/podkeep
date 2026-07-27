@@ -34,6 +34,7 @@ return [
 
     'admin' => [
         'completed_retention_days' => env('ADMIN_COMPLETED_RETENTION_DAYS', 3),
+        'failed_retention_days' => env('ADMIN_FAILED_RETENTION_DAYS', 30),
     ],
 
 ];
