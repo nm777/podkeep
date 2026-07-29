@@ -258,3 +258,37 @@ test('rss feed excludes items without media files', function () {
     expect($content)->not->toContain('Item Without Media');
     expect($content)->not->toContain('<enclosure');
 });
+
+test('rss feed refreshes when media becomes available', function () {
+    $user = User::factory()->create();
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Processed Episode',
+        'source_type' => 'upload',
+        'media_file_id' => null,
+    ]);
+    $feed = Feed::factory()->create([
+        'user_id' => $user->id,
+        'slug' => 'test-feed',
+        'user_guid' => 'test-guid',
+        'is_public' => true,
+    ]);
+    FeedItem::factory()->create([
+        'feed_id' => $feed->id,
+        'library_item_id' => $libraryItem->id,
+    ]);
+
+    $this->get("/rss/{$feed->user_guid}/{$feed->slug}");
+    expect(Cache::has("rss.{$feed->id}"))->toBeTrue();
+
+    $mediaFile = MediaFile::factory()->create([
+        'file_path' => 'media/processed-episode.mp3',
+        'filesize' => 1234567,
+        'mime_type' => 'audio/mpeg',
+    ]);
+    $libraryItem->update(['media_file_id' => $mediaFile->id]);
+
+    expect(Cache::has("rss.{$feed->id}"))->toBeFalse();
+    expect($this->get("/rss/{$feed->user_guid}/{$feed->slug}")->getContent())
+        ->toContain('<title>Processed Episode</title>');
+});

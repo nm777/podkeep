@@ -7,10 +7,24 @@ use App\Enums\ProcessingStatusType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 class LibraryItem extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::updated(function (LibraryItem $libraryItem): void {
+            if (! $libraryItem->wasChanged('media_file_id') || ! $libraryItem->media_file_id) {
+                return;
+            }
+
+            $libraryItem->feedItems()->pluck('feed_id')->each(
+                fn (int $feedId) => Cache::forget("rss.{$feedId}")
+            );
+        });
+    }
 
     protected $fillable = [
         'user_id',
