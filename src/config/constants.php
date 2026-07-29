@@ -19,6 +19,10 @@ return [
         'start_delay_seconds' => 30,
     ],
 
+    'media' => [
+        'max_bytes' => 512000 * 1024,
+    ],
+
     'cache' => [
         'youtube_info_duration_seconds' => 30 * 24 * 60 * 60, // 30 days
         'rss_feed_duration_seconds' => 15 * 60, // 15 minutes

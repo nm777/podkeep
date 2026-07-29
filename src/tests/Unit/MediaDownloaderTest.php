@@ -113,3 +113,39 @@ test('throws exception for invalid media content', function () {
     expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
         ->toThrow(Exception::class);
 });
+
+test('rejects a declared download larger than the configured limit', function () {
+    config(['constants.media.max_bytes' => 16]);
+    $url = 'https://example.com/audio.mp3';
+
+    Http::fake([$url => Http::response('ID3', 200, ['Content-Length' => 17])]);
+
+    expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
+        ->toThrow(RuntimeException::class, 'Download exceeds the maximum allowed file size');
+
+    expect(Storage::disk('public')->allFiles('temp-downloads'))->toBeEmpty();
+});
+
+test('rejects a streamed download that exceeds the configured limit', function () {
+    config(['constants.media.max_bytes' => 16]);
+    $url = 'https://example.com/audio.mp3';
+
+    Http::fake([$url => Http::response('ID3'.str_repeat("\x00", 14), 200, ['Content-Length' => 16])]);
+
+    expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
+        ->toThrow(RuntimeException::class, 'Download exceeds the maximum allowed file size');
+
+    expect(Storage::disk('public')->allFiles('temp-downloads'))->toBeEmpty();
+});
+
+test('downloads media at the configured limit', function () {
+    config(['constants.media.max_bytes' => 16]);
+    $url = 'https://example.com/audio.mp3';
+    $content = 'ID3'.str_repeat("\x00", 13);
+
+    Http::fake([$url => Http::response($content, 200, ['Content-Length' => 16])]);
+
+    $path = (new MediaDownloader)->downloadFromUrl($url);
+
+    expect(Storage::disk('public')->get($path))->toBe($content);
+});

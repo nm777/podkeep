@@ -30,7 +30,7 @@ class LibraryItemRequest extends FormRequest
             'source_type' => ['sometimes', 'in:upload,url,youtube'],
             'media_type' => ['nullable', 'string', Rule::enum(MediaType::class)],
             'auto_generate_chapters' => ['nullable', 'boolean'],
-            'file' => ['required_without_all:source_url,url', 'prohibits:source_url,url', 'file', 'mimes:mp3,mp4,m4a,wav,ogg,webm,mkv,mov,avi', 'max:512000'],
+            'file' => ['required_without_all:source_url,url', 'prohibits:source_url,url', 'file', 'mimes:mp3,mp4,m4a,wav,ogg,webm,mkv,mov,avi', 'max:'.(config('constants.media.max_bytes') / 1024)],
             'url' => [
                 'required_without_all:source_url,file',
                 'prohibits:source_url,file',

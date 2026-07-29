@@ -63,15 +63,21 @@ class MediaDownloader
                 throw new \Exception('Failed to download file: HTTP '.$response->status());
             }
 
+            $this->ensureWithinSizeLimit((int) $response->header('Content-Length'));
+
             // Guzzle's sink option streams the body to disk in production.
             // Http::fake doesn't process sink, so write the body manually in tests.
             if (! file_exists($absolutePath) || filesize($absolutePath) === 0) {
                 $body = $response->body();
+                $this->ensureWithinSizeLimit(strlen($body));
+
                 if (empty($body)) {
                     throw new \Exception('Downloaded file is empty');
                 }
                 file_put_contents($absolutePath, $body);
             }
+
+            $this->ensureWithinSizeLimit((int) filesize($absolutePath));
 
             // Read only the first bytes for content validation
             $firstBytes = file_get_contents($absolutePath, false, null, 0, 4096);
@@ -114,13 +120,32 @@ class MediaDownloader
     {
         $parsedUrl = parse_url($url);
         $port = $parsedUrl['port'] ?? ($parsedUrl['scheme'] === 'https' ? 443 : 80);
+        $maxBytes = $this->maxDownloadBytes();
 
         return [
             'sink' => $sinkPath,
             'allow_redirects' => false,
+            'on_headers' => function ($response) use ($maxBytes): void {
+                $this->ensureWithinSizeLimit((int) $response->getHeaderLine('Content-Length'), $maxBytes);
+            },
+            'progress' => function ($downloadTotal, $downloadedBytes) use ($maxBytes): void {
+                $this->ensureWithinSizeLimit((int) $downloadedBytes, $maxBytes);
+            },
             // Keep the URL hostname for HTTP Host and HTTPS SNI while pinning the connection IP.
             'curl' => [CURLOPT_RESOLVE => [$parsedUrl['host'].':'.$port.':'.$ip]],
         ];
+    }
+
+    private function maxDownloadBytes(): int
+    {
+        return (int) config('constants.media.max_bytes');
+    }
+
+    private function ensureWithinSizeLimit(int $bytes, ?int $maxBytes = null): void
+    {
+        if ($bytes > ($maxBytes ?? $this->maxDownloadBytes())) {
+            throw new \RuntimeException('Download exceeds the maximum allowed file size');
+        }
     }
 
     /**
