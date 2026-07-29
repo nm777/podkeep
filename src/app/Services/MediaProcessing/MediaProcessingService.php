@@ -8,6 +8,7 @@ use App\Jobs\TranscribeMediaFile;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Services\DuplicateDetectionService;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -104,15 +105,40 @@ class MediaProcessingService
             $fileData = $this->storageManager->moveTempFile($filePath, $sourceUrl);
             $fileData = array_merge($fileData, $metadata);
 
-            $mediaFile = MediaFile::create([
-                'user_id' => $libraryItem->user_id,
-                'file_path' => $fileData['file_path'],
-                'file_hash' => $fileData['file_hash'],
-                'mime_type' => $fileData['mime_type'],
-                'filesize' => $fileData['filesize'],
-                'duration' => $fileData['duration'] ?? null,
-                'source_url' => $sourceUrl,
-            ]);
+            try {
+                $mediaFile = MediaFile::create([
+                    'user_id' => $libraryItem->user_id,
+                    'file_path' => $fileData['file_path'],
+                    'file_hash' => $fileData['file_hash'],
+                    'mime_type' => $fileData['mime_type'],
+                    'filesize' => $fileData['filesize'],
+                    'duration' => $fileData['duration'] ?? null,
+                    'source_url' => $sourceUrl,
+                ]);
+            } catch (QueryException $e) {
+                $mediaFile = MediaFile::findByHash($fileData['file_hash']);
+
+                if (! $mediaFile) {
+                    throw $e;
+                }
+
+                if ($mediaFile->file_path !== $fileData['file_path']) {
+                    Storage::disk('public')->delete($fileData['file_path']);
+                }
+
+                $libraryItem->media_file_id = $mediaFile->id;
+                $libraryItem->update([
+                    'processing_status' => ProcessingStatusType::COMPLETED,
+                    'processing_completed_at' => now(),
+                    'temp_file_path' => null,
+                ]);
+
+                return [
+                    'is_duplicate' => false,
+                    'media_file' => $mediaFile,
+                    'message' => 'File already exists in system. Linked to existing media file.',
+                ];
+            }
 
             // Link to library item
             $libraryItem->media_file_id = $mediaFile->id;

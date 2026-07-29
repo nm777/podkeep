@@ -6,6 +6,7 @@ use App\Models\MediaFile;
 use App\Models\User;
 use App\ProcessingStatusType;
 use App\Services\MediaProcessing\MediaProcessingService;
+use App\Services\MediaProcessing\MediaStorageManager;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -140,4 +141,64 @@ describe('media_file_id persistence', function () {
         expect($fromDb->media_file_id)->not->toBeNull();
         expect($fromDb->media_file_id)->toBe($existingMediaFile->id);
     });
+
+    it('links to the winning media file after a hash creation race', function (string $winningExtension, string $losingExtension) {
+        $content = 'ID3'.str_repeat("\x00", 100);
+        $hash = hash('sha256', $content);
+        $tempPath = 'temp-uploads/race.mp3';
+        $winningPath = 'media/'.$hash.'.'.$winningExtension;
+        $losingPath = 'media/'.$hash.'.'.$losingExtension;
+        Storage::disk('public')->put($tempPath, $content);
+
+        $owner = User::factory()->create();
+        $libraryItem = LibraryItem::factory()->create([
+            'user_id' => $this->user->id,
+            'source_type' => 'upload',
+            'processing_status' => \App\Enums\ProcessingStatusType::PENDING,
+        ]);
+
+        $storageManager = $this->mock(MediaStorageManager::class);
+        $storageManager->shouldReceive('fileExists')
+            ->once()
+            ->with($tempPath)
+            ->andReturnTrue();
+        $storageManager->shouldReceive('moveTempFile')
+            ->once()
+            ->with($tempPath, null)
+            ->andReturnUsing(function () use ($content, $hash, $losingPath, $owner, $tempPath, $winningPath): array {
+                Storage::disk('public')->delete($tempPath);
+                Storage::disk('public')->put($winningPath, $content);
+                MediaFile::factory()->create([
+                    'user_id' => $owner->id,
+                    'file_path' => $winningPath,
+                    'file_hash' => $hash,
+                    'mime_type' => 'audio/mpeg',
+                    'filesize' => strlen($content),
+                ]);
+                Storage::disk('public')->put($losingPath, $content);
+
+                return [
+                    'file_path' => $losingPath,
+                    'file_hash' => $hash,
+                    'mime_type' => 'audio/mpeg',
+                    'filesize' => strlen($content),
+                ];
+            });
+
+        $result = app(MediaProcessingService::class)->processFromFile($libraryItem, $tempPath);
+
+        $libraryItem->refresh();
+
+        expect($result['is_duplicate'])->toBeFalse();
+        expect($result['media_file']->file_path)->toBe($winningPath);
+        expect($libraryItem->processing_status)->toBe(\App\Enums\ProcessingStatusType::COMPLETED);
+        expect($libraryItem->media_file_id)->toBe($result['media_file']->id);
+        Storage::disk('public')->assertExists($winningPath);
+        if ($losingPath !== $winningPath) {
+            Storage::disk('public')->assertMissing($losingPath);
+        }
+    })->with([
+        'shared path' => ['mp3', 'mp3'],
+        'losing path' => ['mp3', 'wav'],
+    ]);
 });
