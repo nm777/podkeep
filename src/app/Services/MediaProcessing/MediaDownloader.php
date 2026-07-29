@@ -37,8 +37,10 @@ class MediaDownloader
      */
     private function downloadToTempFile(string $url, int $redirectDepth = 0): string
     {
+        $this->validateUrlSafety($url);
+
         if ($redirectDepth > 5) {
-            throw new \Exception('Too many HTML redirects');
+            throw new \Exception('Too many redirects');
         }
 
         $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'mp3';
@@ -49,6 +51,13 @@ class MediaDownloader
 
         try {
             $response = $this->executeDownload($url, $absolutePath);
+
+            if ($response->redirect() && $location = $response->header('Location')) {
+                return $this->downloadToTempFile(
+                    $this->makeAbsoluteUrl($location, $url),
+                    $redirectDepth + 1,
+                );
+            }
 
             if (! $response->successful()) {
                 throw new \Exception('Failed to download file: HTTP '.$response->status());
@@ -97,13 +106,7 @@ class MediaDownloader
     {
         return Http::timeout(60)->withOptions([
             'sink' => $sinkPath,
-            'allow_redirects' => [
-                'max' => 5,
-                'strict' => true,
-                'referer' => true,
-                'protocols' => ['http', 'https'],
-                'track_redirects' => true,
-            ],
+            'allow_redirects' => false,
         ])->get($url);
     }
 

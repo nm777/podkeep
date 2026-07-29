@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\MediaProcessing\MediaDownloader;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -45,5 +46,33 @@ describe('SSRF protection in MediaDownloader', function () {
 
         expect($path)->not->toBeEmpty();
         expect(Storage::disk('public')->exists($path))->toBeTrue();
+    });
+
+    it('blocks HTTP redirects to private URLs', function () {
+        $url = 'https://example.com/download';
+        $privateUrl = 'http://127.0.0.1/secret';
+
+        Http::fake([
+            $url => Http::response('', 302, ['Location' => $privateUrl]),
+        ]);
+
+        expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
+            ->toThrow(InvalidArgumentException::class, 'private');
+
+        Http::assertNotSent(fn (Request $request) => $request->url() === $privateUrl);
+    });
+
+    it('blocks JavaScript redirects to private URLs', function () {
+        $url = 'https://example.com/download';
+        $privateUrl = 'http://127.0.0.1/secret';
+
+        Http::fake([
+            $url => Http::response('<html><script>window.location.replace("'.$privateUrl.'")</script></html>', 200),
+        ]);
+
+        expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
+            ->toThrow(InvalidArgumentException::class, 'private');
+
+        Http::assertNotSent(fn (Request $request) => $request->url() === $privateUrl);
     });
 });
