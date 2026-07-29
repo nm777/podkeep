@@ -74,7 +74,6 @@ class UrlSourceProcessor
         foreach ($brokenItems as $item) {
             Log::info('Cleaning up broken library item before re-upload', [
                 'library_item_id' => $item->id,
-                'source_url' => $sourceUrl,
                 'status' => $item->processing_status?->value,
                 'media_file_id' => $item->media_file_id,
                 'is_duplicate' => $item->is_duplicate,

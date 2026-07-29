@@ -142,4 +142,16 @@ describe('UrlSourceProcessor', function () {
 
         expect($existingItem->fresh()->feedItems()->count())->toBe(1);
     });
+
+    it('does not include source URLs in broken-item cleanup logs', function () {
+        $source = file_get_contents(app_path('Services/SourceProcessors/UrlSourceProcessor.php')) ?: '';
+        $matchCount = preg_match(
+            "/Log::info\(\s*'Cleaning up broken library item before re-upload',\s*\[(?<context>.*?)\]\s*\);/s",
+            $source,
+            $matches
+        );
+
+        $this->assertSame(1, $matchCount);
+        $this->assertStringNotContainsString("'source_url'", $matches['context'] ?? '');
+    });
 });
