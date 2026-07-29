@@ -3,10 +3,13 @@
 use App\Enums\ProcessingStatusType;
 use App\Jobs\ProcessMediaFile;
 use App\Jobs\RedownloadMediaFile;
+use App\Models\Chapter;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 
 describe('retry processing', function () {
     it('retries a failed library item', function () {
@@ -76,6 +79,51 @@ describe('retry processing', function () {
 });
 
 describe('redownload', function () {
+    it('clears annotations when changed content is redownloaded', function () {
+        Storage::fake('public');
+        Http::fake([
+            'https://example.com/new-episode.mp3' => Http::response('RIFFnew audio content', 200),
+        ]);
+
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $oldContent = 'RIFFold audio content';
+        $oldHash = hash('sha256', $oldContent);
+        Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+
+        $mediaFile = MediaFile::factory()->create([
+            'user_id' => $user->id,
+            'file_path' => 'media/'.$oldHash.'.mp3',
+            'file_hash' => $oldHash,
+            'source_url' => 'https://example.com/new-episode.mp3',
+            'transcript' => [['start' => 0, 'end' => 5, 'text' => 'cached']],
+            'chapter_generation_status' => 'failed',
+            'chapter_proposal' => [['start_time' => 0, 'title' => 'Intro']],
+            'chapter_proposal_for_hash' => $oldHash,
+            'chapter_generation_error' => 'Generation failed',
+        ]);
+        Chapter::factory()->create(['media_file_id' => $mediaFile->id]);
+        $item = LibraryItem::factory()->create([
+            'user_id' => $user->id,
+            'media_file_id' => $mediaFile->id,
+            'source_type' => 'url',
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/library/'.$item->id.'/redownload')
+            ->assertOk();
+
+        $this->artisan('queue:work --once')->assertExitCode(0);
+
+        $mediaFile->refresh();
+        expect($mediaFile->transcript)->toBeNull();
+        expect($mediaFile->chapter_generation_status)->toBeNull();
+        expect($mediaFile->chapter_proposal)->toBeNull();
+        expect($mediaFile->chapter_proposal_for_hash)->toBeNull();
+        expect($mediaFile->chapter_generation_error)->toBeNull();
+        expect($mediaFile->chapters)->toHaveCount(0);
+    });
+
     it('redownloads media from source URL', function () {
         Queue::fake();
 

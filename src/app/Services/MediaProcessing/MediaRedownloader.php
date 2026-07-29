@@ -3,6 +3,7 @@
 namespace App\Services\MediaProcessing;
 
 use App\Models\LibraryItem;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -45,13 +46,26 @@ class MediaRedownloader
             $fullPath = Storage::disk('public')->path($storageInfo['file_path']);
             $metadata = $this->validator->validate($fullPath);
 
-            $mediaFile->update([
-                'file_path' => $storageInfo['file_path'],
-                'file_hash' => $storageInfo['file_hash'],
-                'filesize' => $storageInfo['filesize'],
-                'mime_type' => $metadata['mime_type'],
-                'duration' => $metadata['duration'] ?? null,
-            ]);
+            DB::transaction(function () use ($mediaFile, $storageInfo, $metadata, $hashChanged): void {
+                $mediaFile->update([
+                    'file_path' => $storageInfo['file_path'],
+                    'file_hash' => $storageInfo['file_hash'],
+                    'filesize' => $storageInfo['filesize'],
+                    'mime_type' => $metadata['mime_type'],
+                    'duration' => $metadata['duration'] ?? null,
+                    ...($hashChanged ? [
+                        'transcript' => null,
+                        'chapter_generation_status' => null,
+                        'chapter_proposal' => null,
+                        'chapter_proposal_for_hash' => null,
+                        'chapter_generation_error' => null,
+                    ] : []),
+                ]);
+
+                if ($hashChanged) {
+                    $mediaFile->chapters()->delete();
+                }
+            });
 
             if ($hashChanged && $fileExisted && $oldFilePath !== $storageInfo['file_path']) {
                 Storage::disk('public')->delete($oldFilePath);

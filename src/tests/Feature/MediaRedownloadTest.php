@@ -3,6 +3,7 @@
 use App\Enums\ProcessingStatusType;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Jobs\RedownloadMediaFile;
+use App\Models\Chapter;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
@@ -119,7 +120,13 @@ it('updates media file when content has changed', function () {
         'file_path' => 'media/'.$oldHash.'.mp3',
         'file_hash' => $oldHash,
         'source_url' => 'https://example.com/new-audio.mp3',
+        'transcript' => [['start' => 0, 'end' => 5, 'text' => 'cached']],
+        'chapter_generation_status' => 'failed',
+        'chapter_proposal' => [['start_time' => 0, 'title' => 'Intro']],
+        'chapter_proposal_for_hash' => $oldHash,
+        'chapter_generation_error' => 'Generation failed',
     ]);
+    Chapter::factory()->create(['media_file_id' => $mediaFile->id]);
 
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
@@ -138,6 +145,12 @@ it('updates media file when content has changed', function () {
 
     expect($mediaFile->file_hash)->toBe($newHash);
     expect($mediaFile->file_path)->toBe('media/'.$newHash.'.mp3');
+    expect($mediaFile->transcript)->toBeNull();
+    expect($mediaFile->chapter_generation_status)->toBeNull();
+    expect($mediaFile->chapter_proposal)->toBeNull();
+    expect($mediaFile->chapter_proposal_for_hash)->toBeNull();
+    expect($mediaFile->chapter_generation_error)->toBeNull();
+    expect($mediaFile->chapters)->toHaveCount(0);
 
     Storage::disk('public')->assertMissing('media/'.$oldHash.'.mp3');
     Storage::disk('public')->assertExists('media/'.$newHash.'.mp3');
@@ -354,37 +367,4 @@ it('handles redownload when content is html redirect page', function () {
     $this->artisan('queue:work --once')->assertExitCode(0);
 
     Storage::disk('public')->assertExists('media/'.$fileHash.'.mp3');
-});
-
-it('clears cached transcript and chapter proposal when redownloading', function () {
-    $user = User::factory()->create();
-
-    $fileContent = 'RIFFfake audio content';
-    $fileHash = hash('sha256', $fileContent);
-    Storage::disk('public')->put('media/'.$fileHash.'.mp3', $fileContent);
-
-    $mediaFile = MediaFile::factory()->create([
-        'user_id' => $user->id,
-        'file_path' => 'media/'.$fileHash.'.mp3',
-        'file_hash' => $fileHash,
-        'source_url' => 'https://example.com/audio.mp3',
-        'transcript' => [['start' => 0, 'end' => 5, 'text' => 'cached']],
-        'chapter_generation_status' => 'completed',
-        'chapter_proposal' => [['start_time' => 0, 'title' => 'Intro']],
-    ]);
-
-    $libraryItem = LibraryItem::factory()->create([
-        'user_id' => $user->id,
-        'media_file_id' => $mediaFile->id,
-        'source_type' => 'url',
-    ]);
-
-    actingAs($user)
-        ->post("/library/{$libraryItem->id}/redownload")
-        ->assertRedirect();
-
-    $mediaFile->refresh();
-    expect($mediaFile->transcript)->toBeNull();
-    expect($mediaFile->chapter_proposal)->toBeNull();
-    expect($mediaFile->chapter_generation_status)->toBeNull();
 });
