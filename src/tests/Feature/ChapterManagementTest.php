@@ -1,9 +1,11 @@
 <?php
 
+use App\Jobs\SegmentTranscriptIntoChapters;
 use App\Models\Chapter;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 
 it('replaces the full chapter set on sync and deletes chapters not in the payload', function () {
     $user = User::factory()->create();
@@ -38,6 +40,28 @@ it('clears all chapters when an empty array is synced', function () {
 
     $response->assertRedirect();
     expect(Chapter::where('media_file_id', $mediaFile->id)->count())->toBe(0);
+});
+
+it('invalidates queued generation so it cannot overwrite manually synced chapters', function () {
+    Http::fake();
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'duration' => 600,
+        'transcript' => [['start' => 0, 'end' => 5, 'text' => 'Queued transcript.']],
+    ]);
+    $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id, 'media_file_id' => $mediaFile->id]);
+    $staleJob = new SegmentTranscriptIntoChapters($mediaFile, 0);
+
+    $this->actingAs($user)->put("/library/{$libraryItem->id}/chapters", [
+        'chapters' => [['start_time' => 0, 'title' => 'Manual Chapter']],
+    ])->assertRedirect();
+
+    dispatch_sync($staleJob);
+
+    Http::assertNothingSent();
+    expect($mediaFile->fresh()->chapter_generation_version)->toBe(1);
+    expect($mediaFile->fresh()->chapters->pluck('title')->all())->toBe(['Manual Chapter']);
 });
 
 it('enforces the 20-chapter maximum', function () {

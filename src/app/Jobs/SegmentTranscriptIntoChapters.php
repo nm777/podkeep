@@ -17,7 +17,7 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct(public MediaFile $mediaFile)
+    public function __construct(public MediaFile $mediaFile, public int $generationVersion = 0)
     {
         $this->onConnection('chapters');
         $this->onQueue('chapters');
@@ -26,6 +26,11 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
     public function handle(LlmClient $llm): void
     {
         $mediaFile = $this->mediaFile->fresh();
+
+        if (! $this->isCurrent()) {
+            return;
+        }
+
         $transcript = $mediaFile->transcript ?? [];
         $transcriptHash = md5(json_encode($transcript));
 
@@ -34,18 +39,26 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
             $mediaFile->chapter_proposal_for_hash === $transcriptHash ||
             ($mediaFile->chapter_generation_status === 'completed' && $mediaFile->transcript === null && $mediaFile->chapter_proposal_for_hash !== null)
         )) {
-            $mediaFile->update(['chapter_generation_status' => 'completed']);
+            $this->updateCurrent(['chapter_generation_status' => 'completed']);
 
             return;
         }
 
-        $mediaFile->update(['chapter_generation_status' => 'processing']);
+        if (! $this->updateCurrent(['chapter_generation_status' => 'processing'])) {
+            return;
+        }
 
         try {
             $proposed = $llm->proposeChapters($transcript, (int) $mediaFile->duration);
             $chapters = $this->sanitize($proposed, (int) $mediaFile->duration);
 
-            DB::transaction(function () use ($mediaFile, $chapters, $transcriptHash) {
+            $generated = DB::transaction(function () use ($mediaFile, $chapters, $transcriptHash) {
+                $mediaFile = MediaFile::query()->lockForUpdate()->findOrFail($mediaFile->id);
+
+                if ($mediaFile->chapter_generation_version !== $this->generationVersion) {
+                    return false;
+                }
+
                 $mediaFile->chapters()->delete();
 
                 foreach ($chapters as $chapter) {
@@ -62,7 +75,13 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
                     'chapter_generation_status' => 'completed',
                     'chapter_generation_error' => null,
                 ]);
+
+                return true;
             });
+
+            if (! $generated) {
+                return;
+            }
 
             // Invalidate RSS cache for affected feeds.
             foreach ($mediaFile->libraryItems()->with('feedItems')->get() as $libItem) {
@@ -71,11 +90,24 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
                 }
             }
         } catch (\Throwable $e) {
-            $mediaFile->update([
+            $this->updateCurrent([
                 'chapter_generation_status' => 'failed',
                 'chapter_generation_error' => $e->getMessage(),
             ]);
         }
+    }
+
+    private function isCurrent(): bool
+    {
+        return MediaFile::query()->whereKey($this->mediaFile->id)
+            ->where('chapter_generation_version', $this->generationVersion)->exists();
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private function updateCurrent(array $attributes): bool
+    {
+        return MediaFile::query()->whereKey($this->mediaFile->id)
+            ->where('chapter_generation_version', $this->generationVersion)->update($attributes) === 1;
     }
 
     /**

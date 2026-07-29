@@ -6,6 +6,7 @@ use App\Http\Requests\ChapterSyncRequest;
 use App\Jobs\SegmentTranscriptIntoChapters;
 use App\Jobs\TranscribeMediaFile;
 use App\Models\LibraryItem;
+use App\Models\MediaFile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,7 @@ class ChapterController extends Controller
         $chapters = $request->validated()['chapters'] ?? [];
 
         DB::transaction(function () use ($mediaFile, $chapters) {
+            $mediaFile = MediaFile::query()->lockForUpdate()->findOrFail($mediaFile->id);
             $mediaFile->chapters()->delete();
             foreach ($chapters as $chapter) {
                 $mediaFile->chapters()->create([
@@ -35,6 +37,12 @@ class ChapterController extends Controller
                     'title' => $chapter['title'],
                 ]);
             }
+
+            $mediaFile->update([
+                'chapter_generation_version' => $mediaFile->chapter_generation_version + 1,
+                'chapter_generation_status' => null,
+                'chapter_generation_error' => null,
+            ]);
         });
 
         // Invalidate the RSS cache for every feed containing this media file.
@@ -58,18 +66,35 @@ class ChapterController extends Controller
             return back()->with('warning', 'Chapters require a processed media file with a known duration.');
         }
 
-        // "Regenerate" (already completed) forces fresh segmentation by clearing the hash,
-        // so the segmentation job re-runs the LLM instead of skipping it as a duplicate.
-        $updates = ['chapter_generation_status' => 'pending', 'chapter_generation_error' => null];
-        if ($mediaFile->chapter_generation_status === 'completed') {
-            $updates['chapter_proposal_for_hash'] = null;
-        }
-        $mediaFile->update($updates);
+        $mediaFile = DB::transaction(function () use ($mediaFile) {
+            $mediaFile = MediaFile::query()->lockForUpdate()->findOrFail($mediaFile->id);
 
-        TranscribeMediaFile::withChain([new SegmentTranscriptIntoChapters($mediaFile)])
+            if (in_array($mediaFile->chapter_generation_status, ['pending', 'processing'], true)) {
+                return null;
+            }
+
+            // "Regenerate" forces fresh segmentation instead of skipping the cached proposal.
+            $updates = [
+                'chapter_generation_version' => $mediaFile->chapter_generation_version + 1,
+                'chapter_generation_status' => 'pending',
+                'chapter_generation_error' => null,
+            ];
+            if ($mediaFile->chapter_generation_status === 'completed') {
+                $updates['chapter_proposal_for_hash'] = null;
+            }
+            $mediaFile->update($updates);
+
+            return $mediaFile;
+        });
+
+        if (! $mediaFile) {
+            return back()->with('warning', 'Chapter generation is already in progress.');
+        }
+
+        TranscribeMediaFile::withChain([new SegmentTranscriptIntoChapters($mediaFile, $mediaFile->chapter_generation_version)])
             ->onConnection('chapters')
             ->onQueue('chapters')
-            ->dispatch($mediaFile);
+            ->dispatch($mediaFile, $mediaFile->chapter_generation_version);
 
         return back()->with('success', 'Generating chapters in the background — you can leave the page; it keeps running even if you navigate away.');
     }

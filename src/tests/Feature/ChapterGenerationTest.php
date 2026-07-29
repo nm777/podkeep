@@ -17,11 +17,30 @@ it('sets status pending and dispatches the chain on the chapters connection', fu
 
     $response->assertRedirect();
     expect($mediaFile->fresh()->chapter_generation_status)->toBe('pending');
+    expect($mediaFile->fresh()->chapter_generation_version)->toBe(1);
     Queue::assertPushedWithChain(
         TranscribeMediaFile::class,
         [SegmentTranscriptIntoChapters::class],
         fn ($job) => $job->connection === 'chapters' && $job->queue === 'chapters',
     );
+});
+
+it('coalesces requests while chapter generation is active', function () {
+    Queue::fake();
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'duration' => 600,
+        'chapter_generation_status' => 'processing',
+        'chapter_generation_version' => 3,
+    ]);
+    $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id, 'media_file_id' => $mediaFile->id]);
+
+    $this->actingAs($user)->post("/library/{$libraryItem->id}/chapters/generate")
+        ->assertSessionHas('warning');
+
+    expect($mediaFile->fresh()->chapter_generation_version)->toBe(3);
+    Queue::assertNothingPushed();
 });
 
 it('assigns both chapter jobs to the chapters connection and queue', function () {

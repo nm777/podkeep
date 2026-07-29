@@ -15,7 +15,7 @@ class TranscribeMediaFile implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct(public MediaFile $mediaFile)
+    public function __construct(public MediaFile $mediaFile, public int $generationVersion = 0)
     {
         $this->onConnection('chapters');
         $this->onQueue('chapters');
@@ -24,6 +24,10 @@ class TranscribeMediaFile implements ShouldQueue
     public function handle(WhisperClient $whisper): void
     {
         $mediaFile = $this->mediaFile->fresh();
+
+        if (! $this->isCurrent()) {
+            return;
+        }
 
         $duration = (int) ($mediaFile->duration ?? 0);
         $existing = $mediaFile->transcript ?? [];
@@ -34,7 +38,9 @@ class TranscribeMediaFile implements ShouldQueue
             return;
         }
 
-        $mediaFile->update(['chapter_generation_status' => 'processing']);
+        if (! $this->updateCurrent(['chapter_generation_status' => 'processing'])) {
+            return;
+        }
 
         $chunkSeconds = (int) config('services.whisper.chunk_seconds', 1800);
         $source = Storage::disk('public')->path($mediaFile->file_path);
@@ -58,11 +64,13 @@ class TranscribeMediaFile implements ShouldQueue
                 }
 
                 // Checkpoint after each chunk so a crash/timeout resumes here, not from zero.
-                $this->mediaFile->fresh()->update(['transcript' => $segments]);
+                if (! $this->updateCurrent(['transcript' => $segments])) {
+                    return;
+                }
             }
         } catch (\Throwable $e) {
             // Partial transcript is already saved; surface the failure and stop the chain.
-            $this->mediaFile->fresh()->update([
+            $this->updateCurrent([
                 'chapter_generation_status' => 'failed',
                 'chapter_generation_error' => $e->getMessage(),
             ]);
@@ -71,5 +79,18 @@ class TranscribeMediaFile implements ShouldQueue
         } finally {
             $whisper->cleanupChunks($chunking['dir']);
         }
+    }
+
+    private function isCurrent(): bool
+    {
+        return MediaFile::query()->whereKey($this->mediaFile->id)
+            ->where('chapter_generation_version', $this->generationVersion)->exists();
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private function updateCurrent(array $attributes): bool
+    {
+        return MediaFile::query()->whereKey($this->mediaFile->id)
+            ->where('chapter_generation_version', $this->generationVersion)->update($attributes) === 1;
     }
 }

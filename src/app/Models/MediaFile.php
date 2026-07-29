@@ -32,6 +32,7 @@ class MediaFile extends Model
         'source_url',
         'transcript',
         'chapter_generation_status',
+        'chapter_generation_version',
         'chapter_proposal',
         'chapter_proposal_for_hash',
         'chapter_generation_error',
