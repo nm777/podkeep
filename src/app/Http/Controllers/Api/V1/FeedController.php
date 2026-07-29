@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\UpdateFeedRequest;
 use App\Http\Resources\FeedResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class FeedController extends Controller
@@ -72,6 +73,8 @@ class FeedController extends Controller
         $validated = $request->validated();
 
         $feed->update($validated);
+
+        Cache::forget("rss.{$feed->id}");
 
         return (new FeedResource($feed))
             ->response()

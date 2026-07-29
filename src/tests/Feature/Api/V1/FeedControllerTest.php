@@ -3,6 +3,7 @@
 use App\Models\Feed;
 use App\Models\FeedItem;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 describe('feed creation', function () {
     it('creates a feed with valid data', function () {
@@ -133,6 +134,8 @@ describe('feed update', function () {
         $token = $user->createToken('test')->plainTextToken;
         $feed = Feed::factory()->create(['user_id' => $user->id, 'title' => 'Old Title']);
 
+        Cache::put("rss.{$feed->id}", 'stale-xml', now()->addMinutes(15));
+
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->putJson('/api/v1/feeds/'.$feed->id, [
                 'title' => 'New Title',
@@ -140,6 +143,7 @@ describe('feed update', function () {
 
         $response->assertOk();
         $response->assertJsonPath('data.title', 'New Title');
+        expect(Cache::has("rss.{$feed->id}"))->toBeFalse();
     });
 
     it('prevents updating another users feed', function () {
