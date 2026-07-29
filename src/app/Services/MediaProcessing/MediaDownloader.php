@@ -18,10 +18,10 @@ class MediaDownloader
      */
     public function downloadFromUrl(string $url): string
     {
-        $this->validateUrlSafety($url);
+        $ip = $this->validateUrlSafety($url);
 
         try {
-            return $this->downloadToTempFile($url);
+            return $this->downloadToTempFile($url, ip: $ip);
         } catch (\Exception $e) {
             Log::error('Media download failed', [
                 'url' => $url,
@@ -35,9 +35,9 @@ class MediaDownloader
     /**
      * Download URL to a temp file, handling HTML redirects recursively.
      */
-    private function downloadToTempFile(string $url, int $redirectDepth = 0): string
+    private function downloadToTempFile(string $url, int $redirectDepth = 0, ?string $ip = null): string
     {
-        $this->validateUrlSafety($url);
+        $ip ??= $this->validateUrlSafety($url);
 
         if ($redirectDepth > 5) {
             throw new \Exception('Too many redirects');
@@ -50,7 +50,7 @@ class MediaDownloader
         $absolutePath = Storage::disk('public')->path($relativePath);
 
         try {
-            $response = $this->executeDownload($url, $absolutePath);
+            $response = $this->executeDownload($url, $absolutePath, $ip);
 
             if ($response->redirect() && $location = $response->header('Location')) {
                 return $this->downloadToTempFile(
@@ -102,12 +102,25 @@ class MediaDownloader
     /**
      * Execute HTTP download, streaming response body to the sink path.
      */
-    private function executeDownload(string $url, string $sinkPath): Response
+    private function executeDownload(string $url, string $sinkPath, string $ip): Response
     {
-        return Http::timeout(60)->withOptions([
+        return Http::timeout(60)->withOptions($this->downloadOptions($url, $sinkPath, $ip))->get($url);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function downloadOptions(string $url, string $sinkPath, string $ip): array
+    {
+        $parsedUrl = parse_url($url);
+        $port = $parsedUrl['port'] ?? ($parsedUrl['scheme'] === 'https' ? 443 : 80);
+
+        return [
             'sink' => $sinkPath,
             'allow_redirects' => false,
-        ])->get($url);
+            // Keep the URL hostname for HTTP Host and HTTPS SNI while pinning the connection IP.
+            'curl' => [CURLOPT_RESOLVE => [$parsedUrl['host'].':'.$port.':'.$ip]],
+        ];
     }
 
     /**
@@ -192,7 +205,7 @@ class MediaDownloader
         }
     }
 
-    private function validateUrlSafety(string $url): void
+    private function validateUrlSafety(string $url): string
     {
         $parsed = parse_url($url);
 
@@ -246,5 +259,7 @@ class MediaDownloader
                 throw new \InvalidArgumentException('URL resolves to a private/internal IP address');
             }
         }
+
+        return $ip;
     }
 }

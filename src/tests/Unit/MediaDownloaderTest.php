@@ -22,6 +22,21 @@ test('downloads media file successfully', function () {
     expect(Storage::disk('public')->get($path))->toBe($content);
 });
 
+test('pins a download to its validated address', function () {
+    $downloader = new class extends MediaDownloader
+    {
+        /** @return array<string, mixed> */
+        public function options(string $url, string $sinkPath, string $ip): array
+        {
+            return $this->downloadOptions($url, $sinkPath, $ip);
+        }
+    };
+
+    $options = $downloader->options('https://media.example.com:8443/audio.mp3', '/tmp/audio.mp3', '93.184.216.34');
+
+    expect($options['curl'][CURLOPT_RESOLVE])->toBe(['media.example.com:8443:93.184.216.34']);
+});
+
 test('throws exception for failed http request', function () {
     $url = 'https://example.com/audio.mp3';
 
