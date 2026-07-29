@@ -41,6 +41,33 @@ it('allows users to only access their own media files', function () {
         ->assertStatus(403);
 });
 
+it('allows users to access media files linked to their library items', function () {
+    Storage::fake('public');
+
+    $owner = User::factory()->create();
+    $linkedUser = User::factory()->create();
+    $unrelatedUser = User::factory()->create();
+
+    Storage::disk('public')->put('media/shared-file.mp3', 'fake audio content');
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $owner->id,
+        'file_path' => 'media/shared-file.mp3',
+    ]);
+
+    LibraryItem::factory()->create([
+        'user_id' => $linkedUser->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+
+    actingAs($linkedUser)
+        ->get("/files/{$mediaFile->file_path}")
+        ->assertSuccessful();
+
+    actingAs($unrelatedUser)
+        ->get("/files/{$mediaFile->file_path}")
+        ->assertForbidden();
+});
+
 it('allows duplicate files for different users but links to existing media without duplicate flag', function () {
     Storage::fake('public');
 
