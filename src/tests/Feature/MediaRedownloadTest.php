@@ -22,6 +22,23 @@ beforeEach(function () {
     ]);
 });
 
+it('resolves the redownloader when dry-running the media redownload command', function () {
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'source_url' => 'https://example.com/audio.mp3',
+    ]);
+
+    LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+
+    $this->artisan('media:redownload', ['--dry-run' => true])
+        ->expectsOutput('  Would redownload from: https://example.com/audio.mp3')
+        ->assertExitCode(0);
+});
+
 it('dispatches redownload job to queue', function () {
     Queue::fake();
 

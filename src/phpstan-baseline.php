@@ -8,12 +8,6 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/app/Console/Commands/CleanupOrphanedMediaFilesCommand.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Class App\\\\Services\\\\MediaProcessing\\\\MediaRedownloader constructor invoked with 2 parameters, 3 required\\.$#',
-	'identifier' => 'arguments.count',
-	'count' => 1,
-	'path' => __DIR__ . '/app/Console/Commands/RedownloadMedia.php',
-];
-$ignoreErrors[] = [
 	'message' => '#^Method App\\\\Console\\\\Commands\\\\RedownloadMedia\\:\\:handle\\(\\) has no return type specified\\.$#',
 	'identifier' => 'missingType.return',
 	'count' => 1,

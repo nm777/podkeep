@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\LibraryItem;
-use App\Services\MediaProcessing\MediaDownloader;
 use App\Services\MediaProcessing\MediaRedownloader;
 use App\Services\MediaProcessing\MediaStorageManager;
 use Illuminate\Console\Command;
@@ -18,7 +17,7 @@ class RedownloadMedia extends Command
 
     protected $description = 'Redownload media files from their original source URLs';
 
-    public function handle()
+    public function handle(MediaRedownloader $redownloader)
     {
         $query = LibraryItem::with('mediaFile')->whereHas('mediaFile');
 
@@ -39,11 +38,6 @@ class RedownloadMedia extends Command
         }
 
         $this->info("Found {$items->count()} library item(s) to process.");
-
-        $redownloader = new MediaRedownloader(
-            new MediaDownloader,
-            new MediaStorageManager,
-        );
 
         $successCount = 0;
         $failureCount = 0;
