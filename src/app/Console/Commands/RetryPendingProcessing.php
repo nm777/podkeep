@@ -18,10 +18,17 @@ class RetryPendingProcessing extends Command
     public function handle(): int
     {
         $minutes = (int) $this->option('minutes');
-        $cutoff = now()->subMinutes($minutes);
+        $now = now();
+        $cutoff = $now->copy()->subMinutes($minutes);
 
         $stuckItems = LibraryItem::where('processing_status', ProcessingStatusType::PENDING)
-            ->where('created_at', '<', $cutoff)
+            ->where(function ($query) use ($cutoff) {
+                $query->where('processing_started_at', '<', $cutoff)
+                    ->orWhere(function ($query) use ($cutoff) {
+                        $query->whereNull('processing_started_at')
+                            ->where('created_at', '<', $cutoff);
+                    });
+            })
             ->get();
 
         if ($stuckItems->isEmpty()) {
@@ -32,6 +39,21 @@ class RetryPendingProcessing extends Command
         $failed = 0;
 
         foreach ($stuckItems as $item) {
+            $claimed = LibraryItem::whereKey($item)
+                ->where('processing_status', ProcessingStatusType::PENDING)
+                ->where(function ($query) use ($cutoff) {
+                    $query->where('processing_started_at', '<', $cutoff)
+                        ->orWhere(function ($query) use ($cutoff) {
+                            $query->whereNull('processing_started_at')
+                                ->where('created_at', '<', $cutoff);
+                        });
+                })
+                ->update(['processing_started_at' => $now]);
+
+            if ($claimed === 0) {
+                continue;
+            }
+
             if ($item->temp_file_path && Storage::disk('public')->exists($item->temp_file_path)) {
                 ProcessMediaFile::dispatch($item, null, $item->temp_file_path);
                 $redispatched++;
