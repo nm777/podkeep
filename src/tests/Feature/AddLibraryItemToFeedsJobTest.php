@@ -65,6 +65,28 @@ it('creates feed items with correct sequence numbers', function () {
     ]);
 });
 
+it('is idempotent and assigns the next sequence to new attachments', function () {
+    $user = User::factory()->create();
+    $feed = Feed::factory()->create(['user_id' => $user->id]);
+    $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id]);
+
+    $job = new AddLibraryItemToFeedsJob($libraryItem, [$feed->id]);
+    $job->handle();
+    $job->handle();
+
+    expect(FeedItem::where('feed_id', $feed->id)->where('library_item_id', $libraryItem->id)->count())->toBe(1)
+        ->and(FeedItem::where('feed_id', $feed->id)->where('library_item_id', $libraryItem->id)->value('sequence'))->toBe(1);
+
+    $nextLibraryItem = LibraryItem::factory()->create(['user_id' => $user->id]);
+    (new AddLibraryItemToFeedsJob($nextLibraryItem, [$feed->id]))->handle();
+
+    $this->assertDatabaseHas('feed_items', [
+        'feed_id' => $feed->id,
+        'library_item_id' => $nextLibraryItem->id,
+        'sequence' => 2,
+    ]);
+});
+
 it('only adds items to feeds owned by the same user', function () {
     $user1 = User::factory()->create();
     $user2 = User::factory()->create();

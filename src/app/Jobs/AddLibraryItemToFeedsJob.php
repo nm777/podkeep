@@ -34,6 +34,10 @@ class AddLibraryItemToFeedsJob implements ShouldQueue
                 // PostgreSQL rejects FOR UPDATE on aggregate queries, so we lock the parent row.
                 Feed::lockForUpdate()->find($feed->id);
 
+                if ($feed->items()->where('library_item_id', $this->libraryItem->id)->exists()) {
+                    return;
+                }
+
                 $maxSequence = $feed->items()->max('sequence') ?? 0;
 
                 FeedItem::create([
