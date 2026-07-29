@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class LibraryItem extends Model
 {
@@ -21,6 +22,12 @@ class LibraryItem extends Model
             }
 
             $libraryItem->forgetRssCache();
+        });
+
+        static::deleting(function (LibraryItem $libraryItem): void {
+            if ($libraryItem->temp_file_path) {
+                Storage::disk('public')->delete($libraryItem->temp_file_path);
+            }
         });
     }
 

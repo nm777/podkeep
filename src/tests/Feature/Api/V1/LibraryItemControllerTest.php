@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProcessingStatusType;
 use App\Models\Feed;
 use App\Models\FeedItem;
 use App\Models\LibraryItem;
@@ -355,6 +356,27 @@ describe('library delete', function () {
         $this->assertDatabaseMissing('library_items', [
             'id' => $item->id,
         ]);
+    });
+
+    it('deletes the staged upload when deleting a pending library item', function () {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $tempPath = 'temp-uploads/pending-api-upload.mp3';
+        Storage::disk('public')->put($tempPath, 'fake content');
+        $item = LibraryItem::factory()->create([
+            'user_id' => $user->id,
+            'media_file_id' => null,
+            'processing_status' => ProcessingStatusType::PENDING,
+            'temp_file_path' => $tempPath,
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/library/'.$item->id)
+            ->assertNoContent();
+
+        Storage::disk('public')->assertMissing($tempPath);
     });
 
     it('prevents deleting another users item', function () {

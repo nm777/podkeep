@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProcessingStatusType;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
@@ -24,6 +25,43 @@ it('can delete a library item', function () {
     $this->assertDatabaseMissing('library_items', [
         'id' => $libraryItem->id,
     ]);
+});
+
+it('deletes the staged upload when deleting a pending library item', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $tempPath = 'temp-uploads/pending-web-upload.mp3';
+    Storage::disk('public')->put($tempPath, 'fake content');
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => null,
+        'processing_status' => ProcessingStatusType::PENDING,
+        'temp_file_path' => $tempPath,
+    ]);
+
+    $this->actingAs($user)->delete("/library/{$libraryItem->id}")
+        ->assertRedirect('/library');
+
+    Storage::disk('public')->assertMissing($tempPath);
+});
+
+it('does not delete storage when deleting an item without a staged upload', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $unrelatedPath = 'temp-uploads/unrelated.mp3';
+    Storage::disk('public')->put($unrelatedPath, 'fake content');
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => null,
+        'temp_file_path' => null,
+    ]);
+
+    $this->actingAs($user)->delete("/library/{$libraryItem->id}")
+        ->assertRedirect('/library');
+
+    Storage::disk('public')->assertExists($unrelatedPath);
 });
 
 it('cannot delete another user library item', function () {
