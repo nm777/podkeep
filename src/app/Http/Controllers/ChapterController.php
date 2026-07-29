@@ -18,6 +18,8 @@ class ChapterController extends Controller
         Gate::authorize('update', $library_item);
 
         $mediaFile = $library_item->mediaFile;
+        abort_unless(! $mediaFile || $mediaFile->user_id === $library_item->user_id, 403);
+
         if (! $mediaFile || ! $mediaFile->duration) {
             return back()->with('warning', 'Chapters require a processed media file with a known duration.');
         }
@@ -50,6 +52,8 @@ class ChapterController extends Controller
         Gate::authorize('update', $library_item);
 
         $mediaFile = $library_item->mediaFile;
+        abort_unless(! $mediaFile || $mediaFile->user_id === $library_item->user_id, 403);
+
         if (! $mediaFile || ! $mediaFile->duration) {
             return back()->with('warning', 'Chapters require a processed media file with a known duration.');
         }

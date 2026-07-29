@@ -46,3 +46,30 @@ it('forbids non-owners from generating chapters', function () {
 
     $response->assertForbidden();
 });
+
+it('forbids shared media references from generating chapters', function () {
+    Queue::fake();
+    $owner = User::factory()->create();
+    $sharedUser = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $owner->id,
+        'duration' => 600,
+        'transcript' => [['start' => 0, 'end' => 600, 'text' => 'Existing transcript']],
+        'chapter_generation_status' => 'completed',
+    ]);
+    $ownerItem = LibraryItem::factory()->create(['user_id' => $owner->id, 'media_file_id' => $mediaFile->id]);
+    $sharedItem = LibraryItem::factory()->create(['user_id' => $sharedUser->id, 'media_file_id' => $mediaFile->id]);
+
+    $this->actingAs($sharedUser)->post("/library/{$sharedItem->id}/chapters/generate")->assertForbidden();
+
+    expect($mediaFile->fresh()->only(['transcript', 'chapter_generation_status']))->toBe([
+        'transcript' => [['start' => 0, 'end' => 600, 'text' => 'Existing transcript']],
+        'chapter_generation_status' => 'completed',
+    ]);
+    Queue::assertNothingPushed();
+
+    $this->actingAs($owner)->post("/library/{$ownerItem->id}/chapters/generate")->assertRedirect();
+
+    expect($mediaFile->fresh()->chapter_generation_status)->toBe('pending');
+    Queue::assertPushed(TranscribeMediaFile::class);
+});

@@ -121,3 +121,22 @@ it('forbids non-owners from syncing chapters', function () {
     $response->assertForbidden();
     expect(Chapter::where('media_file_id', $mediaFile->id)->count())->toBe(0);
 });
+
+it('forbids shared media references from syncing chapters', function () {
+    $owner = User::factory()->create();
+    $sharedUser = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create(['user_id' => $owner->id, 'duration' => 600]);
+    $ownerItem = LibraryItem::factory()->create(['user_id' => $owner->id, 'media_file_id' => $mediaFile->id]);
+    $sharedItem = LibraryItem::factory()->create(['user_id' => $sharedUser->id, 'media_file_id' => $mediaFile->id]);
+
+    $this->actingAs($owner)->put("/library/{$ownerItem->id}/chapters", [
+        'chapters' => [['start_time' => 0, 'title' => 'Owner Chapter']],
+    ])->assertRedirect();
+
+    $this->actingAs($sharedUser)->put("/library/{$sharedItem->id}/chapters", [
+        'chapters' => [['start_time' => 0, 'title' => 'Shared User Chapter']],
+    ])->assertForbidden();
+
+    $this->assertDatabaseHas('chapters', ['media_file_id' => $mediaFile->id, 'title' => 'Owner Chapter']);
+    $this->assertDatabaseMissing('chapters', ['media_file_id' => $mediaFile->id, 'title' => 'Shared User Chapter']);
+});
