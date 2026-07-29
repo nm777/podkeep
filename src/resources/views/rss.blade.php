@@ -5,7 +5,7 @@
     xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>{{ $feed->title }}</title>
-        <description><![CDATA[{!! $feed->description !!}]]></description>
+        <description><![CDATA[{!! str_replace(']]>', ']]]]><![CDATA[>', $feed->description) !!}]]></description>
         <link>{{ $feed->website_url ?? route('share.show', ['user_guid' => $feed->user_guid, 'feed_slug' => $feed->slug]) }}</link>
         <image>
             <url>{{ $feed->cover_image_url ?? asset('logo.svg') }}</url>
@@ -22,7 +22,7 @@
             @if($item->libraryItem->mediaFile)
         <item>
             <title>{{ $item->libraryItem->title }}</title>
-            <description><![CDATA[{!! $feed->feed_type->isAppend() && $item->libraryItem->display_date ? '[' . $item->libraryItem->display_date->format('M j, Y') . '] ' : '' !!}{!! $item->libraryItem->description !!}]]></description>
+            <description><![CDATA[{!! $feed->feed_type->isAppend() && $item->libraryItem->display_date ? '[' . $item->libraryItem->display_date->format('M j, Y') . '] ' : '' !!}{!! str_replace(']]>', ']]]]><![CDATA[>', $item->libraryItem->description) !!}]]></description>
             <pubDate>{{ ($feed->feed_type->isStatic()
                 ? $feed->created_at->copy()->addMinutes($item->sequence)
                 : $item->created_at)->toRfc822String() }}</pubDate>
