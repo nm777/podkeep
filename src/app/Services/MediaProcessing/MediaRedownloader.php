@@ -68,7 +68,7 @@ class MediaRedownloader
                             'source_url' => $mediaFile->source_url,
                         ]);
 
-                    $libraryItem->update(['media_file_id' => $replacement->id]);
+                    $libraryItem->updateQuietly(['media_file_id' => $replacement->id]);
 
                     return;
                 }
@@ -97,6 +97,11 @@ class MediaRedownloader
                 && ! MediaFile::where('file_path', $oldFilePath)->exists()) {
                 Storage::disk('public')->delete($oldFilePath);
             }
+
+            ($hashChanged && $hasOtherLibraryItems
+                ? collect([$libraryItem])
+                : $mediaFile->libraryItems()->get()
+            )->each->forgetRssCache();
 
             return [
                 'success' => true,

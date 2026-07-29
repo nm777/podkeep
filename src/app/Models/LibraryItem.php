@@ -20,10 +20,15 @@ class LibraryItem extends Model
                 return;
             }
 
-            $libraryItem->feedItems()->pluck('feed_id')->each(
-                fn (int $feedId) => Cache::forget("rss.{$feedId}")
-            );
+            $libraryItem->forgetRssCache();
         });
+    }
+
+    public function forgetRssCache(): void
+    {
+        $this->feedItems()->pluck('feed_id')->each(
+            fn (int $feedId) => Cache::forget("rss.{$feedId}")
+        );
     }
 
     protected $fillable = [

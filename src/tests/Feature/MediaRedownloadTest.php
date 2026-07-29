@@ -4,6 +4,8 @@ use App\Enums\ProcessingStatusType;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Jobs\RedownloadMediaFile;
 use App\Models\Chapter;
+use App\Models\Feed;
+use App\Models\FeedItem;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
@@ -11,6 +13,7 @@ use App\Services\MediaProcessing\MediaDownloader;
 use App\Services\MediaProcessing\MediaRedownloader;
 use App\Services\MediaProcessing\MediaStorageManager;
 use App\Services\MediaProcessing\MediaValidator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -159,6 +162,36 @@ it('updates media file when content has changed', function () {
 
     Storage::disk('public')->assertMissing('media/'.$oldHash.'.mp3');
     Storage::disk('public')->assertExists('media/'.$newHash.'.mp3');
+});
+
+it('evicts cached RSS when an in-place redownload changes the enclosure path', function () {
+    $user = User::factory()->create();
+    $oldContent = 'RIFFfake audio content';
+    $oldHash = hash('sha256', $oldContent);
+    $newHash = hash('sha256', 'RIFFnew audio content');
+
+    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'file_hash' => $oldHash,
+        'source_url' => 'https://example.com/new-audio.mp3',
+    ]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+    $feed = Feed::factory()->create(['user_id' => $user->id, 'is_public' => true]);
+    FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $libraryItem->id]);
+
+    $this->get("/rss/{$feed->user_guid}/{$feed->slug}")->assertSuccessful();
+    expect(Cache::has("rss.{$feed->id}"))->toBeTrue();
+
+    app(MediaRedownloader::class)->redownload($libraryItem);
+
+    expect($mediaFile->fresh()->file_path)->toBe('media/'.$newHash.'.mp3')
+        ->and(Cache::has("rss.{$feed->id}"))->toBeFalse();
 });
 
 it('relinks only the requested item when redownloading shared media with changed content', function () {
