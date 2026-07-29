@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 
 use function Pest\Laravel\actingAs;
 
@@ -81,6 +82,41 @@ it('dispatches redownload job to queue', function () {
     });
 
     expect($libraryItem->fresh()->processing_status->value)->toBe('processing');
+});
+
+it('rejects redownloading an item already being processed', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'source_url' => 'https://example.com/audio.mp3',
+    ]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+        'processing_status' => ProcessingStatusType::PROCESSING,
+    ]);
+
+    actingAs($user)
+        ->post("/library/{$libraryItem->id}/redownload")
+        ->assertRedirect()
+        ->assertSessionHas('error', 'This media file is already being processed.');
+
+    Queue::assertNotPushed(RedownloadMediaFile::class);
+});
+
+it('prevents overlapping redownload jobs for the same media file', function () {
+    $mediaFile = MediaFile::factory()->create();
+    $libraryItem = LibraryItem::factory()->create(['media_file_id' => $mediaFile->id]);
+
+    $middleware = (new RedownloadMediaFile($libraryItem))->middleware();
+
+    expect($middleware)->toHaveCount(1)
+        ->and($middleware[0])->toBeInstanceOf(WithoutOverlapping::class)
+        ->and($middleware[0]->key)->toBe('media-file-'.$mediaFile->id)
+        ->and($middleware[0]->expiresAfter)->toBe(360)
+        ->and($middleware[0]->releaseAfter)->toBeNull();
 });
 
 it('allows user to redownload their own media file', function () {

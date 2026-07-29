@@ -99,6 +99,10 @@ class LibraryController extends Controller
 
         Gate::authorize('update', $libraryItem);
 
+        if ($libraryItem->isProcessing()) {
+            return back()->with('error', 'This media file is already being processed.');
+        }
+
         if (! $libraryItem->mediaFile) {
             return back()->with('error', 'No media file associated with this library item.');
         }

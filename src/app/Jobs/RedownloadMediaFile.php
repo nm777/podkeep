@@ -9,6 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
@@ -27,6 +28,16 @@ class RedownloadMediaFile implements ShouldQueue
     public function getLibraryItemId(): int
     {
         return $this->libraryItem->id;
+    }
+
+    /**
+     * @return array<int, WithoutOverlapping>
+     */
+    public function middleware(): array
+    {
+        return [(new WithoutOverlapping('media-file-'.$this->libraryItem->media_file_id))
+            ->expireAfter(360)
+            ->dontRelease()];
     }
 
     public function handle(MediaRedownloader $redownloader): void

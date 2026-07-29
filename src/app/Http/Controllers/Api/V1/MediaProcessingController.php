@@ -47,6 +47,10 @@ class MediaProcessingController extends Controller
     {
         $item = Auth::user()->libraryItems()->findOrFail($id);
 
+        if ($item->isProcessing()) {
+            return response()->json(['message' => 'This media file is already being processed.'], 422);
+        }
+
         if (! $item->mediaFile) {
             return response()->json(['message' => 'No media file associated with this library item.'], 422);
         }
