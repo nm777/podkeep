@@ -263,6 +263,30 @@ describe('feed item removal', function () {
         ]);
     });
 
+    it('compacts sequences after removing a middle item and appends at the next sequence', function () {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $feed = Feed::factory()->create(['user_id' => $user->id]);
+        $first = FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => LibraryItem::factory()->create(['user_id' => $user->id]), 'sequence' => 0]);
+        $middle = FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => LibraryItem::factory()->create(['user_id' => $user->id]), 'sequence' => 1]);
+        $last = FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => LibraryItem::factory()->create(['user_id' => $user->id]), 'sequence' => 2]);
+        $next = LibraryItem::factory()->create(['user_id' => $user->id]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/feeds/'.$feed->id.'/items/'.$middle->id)
+            ->assertNoContent();
+
+        expect(FeedItem::where('feed_id', $feed->id)->orderBy('sequence')->pluck('sequence')->all())
+            ->toBe([0, 1]);
+        expect(FeedItem::where('feed_id', $feed->id)->orderBy('sequence')->pluck('id')->all())
+            ->toBe([$first->id, $last->id]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/feeds/'.$feed->id.'/items', ['library_item_id' => $next->id])
+            ->assertCreated()
+            ->assertJsonPath('data.sequence', 2);
+    });
+
     it('prevents removing from another users feed', function () {
         $userA = User::factory()->create();
         $tokenA = $userA->createToken('test')->plainTextToken;

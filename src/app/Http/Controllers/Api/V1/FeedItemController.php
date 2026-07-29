@@ -86,11 +86,11 @@ class FeedItemController extends Controller
     /**
      * Remove the specified item from the feed.
      */
-    public function destroy(int $feedId, int $itemId): Response
+    public function destroy(int $feedId, int $itemId, FeedItemOrderingService $feedItemOrdering): Response
     {
         $feed = Auth::user()->feeds()->findOrFail($feedId);
 
-        $feed->items()->findOrFail($itemId)->delete();
+        $feedItemOrdering->remove($feed, $itemId);
 
         Cache::forget("rss.{$feedId}");
 

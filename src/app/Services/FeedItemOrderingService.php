@@ -35,6 +35,25 @@ class FeedItemOrderingService
         });
     }
 
+    public function remove(Feed $feed, int $feedItemId): void
+    {
+        DB::transaction(function () use ($feed, $feedItemId): void {
+            $feed = Feed::lockForUpdate()->findOrFail($feed->id);
+
+            $feed->items()->findOrFail($feedItemId)->delete();
+
+            $feedItems = $feed->items()->orderBy('sequence')->orderBy('id')->get();
+
+            foreach ($feedItems as $feedItem) {
+                $feedItem->update(['sequence' => -$feedItem->id]);
+            }
+
+            foreach ($feedItems as $sequence => $feedItem) {
+                $feedItem->update(['sequence' => $sequence]);
+            }
+        });
+    }
+
     /**
      * @param  array<int, array{id: int, sequence: int}>  $items
      * @return Collection<int, FeedItem>
