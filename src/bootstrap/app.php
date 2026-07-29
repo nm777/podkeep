@@ -1,6 +1,5 @@
 <?php
 
-use App\Console\Commands\UpdateYtDlp;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\ApprovedUserMiddleware;
 use App\Http\Middleware\EnsureEligibleForApi;
@@ -53,8 +52,5 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('media:cleanup-orphaned')->daily();
         $schedule->command('media:retry-pending')->everyFiveMinutes();
-        $schedule->command('yt-dlp:update')
-            ->cron(UpdateYtDlp::dailyCronExpression(now()))
-            ->withoutOverlapping();
     })
     ->create();

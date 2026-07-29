@@ -26,8 +26,9 @@ RUN apk add --no-cache \
     wget \
     zip
 
-RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_musllinux \
+RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/download/2026.07.04/yt-dlp_musllinux \
         -o /usr/local/bin/yt-dlp \
+    && echo 'f7439ec2e3ffe69e06ac233f83f0d9687b89105939129bddcbf74e5de0f2b40e  /usr/local/bin/yt-dlp' | sha256sum -c - \
     && chmod a+rx /usr/local/bin/yt-dlp
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
