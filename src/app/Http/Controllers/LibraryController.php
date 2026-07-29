@@ -108,6 +108,10 @@ class LibraryController extends Controller
             return back()->with('error', 'Cannot redownload: no source URL available for this media file.');
         }
 
+        if ($libraryItem->mediaFile->user_id !== $libraryItem->user_id) {
+            return back()->with('error', 'Cannot redownload a media file owned by another user.');
+        }
+
         // Invalidate any cached transcription/proposal — the audio is about to change.
         $libraryItem->mediaFile->update([
             'transcript' => null,

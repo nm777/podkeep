@@ -55,6 +55,10 @@ class MediaProcessingController extends Controller
             return response()->json(['message' => 'Cannot redownload: no source URL available for this media file.'], 422);
         }
 
+        if ($item->mediaFile->user_id !== $item->user_id) {
+            return response()->json(['message' => 'Cannot redownload a media file owned by another user.'], 422);
+        }
+
         $item->update([
             'processing_status' => ProcessingStatusType::PROCESSING,
             'processing_started_at' => now(),

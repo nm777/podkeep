@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProcessingStatusType;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Jobs\RedownloadMediaFile;
 use App\Models\LibraryItem;
@@ -174,6 +175,30 @@ it('prevents user from redownloading another users media', function () {
     actingAs($user2)
         ->post("/library/{$libraryItem->id}/redownload")
         ->assertStatus(403);
+});
+
+it('prevents a user from redownloading a shared media file owned by another user', function () {
+    Queue::fake();
+
+    $owner = User::factory()->create();
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $owner->id,
+        'source_url' => 'https://example.com/audio.mp3',
+    ]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+        'source_type' => 'url',
+    ]);
+
+    actingAs($user)
+        ->post("/library/{$libraryItem->id}/redownload")
+        ->assertRedirect()
+        ->assertSessionHas('error', 'Cannot redownload a media file owned by another user.');
+
+    Queue::assertNotPushed(RedownloadMediaFile::class);
+    expect($libraryItem->fresh()->processing_status)->toBe(ProcessingStatusType::COMPLETED);
 });
 
 it('returns error when media file has no source url', function () {

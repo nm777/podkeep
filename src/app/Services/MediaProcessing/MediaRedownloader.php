@@ -26,6 +26,10 @@ class MediaRedownloader
             throw new \Exception('Cannot redownload: no source URL available for this media file');
         }
 
+        if ($mediaFile->user_id !== $libraryItem->user_id) {
+            throw new \Exception('Cannot redownload a media file owned by another user');
+        }
+
         $fileExisted = $this->storageManager->fileExists($mediaFile->file_path);
 
         try {

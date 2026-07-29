@@ -148,4 +148,30 @@ describe('redownload', function () {
         $response->assertNotFound();
         Queue::assertNotPushed(RedownloadMediaFile::class);
     });
+
+    it('prevents redownloading a shared media file owned by another user', function () {
+        Queue::fake();
+
+        $owner = User::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $mediaFile = MediaFile::factory()->create([
+            'user_id' => $owner->id,
+            'source_url' => 'https://example.com/episode.mp3',
+        ]);
+        $item = LibraryItem::factory()->create([
+            'user_id' => $user->id,
+            'media_file_id' => $mediaFile->id,
+            'processing_status' => ProcessingStatusType::COMPLETED,
+            'source_type' => 'url',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/library/'.$item->id.'/redownload');
+
+        $response->assertUnprocessable();
+        $response->assertJsonPath('message', 'Cannot redownload a media file owned by another user.');
+        Queue::assertNotPushed(RedownloadMediaFile::class);
+        expect($item->fresh()->processing_status)->toBe(ProcessingStatusType::COMPLETED);
+    });
 });
