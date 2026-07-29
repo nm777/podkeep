@@ -46,7 +46,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     xml \
     zip
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2@sha256:5946476338742b200bb9ff88f8be56275ddae4b3949c72305cb0dbf10cfcb760 /usr/bin/composer /usr/bin/composer
 
 COPY custom-www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY src/php.ini /usr/local/etc/php/conf.d/custom.ini
@@ -77,22 +77,27 @@ RUN npm run build
 # Built in its own stage so only the binary + model land in the app image.
 FROM alpine:3.20 AS whisper
 
-ARG WHISPER_VERSION=v1.7.4
-ARG WHISPER_MODEL=ggml-small.en.bin
+ARG WHISPER_COMMIT=8a9ad7844d6e2a10cddf4b92de4089d7ac2b14a9
+ARG WHISPER_MODEL_REVISION=5359861c739e955e79d9a303bcbc70fb988958b1
+ARG WHISPER_MODEL_SHA256=c6138d6d58ecc8322097e0f987c32f1be8bb0a18532a3f88f734d1bbf9c41e5d
 
 RUN apk add --no-cache git build-base curl cmake
 
 WORKDIR /build
 # whisper.cpp builds with cmake; the CLI binary lands somewhere under build/.
 # Locate it and copy to a known path so the app stage can COPY it reliably.
-RUN git clone --depth 1 --branch ${WHISPER_VERSION} https://github.com/ggerganov/whisper.cpp.git . \
+RUN git init . \
+    && git remote add origin https://github.com/ggml-org/whisper.cpp.git \
+    && git fetch --depth 1 origin ${WHISPER_COMMIT} \
+    && git checkout --detach FETCH_HEAD \
     && cmake -B build -DWHISPER_BUILD_TESTS=OFF -DWHISPER_BUILD_EXAMPLES=ON -DBUILD_SHARED_LIBS=OFF \
     && cmake --build build -j"$(nproc)" \
     && cp "$(find build -type f -name 'whisper-cli' | head -1)" /usr/local/bin/whisper-cli \
     && test -x /usr/local/bin/whisper-cli
 
 RUN mkdir -p /models \
-    && curl -fsSL "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${WHISPER_MODEL}" -o "/models/${WHISPER_MODEL}"
+    && curl -fsSL "https://huggingface.co/ggerganov/whisper.cpp/resolve/${WHISPER_MODEL_REVISION}/ggml-small.en.bin" -o /models/ggml-small.en.bin \
+    && echo "${WHISPER_MODEL_SHA256}  /models/ggml-small.en.bin" | sha256sum -c -
 
 FROM base AS app
 
