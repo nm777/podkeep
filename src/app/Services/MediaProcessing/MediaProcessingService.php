@@ -154,6 +154,7 @@ class MediaProcessingService
             // Honor the add-time opt-in for automatic chapter generation.
             if ($libraryItem->fresh()?->auto_generate_chapters && $mediaFile->duration) {
                 TranscribeMediaFile::withChain([new SegmentTranscriptIntoChapters($mediaFile)])
+                    ->onConnection('chapters')
                     ->onQueue('chapters')
                     ->dispatch($mediaFile);
             }

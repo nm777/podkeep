@@ -39,7 +39,16 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 43260),
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 780),
+            'after_commit' => false,
+        ],
+
+        'chapters' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            'queue' => 'chapters',
+            'retry_after' => (int) env('CHAPTERS_QUEUE_RETRY_AFTER', 43260),
             'after_commit' => false,
         ],
 

@@ -73,7 +73,7 @@ services:
       - app
 
   # Low-priority worker for chapter generation (transcription + LLM segmentation).
-  # Isolated on its own queue so slow transcription never blocks the default worker.
+  # Its connection has a long lease, keeping routine jobs on the default worker's lease.
   # --tries=3 + per-chunk checkpointing => a restart mid-job auto-resumes (the DB
   # queue re-reserves it after retry_after). NOTE: keep this to ONE worker — the DB
   # queue can't safely run multiple workers on long jobs (a 2nd worker would re-grab
@@ -82,14 +82,14 @@ services:
     image: podkeep-app:latest
     restart: unless-stopped
     working_dir: /var/www/html
-    command: php -d memory_limit=512M artisan queue:work --queue=chapters --sleep=5 --tries=3 --timeout=43200
+    command: php -d memory_limit=512M artisan queue:work chapters --queue=chapters --sleep=5 --tries=3 --timeout=43200
     volumes:
       - podcast-storage:/var/www/html/storage
     depends_on:
       app:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f 'queue:work --queue=chapters' > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "pgrep -f 'queue:work chapters --queue=chapters' > /dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3

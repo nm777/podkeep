@@ -67,6 +67,7 @@ class ChapterController extends Controller
         $mediaFile->update($updates);
 
         TranscribeMediaFile::withChain([new SegmentTranscriptIntoChapters($mediaFile)])
+            ->onConnection('chapters')
             ->onQueue('chapters')
             ->dispatch($mediaFile);
 

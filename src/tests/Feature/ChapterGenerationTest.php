@@ -7,7 +7,7 @@ use App\Models\MediaFile;
 use App\Models\User;
 use Illuminate\Support\Facades\Queue;
 
-it('sets status pending and dispatches the chain on the chapters queue', function () {
+it('sets status pending and dispatches the chain on the chapters connection', function () {
     Queue::fake();
     $user = User::factory()->create();
     $mediaFile = MediaFile::factory()->create(['user_id' => $user->id, 'duration' => 600]);
@@ -20,8 +20,19 @@ it('sets status pending and dispatches the chain on the chapters queue', functio
     Queue::assertPushedWithChain(
         TranscribeMediaFile::class,
         [SegmentTranscriptIntoChapters::class],
-        fn ($job) => $job->queue === 'chapters',
+        fn ($job) => $job->connection === 'chapters' && $job->queue === 'chapters',
     );
+});
+
+it('assigns both chapter jobs to the chapters connection and queue', function () {
+    $mediaFile = MediaFile::factory()->make();
+    $transcription = new TranscribeMediaFile($mediaFile);
+    $segmentation = new SegmentTranscriptIntoChapters($mediaFile);
+
+    expect(data_get($transcription, 'connection'))->toBe('chapters');
+    expect(data_get($transcription, 'queue'))->toBe('chapters');
+    expect(data_get($segmentation, 'connection'))->toBe('chapters');
+    expect(data_get($segmentation, 'queue'))->toBe('chapters');
 });
 
 it('requires a processed media file with a duration', function () {

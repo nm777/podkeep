@@ -19,6 +19,7 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
 
     public function __construct(public MediaFile $mediaFile)
     {
+        $this->onConnection('chapters');
         $this->onQueue('chapters');
     }
 
