@@ -36,24 +36,25 @@ class MediaProcessingService
                 return $duplicateResult;
             }
 
-            $tempPath = $this->downloader->downloadFromUrl($sourceUrl);
-
-            // If user wants audio from a video source, convert it
-            if ($mediaType === 'audio') {
-                $mimeType = Storage::disk('public')->mimeType($tempPath);
-                if (str_starts_with($mimeType, 'video/')) {
-                    $tempPath = $this->videoToAudioConverter->convert($tempPath);
-                }
-            }
+            $sourceTempPath = $this->downloader->downloadFromUrl($sourceUrl);
+            $tempPath = $sourceTempPath;
 
             try {
-                return $this->processFromFile($libraryItem, $tempPath, $sourceUrl);
-            } catch (\Exception $e) {
-                if (Storage::disk('public')->exists($tempPath)) {
-                    Storage::disk('public')->delete($tempPath);
+                // If user wants audio from a video source, convert it
+                if ($mediaType === 'audio') {
+                    $mimeType = Storage::disk('public')->mimeType($tempPath);
+                    if (str_starts_with($mimeType, 'video/')) {
+                        $tempPath = $this->videoToAudioConverter->convert($tempPath);
+                    }
                 }
 
-                throw $e;
+                return $this->processFromFile($libraryItem, $tempPath, $sourceUrl);
+            } finally {
+                foreach (array_unique([$sourceTempPath, $tempPath]) as $path) {
+                    if (Storage::disk('public')->exists($path)) {
+                        Storage::disk('public')->delete($path);
+                    }
+                }
             }
 
         } catch (\Exception $e) {
