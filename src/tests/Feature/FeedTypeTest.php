@@ -241,8 +241,13 @@ it('orders append feed RSS items newest-first by created_at', function () {
     expect($posNew)->toBeLessThan($posOld);
 });
 
-it('shows display date prefix in RSS description for append feeds', function () {
-    $feed = Feed::factory()->create([
+it('stores and renders display dates per append feed item', function () {
+    $firstFeed = Feed::factory()->create([
+        'user_id' => $this->user->id,
+        'feed_type' => 'append',
+        'is_public' => true,
+    ]);
+    $secondFeed = Feed::factory()->create([
         'user_id' => $this->user->id,
         'feed_type' => 'append',
         'is_public' => true,
@@ -254,19 +259,38 @@ it('shows display date prefix in RSS description for append feeds', function () 
         'media_file_id' => $mediaFile->id,
         'title' => 'Test Episode',
         'description' => 'A great episode',
-        'display_date' => '2026-07-04',
     ]);
 
-    $feed->items()->create([
+    $firstFeedItem = $firstFeed->items()->create([
+        'library_item_id' => $item->id,
+        'sequence' => 0,
+    ]);
+    $secondFeedItem = $secondFeed->items()->create([
         'library_item_id' => $item->id,
         'sequence' => 0,
     ]);
 
-    $response = $this->get("/rss/{$feed->user_guid}/{$feed->slug}");
+    $this->actingAs($this->user)->put("/feeds/{$firstFeed->id}", [
+        'title' => $firstFeed->title,
+        'is_public' => true,
+        'display_dates' => [$item->id => '2026-07-04'],
+    ])->assertRedirect();
+    $this->actingAs($this->user)->put("/feeds/{$secondFeed->id}", [
+        'title' => $secondFeed->title,
+        'is_public' => true,
+        'display_dates' => [$item->id => '2026-07-05'],
+    ])->assertRedirect();
 
-    $response->assertOk();
-    expect($response->content())->toContain('[Jul 4, 2026]');
-    expect($response->content())->toContain('A great episode');
+    $this->assertDatabaseHas('feed_items', ['id' => $firstFeedItem->id, 'display_date' => '2026-07-04']);
+    $this->assertDatabaseHas('feed_items', ['id' => $secondFeedItem->id, 'display_date' => '2026-07-05']);
+
+    $firstResponse = $this->get("/rss/{$firstFeed->user_guid}/{$firstFeed->slug}");
+    $secondResponse = $this->get("/rss/{$secondFeed->user_guid}/{$secondFeed->slug}");
+
+    $firstResponse->assertOk();
+    $secondResponse->assertOk();
+    expect($firstResponse->content())->toContain('[Jul 4, 2026] A great episode')
+        ->and($secondResponse->content())->toContain('[Jul 5, 2026] A great episode');
 });
 
 it('reorders items by created_at desc when switching to append type', function () {

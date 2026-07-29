@@ -13,7 +13,15 @@ class FeedItem extends Model
         'feed_id',
         'library_item_id',
         'sequence',
+        'display_date',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'display_date' => 'date',
+        ];
+    }
 
     public function feed()
     {

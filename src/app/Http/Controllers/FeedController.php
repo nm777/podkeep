@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\FeedRequest;
 use App\Models\Feed;
-use App\Models\LibraryItem;
 use App\Services\FeedItemOrderingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -113,14 +112,11 @@ class FeedController extends Controller
             }
         });
 
-        // Update display dates if provided (for Append feeds)
         if (isset($validated['display_dates'])) {
             foreach ($validated['display_dates'] as $libraryItemId => $date) {
-                if ($date) {
-                    LibraryItem::where('id', $libraryItemId)
-                        ->where('user_id', $feed->user_id)
-                        ->update(['display_date' => $date]);
-                }
+                $feed->items()
+                    ->where('library_item_id', $libraryItemId)
+                    ->update(['display_date' => $date]);
             }
         }
 

@@ -22,7 +22,7 @@
             @if($item->libraryItem->mediaFile)
         <item>
             <title>{{ $item->libraryItem->title }}</title>
-            <description><![CDATA[{!! $feed->feed_type->isAppend() && $item->libraryItem->display_date ? '[' . $item->libraryItem->display_date->format('M j, Y') . '] ' : '' !!}{!! str_replace(']]>', ']]]]><![CDATA[>', $item->libraryItem->description) !!}]]></description>
+            <description><![CDATA[{!! $feed->feed_type->isAppend() && $item->display_date ? '[' . $item->display_date->format('M j, Y') . '] ' : '' !!}{!! str_replace(']]>', ']]]]><![CDATA[>', $item->libraryItem->description) !!}]]></description>
             <pubDate>{{ ($feed->feed_type->isStatic()
                 ? $feed->created_at->copy()->addMinutes($item->sequence)
                 : $item->created_at)->toRfc822String() }}</pubDate>

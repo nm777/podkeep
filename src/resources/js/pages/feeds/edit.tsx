@@ -255,7 +255,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                                             {data.feed_type === 'append' && (
                                                 <input
                                                     type="date"
-                                                    value={displayDates[item.library_item_id] ?? getLibraryItem(item.library_item_id)?.display_date ?? ''}
+                                                    value={displayDates[item.library_item_id] ?? item.display_date ?? ''}
                                                     onChange={(e) => setDisplayDates((prev) => ({ ...prev, [item.library_item_id]: e.target.value }))}
                                                     className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
                                                     title="Display date (appears in RSS description)"

@@ -60,7 +60,6 @@ export interface LibraryItem {
     processing_completed_at?: string;
     processing_error?: string;
     published_at?: string;
-    display_date?: string;
     created_at: string;
     updated_at: string;
     media_file?: MediaFile | null;
@@ -72,6 +71,7 @@ export interface FeedItem {
     feed_id: number;
     library_item_id: number;
     sequence: number;
+    display_date?: string;
     library_item: LibraryItem;
 }
 
