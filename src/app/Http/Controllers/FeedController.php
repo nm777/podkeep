@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\FeedRequest;
 use App\Models\Feed;
 use App\Models\LibraryItem;
+use App\Services\FeedItemOrderingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -79,34 +81,37 @@ class FeedController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(FeedRequest $request, Feed $feed)
+    public function update(FeedRequest $request, Feed $feed, FeedItemOrderingService $feedItemOrdering)
     {
         Gate::authorize('update', $feed);
 
         $validated = $request->validated();
 
-        $wasStatic = $feed->feed_type->isStatic();
+        DB::transaction(function () use (&$feed, $validated, $feedItemOrdering): void {
+            $feed = Feed::lockForUpdate()->findOrFail($feed->id);
+            $wasStatic = $feed->feed_type->isStatic();
 
-        $feed->update([
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'website_url' => $validated['website_url'] ?? null,
-            'is_public' => $validated['is_public'] ?? false,
-            'is_hidden_from_selector' => $validated['is_hidden_from_selector'] ?? false,
-            'feed_type' => $validated['feed_type'] ?? $feed->feed_type,
-        ]);
+            $feed->update([
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'website_url' => $validated['website_url'] ?? null,
+                'is_public' => $validated['is_public'] ?? false,
+                'is_hidden_from_selector' => $validated['is_hidden_from_selector'] ?? false,
+                'feed_type' => $validated['feed_type'] ?? $feed->feed_type,
+            ]);
 
-        // When switching to Append, re-order items by addition recency
-        if (($validated['feed_type'] ?? null) === 'append' && $wasStatic) {
-            $items = $feed->items()->reorder()->orderBy('created_at', 'desc')->get();
-            foreach ($items as $index => $item) {
-                $item->update(['sequence' => $index]);
+            // When switching to Append, re-order items by addition recency
+            if (($validated['feed_type'] ?? null) === 'append' && $wasStatic) {
+                $items = $feed->items()->reorder()->orderBy('created_at', 'desc')->get();
+                foreach ($items as $index => $item) {
+                    $item->update(['sequence' => $index]);
+                }
             }
-        }
 
-        if (isset($validated['items'])) {
-            $this->syncFeedItems($feed, $validated['items']);
-        }
+            if (isset($validated['items'])) {
+                $feedItemOrdering->sync($feed, $validated['items']);
+            }
+        });
 
         // Update display dates if provided (for Append feeds)
         if (isset($validated['display_dates'])) {
@@ -160,31 +165,5 @@ class FeedController extends Controller
         }
 
         return $slug;
-    }
-
-    private function syncFeedItems(Feed $feed, array $items): void
-    {
-        $newItemIds = collect($items)->pluck('library_item_id');
-
-        if ($newItemIds->isEmpty()) {
-            $feed->items()->delete();
-
-            return;
-        }
-
-        $feed->items()
-            ->whereNotIn('library_item_id', $newItemIds)
-            ->delete();
-
-        foreach ($items as $item) {
-            $feed->items()->updateOrCreate(
-                [
-                    'library_item_id' => $item['library_item_id'],
-                ],
-                [
-                    'sequence' => $item['sequence'],
-                ]
-            );
-        }
     }
 }

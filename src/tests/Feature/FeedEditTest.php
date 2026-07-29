@@ -148,6 +148,10 @@ it('allows reordering items in feed', function () {
         'user_id' => $user->id,
         'media_file_id' => $mediaFile2->id,
     ]);
+    $feed->items()->createMany([
+        ['library_item_id' => $libraryItem1->id, 'sequence' => 0],
+        ['library_item_id' => $libraryItem2->id, 'sequence' => 1],
+    ]);
 
     $response = $this->actingAs($user)->put("/feeds/{$feed->id}", [
         'title' => $feed->title,
@@ -172,6 +176,40 @@ it('allows reordering items in feed', function () {
         'library_item_id' => $libraryItem1->id,
         'sequence' => 1,
     ]);
+});
+
+it('rejects duplicate item sequences', function () {
+    $user = User::factory()->create();
+    $feed = Feed::factory()->create(['user_id' => $user->id]);
+    $items = LibraryItem::factory()->count(2)->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->put("/feeds/{$feed->id}", [
+        'title' => $feed->title,
+        'items' => [
+            ['library_item_id' => $items[0]->id, 'sequence' => 0],
+            ['library_item_id' => $items[1]->id, 'sequence' => 0],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors(['items.1.sequence']);
+    expect($feed->items()->count())->toBe(0);
+});
+
+it('rejects gapped item sequences', function () {
+    $user = User::factory()->create();
+    $feed = Feed::factory()->create(['user_id' => $user->id]);
+    $items = LibraryItem::factory()->count(2)->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->put("/feeds/{$feed->id}", [
+        'title' => $feed->title,
+        'items' => [
+            ['library_item_id' => $items[0]->id, 'sequence' => 0],
+            ['library_item_id' => $items[1]->id, 'sequence' => 2],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors(['items']);
+    expect($feed->items()->count())->toBe(0);
 });
 
 it('validates library item exists when adding to feed', function () {

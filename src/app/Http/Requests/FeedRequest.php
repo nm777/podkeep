@@ -33,13 +33,13 @@ class FeedRequest extends FormRequest
             'is_hidden_from_selector' => ['boolean'],
             'feed_type' => ['nullable', 'string', Rule::enum(FeedType::class)],
             'items' => ['nullable', 'array'],
-            'items.*.library_item_id' => ['required', 'integer', 'exists:library_items,id', function ($attribute, $value, $fail) {
+            'items.*.library_item_id' => ['required', 'integer', 'distinct', 'exists:library_items,id', function ($attribute, $value, $fail) {
                 $item = LibraryItem::find($value);
                 if ($item && $item->user_id !== $this->user()->id) {
                     $fail('You can only add your own library items to feeds.');
                 }
             }],
-            'items.*.sequence' => ['required', 'integer', 'min:0'],
+            'items.*.sequence' => ['required', 'integer', 'min:0', 'distinct'],
             'display_dates' => ['nullable', 'array'],
             'display_dates.*' => ['nullable', 'date'],
         ];
