@@ -7,6 +7,7 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class AttachFeedItemRequest extends FormRequest
 {
@@ -29,6 +30,7 @@ class AttachFeedItemRequest extends FormRequest
             'library_item_id' => [
                 'required',
                 'integer',
+                Rule::unique('feed_items', 'library_item_id')->where('feed_id', $this->route('feed')),
                 function (string $attribute, mixed $value, Closure $fail) {
                     if (! LibraryItem::where('id', $value)->where('user_id', Auth::id())->exists()) {
                         $fail('The selected library item does not belong to you.');

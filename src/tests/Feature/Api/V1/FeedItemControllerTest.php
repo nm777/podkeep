@@ -35,6 +35,28 @@ describe('feed item attachment', function () {
         ]);
     });
 
+    it('rejects a duplicate library item attachment', function () {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $feed = Feed::factory()->create(['user_id' => $user->id]);
+        $item = LibraryItem::factory()->create(['user_id' => $user->id]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/feeds/'.$feed->id.'/items', [
+                'library_item_id' => $item->id,
+            ])
+            ->assertCreated();
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/feeds/'.$feed->id.'/items', [
+                'library_item_id' => $item->id,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('library_item_id');
+
+        expect(FeedItem::where('feed_id', $feed->id)->where('library_item_id', $item->id)->count())->toBe(1);
+    });
+
     it('prevents attaching to another users feed', function () {
         $userA = User::factory()->create();
         $tokenA = $userA->createToken('test')->plainTextToken;
