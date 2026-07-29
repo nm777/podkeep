@@ -48,4 +48,30 @@ describe('cross-user dedup cascade safety', function () {
         expect($item->media_file_id)->toBeNull();
         expect(LibraryItem::find($item->id))->not->toBeNull();
     });
+
+    it('preserves shared media when its owner deletes their account', function () {
+        $owner = User::factory()->create();
+        $linkedUser = User::factory()->create();
+
+        $mediaFile = MediaFile::factory()->create([
+            'user_id' => $owner->id,
+            'file_hash' => 'shared-hash-owner-deletion',
+        ]);
+
+        $linkedItem = LibraryItem::factory()->create([
+            'user_id' => $linkedUser->id,
+            'media_file_id' => $mediaFile->id,
+        ]);
+
+        $this->actingAs($owner)
+            ->delete('/settings/profile', ['password' => 'password'])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/');
+
+        expect($linkedItem->refresh()->media_file_id)->toBe($mediaFile->id);
+        $preservedMediaFile = MediaFile::find($mediaFile->id);
+
+        expect($preservedMediaFile)->not->toBeNull();
+        expect($preservedMediaFile->user_id)->toBeNull();
+    });
 });
