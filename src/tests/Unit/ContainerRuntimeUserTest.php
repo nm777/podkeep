@@ -3,7 +3,7 @@
 use PHPUnit\Framework\Assert;
 
 test('non PHP-FPM container commands run as www-data after setup', function () {
-    $repositoryRoot = getenv('REPOSITORY_ROOT') ?: base_path('..');
+    $repositoryRoot = getenv('PODKEEP_REPOSITORY_ROOT') ?: dirname(__DIR__, 3);
     $entrypoint = file_get_contents($repositoryRoot.'/docker-entrypoint.sh');
     $compose = file_get_contents($repositoryRoot.'/docker-compose.prod.yml');
 
@@ -14,7 +14,7 @@ test('non PHP-FPM container commands run as www-data after setup', function () {
 });
 
 test('Laravel production services mount their persistent runtime files', function () {
-    $repositoryRoot = getenv('REPOSITORY_ROOT') ?: base_path('..');
+    $repositoryRoot = getenv('PODKEEP_REPOSITORY_ROOT') ?: dirname(__DIR__, 3);
     $compose = file_get_contents($repositoryRoot.'/docker-compose.prod.yml');
 
     foreach (['app', 'worker', 'chapters', 'scheduler'] as $service) {
@@ -23,4 +23,14 @@ test('Laravel production services mount their persistent runtime files', functio
             $compose,
         );
     }
+});
+
+test('development Compose runs a dedicated chapters worker', function () {
+    $repositoryRoot = getenv('PODKEEP_REPOSITORY_ROOT') ?: dirname(__DIR__, 3);
+    $compose = file_get_contents($repositoryRoot.'/docker-compose.yml');
+
+    Assert::assertMatchesRegularExpression(
+        '/^  chapters:\n(?:(?:    |  ).*\n)*?    command: php -d memory_limit=512M artisan queue:work chapters --queue=chapters --sleep=5 --tries=3 --timeout=43200$/m',
+        $compose,
+    );
 });
