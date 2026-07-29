@@ -15,6 +15,10 @@ class MediaFile extends Model
 {
     use HasFactory;
 
+    protected $hidden = [
+        'source_url',
+    ];
+
     protected $fillable = [
         'user_id',
         'file_path',

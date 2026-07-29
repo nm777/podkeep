@@ -23,7 +23,7 @@ class MediaFileResource extends JsonResource
             'mime_type' => $this->mime_type,
             'filesize' => $this->filesize,
             'duration' => $this->duration,
-            'source_url' => $this->source_url,
+            'source_url' => $this->when($request->user()?->id === $this->user_id, $this->source_url),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
