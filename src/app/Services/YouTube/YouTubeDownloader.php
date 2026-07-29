@@ -2,6 +2,7 @@
 
 namespace App\Services\YouTube;
 
+use App\Services\YouTubeUrlValidator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -15,17 +16,11 @@ class YouTubeDownloader
     public function downloadAudio(string $youtubeUrl, string $tempDir): ?string
     {
         $tempPath = $tempDir.'/audio.%(ext)s';
-
-        Log::info('Setting up YouTube download', [
-            'youtube_url' => $youtubeUrl,
-            'temp_dir' => $tempDir,
-            'temp_path' => $tempPath,
-        ]);
+        $videoId = YouTubeUrlValidator::extractVideoId($youtubeUrl);
 
         try {
             // Create temp directory
             Storage::disk('public')->makeDirectory($tempDir);
-            Log::info('Created temp directory', ['temp_dir' => $tempDir]);
 
             // Download audio using yt-dlp
             $command = [
@@ -41,26 +36,20 @@ class YouTubeDownloader
                 $youtubeUrl,
             ];
 
-            Log::info('Running yt-dlp command', [
-                'command' => implode(' ', $command),
-            ]);
-
             $process = new Process($command);
             $process->setTimeout(300); // 5 minutes timeout
             $process->run();
 
             Log::info('yt-dlp command completed', [
-                'is_successful' => $process->isSuccessful(),
+                'video_id' => $videoId,
                 'exit_code' => $process->getExitCode(),
-                'output' => $process->getOutput(),
-                'error_output' => $process->getErrorOutput(),
             ]);
 
             if (! $process->isSuccessful()) {
                 Log::error('yt-dlp command failed', [
+                    'video_id' => $videoId,
                     'exit_code' => $process->getExitCode(),
-                    'output' => $process->getOutput(),
-                    'error_output' => $process->getErrorOutput(),
+                    'error' => 'Audio download command failed',
                 ]);
                 throw new ProcessFailedException($process);
             }
@@ -68,35 +57,25 @@ class YouTubeDownloader
             // Find downloaded file (yt-dlp might create different extensions)
             $downloadedFile = $this->findDownloadedFile($tempDir);
 
-            Log::info('Looking for downloaded files', [
-                'temp_dir' => $tempDir,
-                'files_found' => Storage::disk('public')->allFiles($tempDir),
-                'downloaded_file' => $downloadedFile,
-            ]);
-
             if (! $downloadedFile || ! Storage::disk('public')->exists($downloadedFile)) {
                 Log::error('No downloaded file found', [
-                    'temp_dir' => $tempDir,
-                    'files_found' => Storage::disk('public')->allFiles($tempDir),
-                    'downloaded_file' => $downloadedFile,
-                    'file_exists' => $downloadedFile ? Storage::disk('public')->exists($downloadedFile) : false,
+                    'video_id' => $videoId,
+                    'error' => 'Downloaded audio file not found',
                 ]);
 
                 return null;
             }
 
             Log::info('Found downloaded file', [
-                'downloaded_file' => $downloadedFile,
-                'file_size' => Storage::disk('public')->size($downloadedFile),
+                'video_id' => $videoId,
             ]);
 
             return $downloadedFile;
 
         } catch (\Exception $e) {
             Log::error('YouTube download failed', [
-                'youtube_url' => $youtubeUrl,
-                'error_message' => $e->getMessage(),
-                'error_trace' => $e->getTraceAsString(),
+                'video_id' => $videoId,
+                'error' => 'Audio download failed',
             ]);
 
             return null;
@@ -106,6 +85,7 @@ class YouTubeDownloader
     public function downloadVideo(string $youtubeUrl, string $tempDir): ?string
     {
         $tempPath = $tempDir.'/video.%(ext)s';
+        $videoId = YouTubeUrlValidator::extractVideoId($youtubeUrl);
 
         try {
             Storage::disk('public')->makeDirectory($tempDir);
@@ -124,8 +104,9 @@ class YouTubeDownloader
 
             if (! $process->isSuccessful()) {
                 Log::error('yt-dlp video download failed', [
+                    'video_id' => $videoId,
                     'exit_code' => $process->getExitCode(),
-                    'error_output' => $process->getErrorOutput(),
+                    'error' => 'Video download command failed',
                 ]);
 
                 return null;
@@ -137,8 +118,8 @@ class YouTubeDownloader
 
         } catch (\Exception $e) {
             Log::error('YouTube video download failed', [
-                'youtube_url' => $youtubeUrl,
-                'error_message' => $e->getMessage(),
+                'video_id' => $videoId,
+                'error' => 'Video download failed',
             ]);
 
             return null;
@@ -168,7 +149,6 @@ class YouTubeDownloader
     {
         if (Storage::disk('public')->exists($tempDir)) {
             Storage::disk('public')->deleteDirectory($tempDir);
-            Log::info('Cleaned up temp directory', ['temp_dir' => $tempDir]);
         }
     }
 }

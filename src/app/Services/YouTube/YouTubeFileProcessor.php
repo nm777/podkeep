@@ -85,7 +85,6 @@ class YouTubeFileProcessor
             'file_hash' => $fileHash,
             'mime_type' => $mimeType,
             'filesize' => $fileSize,
-            'source_url' => $youtubeUrl,
         ]);
 
         $mediaFile = MediaFile::create([

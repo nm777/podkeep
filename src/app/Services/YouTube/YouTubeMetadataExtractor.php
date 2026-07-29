@@ -2,6 +2,7 @@
 
 namespace App\Services\YouTube;
 
+use App\Services\YouTubeUrlValidator;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 
@@ -12,6 +13,8 @@ class YouTubeMetadataExtractor
      */
     public function extractMetadata(string $youtubeUrl): ?array
     {
+        $videoId = YouTubeUrlValidator::extractVideoId($youtubeUrl);
+
         try {
             $metadataCommand = [
                 'yt-dlp',
@@ -20,30 +23,23 @@ class YouTubeMetadataExtractor
                 $youtubeUrl,
             ];
 
-            Log::info('Getting video metadata', [
-                'command' => implode(' ', $metadataCommand),
-            ]);
-
             $process = new Process($metadataCommand);
             $process->setTimeout(120);
             $process->run();
             $metadata = null;
 
             Log::info('Metadata command completed', [
-                'is_successful' => $process->isSuccessful(),
-                'output' => $process->getOutput(),
-                'error_output' => $process->getErrorOutput(),
+                'video_id' => $videoId,
+                'exit_code' => $process->getExitCode(),
             ]);
 
             if ($process->isSuccessful()) {
                 $metadata = json_decode($process->getOutput(), true);
-                Log::info('Parsed metadata', [
-                    'title' => $metadata['title'] ?? 'N/A',
-                    'description' => isset($metadata['description']) ? substr($metadata['description'], 0, 100).'...' : 'N/A',
-                ]);
             } else {
                 Log::error('Failed to extract metadata', [
-                    'error_output' => $process->getErrorOutput(),
+                    'video_id' => $videoId,
+                    'exit_code' => $process->getExitCode(),
+                    'error' => 'Metadata command failed',
                 ]);
 
                 return null;
@@ -57,8 +53,8 @@ class YouTubeMetadataExtractor
 
         } catch (\Exception $e) {
             Log::error('Metadata extraction failed', [
-                'youtube_url' => $youtubeUrl,
-                'error_message' => $e->getMessage(),
+                'video_id' => $videoId,
+                'error' => 'Metadata extraction failed',
             ]);
 
             return null;

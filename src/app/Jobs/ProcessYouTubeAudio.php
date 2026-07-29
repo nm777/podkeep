@@ -35,7 +35,6 @@ class ProcessYouTubeAudio implements ShouldQueue
     {
         Log::info('ProcessYouTubeAudio job started', [
             'library_item_id' => $this->libraryItem->id,
-            'youtube_url' => $this->youtubeUrl,
         ]);
 
         try {
@@ -44,8 +43,7 @@ class ProcessYouTubeAudio implements ShouldQueue
             if (isset($result['success']) && $result['success'] === false) {
                 Log::error('ProcessYouTubeAudio processing failed', [
                     'library_item_id' => $this->libraryItem->id,
-                    'youtube_url' => $this->youtubeUrl,
-                    'error' => $result['error'] ?? 'Unknown error',
+                    'error' => 'YouTube processing failed',
                 ]);
             } else {
                 Log::info('ProcessYouTubeAudio completed successfully', [
@@ -56,9 +54,7 @@ class ProcessYouTubeAudio implements ShouldQueue
         } catch (\Exception $e) {
             Log::error('ProcessYouTubeAudio job exception', [
                 'library_item_id' => $this->libraryItem->id,
-                'youtube_url' => $this->youtubeUrl,
-                'error_message' => $e->getMessage(),
-                'error_trace' => $e->getTraceAsString(),
+                'error' => 'YouTube processing failed',
             ]);
 
             $this->libraryItem->update([

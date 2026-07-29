@@ -24,7 +24,6 @@ class YouTubeProcessingService
     {
         Log::info('ProcessYouTubeAudio job started', [
             'library_item_id' => $libraryItem->id,
-            'youtube_url' => $youtubeUrl,
         ]);
 
         // Mark as processing
@@ -36,7 +35,6 @@ class YouTubeProcessingService
         if (! $videoId) {
             Log::error('Failed to extract video ID from URL', [
                 'library_item_id' => $libraryItem->id,
-                'youtube_url' => $youtubeUrl,
             ]);
 
             $libraryItem->update([
@@ -54,7 +52,6 @@ class YouTubeProcessingService
         Log::info('Extracted video ID', [
             'library_item_id' => $libraryItem->id,
             'video_id' => $videoId,
-            'youtube_url' => $youtubeUrl,
         ]);
 
         // Skip duplicate check if this is a redownload (item already has a media file)
@@ -68,13 +65,13 @@ class YouTubeProcessingService
         }
 
         // Download and process the video
-        return $this->downloadAndProcess($libraryItem, $youtubeUrl, $mediaType);
+        return $this->downloadAndProcess($libraryItem, $youtubeUrl, $videoId, $mediaType);
     }
 
     /**
      * Download and process YouTube video.
      */
-    private function downloadAndProcess(LibraryItem $libraryItem, string $youtubeUrl, string $mediaType = 'audio'): array
+    private function downloadAndProcess(LibraryItem $libraryItem, string $youtubeUrl, string $videoId, string $mediaType = 'audio'): array
     {
         $tempDir = 'temp-youtube/'.uniqid();
 
@@ -122,9 +119,8 @@ class YouTubeProcessingService
         } catch (\Exception $e) {
             Log::error('YouTube processing failed', [
                 'library_item_id' => $libraryItem->id,
-                'youtube_url' => $youtubeUrl,
-                'error_message' => $e->getMessage(),
-                'error_trace' => $e->getTraceAsString(),
+                'video_id' => $videoId,
+                'error' => 'YouTube processing failed',
             ]);
 
             $libraryItem->update([

@@ -40,7 +40,7 @@ class UnifiedDuplicateProcessor
         }
 
         if ($duplicateAnalysis['should_link_to_global_duplicate']) {
-            return $this->handleGlobalUrlDuplicate($libraryItem, $duplicateAnalysis, $sourceUrl);
+            return $this->handleGlobalUrlDuplicate($libraryItem, $duplicateAnalysis);
         }
 
         return $this->buildSuccessResponse(false, null);
@@ -159,7 +159,7 @@ class UnifiedDuplicateProcessor
     /**
      * Handle global duplicate for URL sources.
      */
-    private function handleGlobalUrlDuplicate(LibraryItem $libraryItem, array $duplicateAnalysis, string $sourceUrl): array
+    private function handleGlobalUrlDuplicate(LibraryItem $libraryItem, array $duplicateAnalysis): array
     {
         $globalMediaFile = $duplicateAnalysis['global_duplicate_media_file'];
 
@@ -168,7 +168,6 @@ class UnifiedDuplicateProcessor
             'existing_media_file_id' => $globalMediaFile->id,
             'existing_user_id' => $globalMediaFile->user_id,
             'current_user_id' => $libraryItem->user_id,
-            'source_url' => $sourceUrl,
         ]);
 
         $libraryItem->media_file_id = $globalMediaFile->id;

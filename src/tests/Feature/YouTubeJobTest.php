@@ -12,7 +12,7 @@ use App\Services\YouTube\YouTubeProcessingService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-it('processes YouTube audio job with logging', function () {
+it('logs only safe context when a YouTube job fails', function () {
     Storage::fake('public');
 
     $user = User::factory()->create();
@@ -22,20 +22,53 @@ it('processes YouTube audio job with logging', function () {
         'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     ]);
 
-    // Capture logs - expect info logs since job should start and process
-    Log::shouldReceive('info')->atLeast()->once();
-    Log::shouldReceive('error')->atLeast()->once();
+    $sensitiveUrl = 'https://user:secret@example.test/watch?v=dQw4w9WgXcQ&token=secret';
+    $job = new ProcessYouTubeAudio($libraryItem, $sensitiveUrl);
 
-    $job = new ProcessYouTubeAudio($libraryItem, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    Log::shouldReceive('info')->once()->with('ProcessYouTubeAudio job started', [
+        'library_item_id' => $libraryItem->id,
+    ]);
+    Log::shouldReceive('error')->once()->with('ProcessYouTubeAudio job exception', [
+        'library_item_id' => $libraryItem->id,
+        'error' => 'YouTube processing failed',
+    ]);
 
     // Mock the processing service to avoid actual YouTube processing
     $processingService = mock(YouTubeProcessingService::class);
     $processingService->shouldReceive('processYouTubeUrl')
         ->once()
-        ->andThrow(new Exception('Test error'));
+        ->andThrow(new Exception("Test error: {$sensitiveUrl}"));
 
-    // Mock the yt-dlp command to fail so we can test error logging
     $job->handle($processingService);
+
+    $libraryItem->refresh();
+    $this->assertStringContainsString($sensitiveUrl, $libraryItem->processing_error);
+});
+
+it('does not log sensitive YouTube processing data', function () {
+    $logContexts = collect([
+        'Jobs/ProcessYouTubeAudio.php',
+        'Services/YouTube/YouTubeDownloader.php',
+        'Services/YouTube/YouTubeMetadataExtractor.php',
+        'Services/YouTube/YouTubeProcessingService.php',
+        'Services/YouTube/YouTubeFileProcessor.php',
+        'Services/YouTubeVideoInfoService.php',
+        'Services/MediaProcessing/UnifiedDuplicateProcessor.php',
+    ])->map(fn (string $path) => preg_match_all('/Log::(?:info|error|warning)\((?:.|\R)*?\]\);/', file_get_contents(app_path($path)), $matches) ? implode("\n", $matches[0]) : '')->implode("\n");
+
+    foreach ([
+        'youtube_url',
+        'source_url',
+        "'command'",
+        "'output'",
+        "'error_output'",
+        "'error_trace'",
+        'getOutput',
+        'getErrorOutput',
+        'getTraceAsString',
+    ] as $sensitiveField) {
+        $this->assertStringNotContainsString($sensitiveField, $logContexts);
+    }
 });
 
 it('marks library item as failed when video ID extraction fails instead of deleting', function () {
