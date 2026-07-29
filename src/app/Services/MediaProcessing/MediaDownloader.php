@@ -53,6 +53,8 @@ class MediaDownloader
             $response = $this->executeDownload($url, $absolutePath, $ip);
 
             if ($response->redirect() && $location = $response->header('Location')) {
+                Storage::disk('public')->delete($relativePath);
+
                 return $this->downloadToTempFile(
                     $this->makeAbsoluteUrl($location, $url),
                     $redirectDepth + 1,

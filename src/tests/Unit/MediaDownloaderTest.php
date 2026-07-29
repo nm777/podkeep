@@ -79,6 +79,22 @@ test('handles javascript redirect', function () {
     expect(Storage::disk('public')->get($path))->toBe($audioContent);
 });
 
+test('handles HTTP redirect without retaining the redirect sink', function () {
+    $url = 'https://example.com/download';
+    $redirectUrl = 'https://example.com/actual.mp3';
+    $audioContent = 'ID3'.str_repeat("\x00", 100).'audio';
+
+    Http::fake([
+        $url => Http::response('', 302, ['Location' => $redirectUrl]),
+        $redirectUrl => Http::response($audioContent, 200),
+    ]);
+
+    $path = (new MediaDownloader)->downloadFromUrl($url);
+
+    expect(Storage::disk('public')->get($path))->toBe($audioContent)
+        ->and(Storage::disk('public')->allFiles('temp-downloads'))->toBe([$path]);
+});
+
 test('converts relative redirect url to absolute', function () {
     $url = 'https://example.com/download';
     $absoluteUrl = 'https://example.com/files/audio.mp3';
