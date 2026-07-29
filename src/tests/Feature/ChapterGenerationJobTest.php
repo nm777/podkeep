@@ -105,34 +105,45 @@ it('skips transcription when the transcript already covers the file', function (
     expect($mediaFile->fresh()->transcript)->toBe($existing);
 });
 
-it('marks status failed and rethrows when transcription fails', function () {
-    $this->app->instance(WhisperClient::class, new class extends WhisperClient
+it('keeps transcription checkpoints for retries and clears them on terminal failure', function () {
+    $fake = new class extends WhisperClient
     {
         public function chunk(string $source, int $chunkSeconds): array
         {
-            return ['dir' => '/tmp/fake', 'segments' => [['path' => '/tmp/c0.wav', 'offset' => 0]]];
+            return ['dir' => '/tmp/fake', 'segments' => [
+                ['path' => '/tmp/c0.wav', 'offset' => 0],
+                ['path' => '/tmp/c1.wav', 'offset' => $chunkSeconds],
+            ]];
         }
 
         public function transcribeFile(string $wavPath): array
         {
-            throw new \RuntimeException('whisper.cpp failed: model not found');
+            if ($wavPath === '/tmp/c1.wav') {
+                throw new \RuntimeException('whisper.cpp failed: model not found');
+            }
+
+            return [['start' => 0, 'end' => 5, 'text' => 'checkpoint']];
         }
 
         public function cleanupChunks(string $dir): void {}
-    });
+    };
 
-    $mediaFile = MediaFile::factory()->create(['duration' => 600, 'mime_type' => 'audio/mpeg']);
+    $mediaFile = MediaFile::factory()->create(['duration' => 3600, 'mime_type' => 'audio/mpeg']);
+    $job = new TranscribeMediaFile($mediaFile);
 
-    $thrown = null;
-    try {
-        dispatch_sync(new TranscribeMediaFile($mediaFile));
-    } catch (\Throwable $e) {
-        $thrown = $e;
-    }
+    expect(fn () => $job->handle($fake))->toThrow(\RuntimeException::class, 'whisper.cpp failed: model not found');
 
-    expect($thrown)->not->toBeNull();
-    expect($mediaFile->fresh()->chapter_generation_status)->toBe('failed');
-    expect($mediaFile->fresh()->chapter_generation_error)->toContain('whisper.cpp');
+    $checkpoint = $mediaFile->fresh();
+    expect($checkpoint->transcript)->toBe([['start' => 0, 'end' => 5, 'text' => 'checkpoint']]);
+    expect($checkpoint->chapter_generation_status)->toBe('failed');
+    expect($checkpoint->chapter_generation_error)->toContain('whisper.cpp');
+
+    $job->failed(new \RuntimeException('whisper.cpp failed: model not found'));
+
+    $failed = $mediaFile->fresh();
+    expect($failed->transcript)->toBeNull();
+    expect($failed->chapter_generation_status)->toBe('failed');
+    expect($failed->chapter_generation_error)->toContain('whisper.cpp');
 });
 
 it('skips re-segmentation when chapters already exist for the current transcript', function () {

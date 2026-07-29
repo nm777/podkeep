@@ -81,6 +81,15 @@ class TranscribeMediaFile implements ShouldQueue
         }
     }
 
+    public function failed(?\Throwable $exception): void
+    {
+        $this->updateCurrent([
+            'transcript' => null,
+            'chapter_generation_status' => 'failed',
+            'chapter_generation_error' => $exception?->getMessage(),
+        ]);
+    }
+
     private function isCurrent(): bool
     {
         return MediaFile::query()->whereKey($this->mediaFile->id)
