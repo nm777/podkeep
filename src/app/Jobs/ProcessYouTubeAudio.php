@@ -16,6 +16,8 @@ class ProcessYouTubeAudio implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $timeout = 360;
+
     public function __construct(
         protected LibraryItem $libraryItem,
         protected string $youtubeUrl,

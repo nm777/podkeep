@@ -42,7 +42,7 @@ services:
       context: .
       target: dev
     hostname: podkeep-worker
-    command: php -d memory_limit=512M artisan queue:work --sleep=3 --tries=3 --timeout=90
+    command: php -d memory_limit=512M artisan queue:work --sleep=3 --tries=3 --timeout=720
     volumes:
       - ./src:/var/www/html
     depends_on:
