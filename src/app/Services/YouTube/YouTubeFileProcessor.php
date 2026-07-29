@@ -7,6 +7,7 @@ use App\Jobs\TranscribeMediaFile;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Services\DuplicateDetectionService;
+use App\Services\MediaFileRetirementService;
 use App\Services\MediaProcessing\MediaValidator;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use Carbon\Carbon;
@@ -60,7 +61,9 @@ class YouTubeFileProcessor
                 'file_path' => $existingMediaFile->file_path,
             ]);
 
-            $existingMediaFile->delete();
+            if (! MediaFileRetirementService::retire($existingMediaFile)) {
+                throw new \RuntimeException('Cannot replace a media file that is still in use.');
+            }
         }
 
         DuplicateDetectionService::cleanupOrphanedByHash($fileHash);

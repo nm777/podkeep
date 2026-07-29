@@ -8,6 +8,7 @@ use App\Jobs\TranscribeMediaFile;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Services\DuplicateDetectionService;
+use App\Services\MediaFileRetirementService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -91,7 +92,9 @@ class MediaProcessingService
                     'file_path' => $existingMediaFile->file_path,
                 ]);
 
-                $existingMediaFile->delete();
+                if (! MediaFileRetirementService::retire($existingMediaFile)) {
+                    throw new \RuntimeException('Cannot replace a media file that is still in use.');
+                }
             }
 
             // Validate and get file metadata

@@ -3,13 +3,12 @@
 namespace App\Jobs;
 
 use App\Models\MediaFile;
+use App\Services\MediaFileRetirementService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class CleanupOrphanedMediaFiles implements ShouldQueue
 {
@@ -24,20 +23,9 @@ class CleanupOrphanedMediaFiles implements ShouldQueue
 
         $deleted = 0;
         foreach ($orphanedFiles as $mediaFile) {
-            DB::transaction(function () use ($mediaFile, &$deleted) {
-                $locked = MediaFile::lockForUpdate()->find($mediaFile->id);
-
-                if (! $locked || $locked->libraryItems()->exists()) {
-                    return;
-                }
-
-                if ($locked->file_path) {
-                    Storage::disk('public')->delete($locked->file_path);
-                }
-
-                $locked->delete();
+            if (MediaFileRetirementService::retire($mediaFile)) {
                 $deleted++;
-            });
+            }
         }
 
         if ($deleted > 0) {

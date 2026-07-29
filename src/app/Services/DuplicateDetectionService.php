@@ -143,8 +143,7 @@ class DuplicateDetectionService
             'file_path' => $mediaFile->file_path,
         ]);
 
-        Storage::disk('public')->delete($mediaFile->file_path);
-        $mediaFile->delete();
+        MediaFileRetirementService::retire($mediaFile);
     }
 
     /**

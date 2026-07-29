@@ -10,12 +10,12 @@ use App\Jobs\RedownloadMediaFile;
 use App\Models\Feed;
 use App\Models\LibraryItem;
 use App\Services\FeedItemOrderingService;
+use App\Services\MediaFileRetirementService;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class LibraryController extends Controller
@@ -59,9 +59,8 @@ class LibraryController extends Controller
 
         $libraryItem->delete();
 
-        if ($mediaFile && $mediaFile->libraryItems()->count() === 0) {
-            Storage::disk('public')->delete($mediaFile->file_path);
-            $mediaFile->delete();
+        if ($mediaFile) {
+            MediaFileRetirementService::retire($mediaFile);
         }
 
         return redirect()->route('library.index')

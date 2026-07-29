@@ -4,13 +4,13 @@ namespace App\Jobs;
 
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
+use App\Services\MediaFileRetirementService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class CleanupDuplicateLibraryItem implements ShouldQueue
 {
@@ -60,17 +60,10 @@ class CleanupDuplicateLibraryItem implements ShouldQueue
             return;
         }
 
-        $mediaFile->refresh();
-
-        if ($mediaFile->libraryItems()->exists()) {
-            return;
-        }
-
         Log::info('Cleaning up orphaned media file after duplicate removal', [
             'media_file_id' => $mediaFile->id,
         ]);
 
-        Storage::disk('public')->delete($mediaFile->file_path);
-        $mediaFile->delete();
+        MediaFileRetirementService::retire($mediaFile);
     }
 }

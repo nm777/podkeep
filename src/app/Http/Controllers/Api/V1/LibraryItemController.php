@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreLibraryItemRequest;
 use App\Http\Requests\Api\V1\UpdateLibraryItemRequest;
 use App\Http\Resources\LibraryItemResource;
+use App\Services\MediaFileRetirementService;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class LibraryItemController extends Controller
 {
@@ -94,9 +94,8 @@ class LibraryItemController extends Controller
 
         $libraryItem->delete();
 
-        if ($mediaFile && $mediaFile->libraryItems()->count() === 0) {
-            Storage::disk('public')->delete($mediaFile->file_path);
-            $mediaFile->delete();
+        if ($mediaFile) {
+            MediaFileRetirementService::retire($mediaFile);
         }
 
         foreach ($feedIds as $feedId) {
