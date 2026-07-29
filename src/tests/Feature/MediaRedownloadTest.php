@@ -547,6 +547,37 @@ it('returns error when source url returns 404', function () {
     expect($libraryItem->processing_error)->toBe('Media redownload failed.');
 });
 
+it('rethrows unexpected redownload errors and records a safe terminal failure', function () {
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create(['user_id' => $user->id, 'source_url' => 'https://example.com/audio.mp3']);
+    $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id, 'media_file_id' => $mediaFile->id]);
+    $redownloader = new class extends MediaRedownloader
+    {
+        public int $calls = 0;
+
+        public function __construct() {}
+
+        /** @return array{success: true, file_existed: bool, hash_changed: bool, old_hash: string, new_hash: string} */
+        public function redownload(LibraryItem $libraryItem): array
+        {
+            $this->calls++;
+
+            throw new RuntimeException('Database password: secret');
+        }
+    };
+    $job = new RedownloadMediaFile($libraryItem);
+
+    expect(fn () => $job->handle($redownloader))->toThrow(RuntimeException::class);
+    expect($redownloader->calls)->toBe(1);
+
+    $job->failed(new RuntimeException('Database password: secret'));
+
+    expect($libraryItem->fresh()->only(['processing_status', 'processing_error']))->toBe([
+        'processing_status' => ProcessingStatusType::FAILED,
+        'processing_error' => 'Media redownload failed.',
+    ]);
+});
+
 it('logs a generic error when redownload exception contains credentials', function () {
     $user = User::factory()->create();
     $url = 'https://user:secret@example.com/audio.mp3?token=secret';

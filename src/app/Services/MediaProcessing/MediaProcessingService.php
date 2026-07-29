@@ -57,7 +57,7 @@ class MediaProcessingService
                 }
             }
 
-        } catch (\Exception $e) {
+        } catch (\InvalidArgumentException $e) {
             return $this->handleProcessingError($libraryItem, $e);
         }
     }
@@ -75,7 +75,7 @@ class MediaProcessingService
 
             // Verify file exists
             if (! $this->storageManager->fileExists($filePath)) {
-                throw new \Exception('Temp file not found or inaccessible');
+                throw new \InvalidArgumentException('Temp file not found or inaccessible');
             }
 
             // Check for duplicates
@@ -166,7 +166,7 @@ class MediaProcessingService
                 'message' => 'Media file processed successfully.',
             ];
 
-        } catch (\Exception $e) {
+        } catch (\InvalidArgumentException $e) {
             return $this->handleProcessingError($libraryItem, $e);
         }
     }

@@ -3,7 +3,7 @@
 use App\Jobs\ProcessMediaFile;
 use App\Models\LibraryItem;
 use App\Models\User;
-use App\ProcessingStatusType;
+use App\Enums\ProcessingStatusType;
 use App\Services\MediaProcessing\MediaProcessingService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -90,4 +90,33 @@ it('updates processing status when job fails', function () {
     expect($libraryItem->processing_status)->toBe(ProcessingStatusType::FAILED);
     expect($libraryItem->processing_completed_at)->not->toBeNull();
     expect($libraryItem->processing_error)->toBe('Media processing failed.');
+});
+
+it('rethrows unexpected media processing errors and records a safe terminal failure', function () {
+    $libraryItem = LibraryItem::factory()->create(['user_id' => User::factory()]);
+    $service = new class extends MediaProcessingService
+    {
+        public int $calls = 0;
+
+        public function __construct() {}
+
+        /** @return array{success?: true, is_duplicate: bool, media_file: \App\Models\MediaFile|null, message?: string, error?: 'media_processing_failed'} */
+        public function processFromUrl(LibraryItem $libraryItem, string $sourceUrl, ?string $mediaType = null): array
+        {
+            $this->calls++;
+
+            throw new RuntimeException('Database password: secret');
+        }
+    };
+    $job = new ProcessMediaFile($libraryItem, 'https://example.com/audio.mp3');
+
+    expect(fn () => $job->handle($service))->toThrow(RuntimeException::class);
+    expect($service->calls)->toBe(1);
+
+    $job->failed(new RuntimeException('Database password: secret'));
+
+    expect($libraryItem->fresh()->only(['processing_status', 'processing_error']))->toBe([
+        'processing_status' => ProcessingStatusType::FAILED,
+        'processing_error' => 'Media processing failed.',
+    ]);
 });

@@ -40,7 +40,7 @@ class MediaDownloader
         $ip ??= $this->validateUrlSafety($url);
 
         if ($redirectDepth > 5) {
-            throw new \Exception('Too many redirects');
+            throw new \InvalidArgumentException('Too many redirects');
         }
 
         $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'mp3';
@@ -62,7 +62,13 @@ class MediaDownloader
             }
 
             if (! $response->successful()) {
-                throw new \Exception('Failed to download file: HTTP '.$response->status());
+                $exception = 'Failed to download file: HTTP '.$response->status();
+
+                if ($response->clientError() && ! in_array($response->status(), [408, 429], true)) {
+                    throw new \InvalidArgumentException($exception);
+                }
+
+                throw new \RuntimeException($exception);
             }
 
             $this->ensureWithinSizeLimit((int) $response->header('Content-Length'));
@@ -74,7 +80,7 @@ class MediaDownloader
                 $this->ensureWithinSizeLimit(strlen($body));
 
                 if (empty($body)) {
-                    throw new \Exception('Downloaded file is empty');
+                    throw new \InvalidArgumentException('Downloaded file is empty');
                 }
                 file_put_contents($absolutePath, $body);
             }
@@ -94,7 +100,7 @@ class MediaDownloader
                     return $this->downloadToTempFile($redirectUrl, $redirectDepth + 1);
                 }
 
-                throw new \Exception('Download failed: Got HTML content instead of media file');
+                throw new \InvalidArgumentException('Download failed: Got HTML content instead of media file');
             }
 
             $this->validateMediaContent($firstBytes);
@@ -146,7 +152,7 @@ class MediaDownloader
     private function ensureWithinSizeLimit(int $bytes, ?int $maxBytes = null): void
     {
         if ($bytes > ($maxBytes ?? $this->maxDownloadBytes())) {
-            throw new \RuntimeException('Download exceeds the maximum allowed file size');
+            throw new \InvalidArgumentException('Download exceeds the maximum allowed file size');
         }
     }
 
@@ -228,7 +234,7 @@ class MediaDownloader
         }
 
         if (! $isValidMedia) {
-            throw new \Exception('Content does not appear to be a valid media file');
+            throw new \InvalidArgumentException('Content does not appear to be a valid media file');
         }
     }
 

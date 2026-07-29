@@ -37,31 +37,27 @@ class ProcessYouTubeAudio implements ShouldQueue
             'library_item_id' => $this->libraryItem->id,
         ]);
 
-        try {
-            $result = $processingService->processYouTubeUrl($this->libraryItem, $this->youtubeUrl, $this->libraryItem->media_type->value);
+        $result = $processingService->processYouTubeUrl($this->libraryItem, $this->youtubeUrl, $this->libraryItem->media_type->value);
 
-            if (isset($result['success']) && $result['success'] === false) {
-                Log::error('ProcessYouTubeAudio processing failed', [
-                    'library_item_id' => $this->libraryItem->id,
-                    'error' => 'YouTube processing failed',
-                ]);
-            } else {
-                Log::info('ProcessYouTubeAudio completed successfully', [
-                    'library_item_id' => $this->libraryItem->id,
-                    'is_duplicate' => $result['is_duplicate'] ?? false,
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('ProcessYouTubeAudio job exception', [
+        if (isset($result['success']) && $result['success'] === false) {
+            Log::error('ProcessYouTubeAudio processing failed', [
                 'library_item_id' => $this->libraryItem->id,
                 'error' => 'YouTube processing failed',
             ]);
-
-            $this->libraryItem->update([
-                'processing_status' => ProcessingStatusType::FAILED,
-                'processing_completed_at' => now(),
-                'processing_error' => 'YouTube processing failed: '.$e->getMessage(),
+        } else {
+            Log::info('ProcessYouTubeAudio completed successfully', [
+                'library_item_id' => $this->libraryItem->id,
+                'is_duplicate' => $result['is_duplicate'] ?? false,
             ]);
         }
+    }
+
+    public function failed(?\Throwable $exception): void
+    {
+        $this->libraryItem->update([
+            'processing_status' => ProcessingStatusType::FAILED,
+            'processing_completed_at' => now(),
+            'processing_error' => 'YouTube processing failed.',
+        ]);
     }
 }

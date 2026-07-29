@@ -44,4 +44,13 @@ class ProcessMediaFile implements ShouldQueue
             ]);
         }
     }
+
+    public function failed(?\Throwable $exception): void
+    {
+        $this->libraryItem->update([
+            'processing_status' => ProcessingStatusType::FAILED,
+            'processing_completed_at' => now(),
+            'processing_error' => 'Media processing failed.',
+        ]);
+    }
 }

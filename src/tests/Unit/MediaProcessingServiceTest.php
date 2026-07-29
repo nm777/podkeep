@@ -165,7 +165,7 @@ function mediaProcessingService(
         public function validate(string $filePath): array
         {
             if ($this->validationFails) {
-                throw new RuntimeException($this->validationError);
+                throw new InvalidArgumentException($this->validationError);
             }
 
             return [];

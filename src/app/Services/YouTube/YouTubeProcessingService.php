@@ -116,23 +116,6 @@ class YouTubeProcessingService
                 'message' => $result['message'],
             ];
 
-        } catch (\Exception $e) {
-            Log::error('YouTube processing failed', [
-                'library_item_id' => $libraryItem->id,
-                'video_id' => $videoId,
-                'error' => 'YouTube processing failed',
-            ]);
-
-            $libraryItem->update([
-                'processing_status' => ProcessingStatusType::FAILED,
-                'processing_completed_at' => now(),
-                'processing_error' => 'YouTube processing failed: '.$e->getMessage(),
-            ]);
-
-            return [
-                'success' => false,
-                'error' => 'YouTube processing failed: '.$e->getMessage(),
-            ];
         } finally {
             // Clean up temp directory
             $this->downloader->cleanupTempDirectory($tempDir);

@@ -78,7 +78,7 @@ class YouTubeDownloader
                 'error' => 'Audio download failed',
             ]);
 
-            return null;
+            throw $e;
         }
     }
 
@@ -122,7 +122,7 @@ class YouTubeDownloader
                 'error' => 'Video download failed',
             ]);
 
-            return null;
+            throw $e;
         }
     }
 

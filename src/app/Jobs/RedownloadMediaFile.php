@@ -52,21 +52,28 @@ class RedownloadMediaFile implements ShouldQueue
 
         try {
             $result = $redownloader->redownload($libraryItem);
-
-            $libraryItem->update([
-                'processing_status' => ProcessingStatusType::COMPLETED,
-                'processing_completed_at' => now(),
-                'processing_error' => null,
-            ]);
-
-            Log::info('Media file redownloaded successfully', [
-                'library_item_id' => $libraryItem->id,
-                'media_file_id' => $libraryItem->mediaFile->id,
-                'hash_changed' => $result['hash_changed'],
-            ]);
-        } catch (\Exception $e) {
+        } catch (\InvalidArgumentException $e) {
             $this->failRedownload();
+
+            return;
         }
+
+        $libraryItem->update([
+            'processing_status' => ProcessingStatusType::COMPLETED,
+            'processing_completed_at' => now(),
+            'processing_error' => null,
+        ]);
+
+        Log::info('Media file redownloaded successfully', [
+            'library_item_id' => $libraryItem->id,
+            'media_file_id' => $libraryItem->mediaFile->id,
+            'hash_changed' => $result['hash_changed'],
+        ]);
+    }
+
+    public function failed(?\Throwable $exception): void
+    {
+        $this->failRedownload();
     }
 
     private function failRedownload(): void

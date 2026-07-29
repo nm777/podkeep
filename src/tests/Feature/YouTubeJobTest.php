@@ -3,7 +3,7 @@
 use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
 use App\Models\User;
-use App\ProcessingStatusType;
+use App\Enums\ProcessingStatusType;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use App\Services\YouTube\YouTubeDownloader;
 use App\Services\YouTube\YouTubeFileProcessor;
@@ -12,7 +12,7 @@ use App\Services\YouTube\YouTubeProcessingService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-it('logs only safe context when a YouTube job fails', function () {
+it('rethrows unexpected YouTube errors and records a safe terminal failure', function () {
     Storage::fake('public');
 
     $user = User::factory()->create();
@@ -28,21 +28,19 @@ it('logs only safe context when a YouTube job fails', function () {
     Log::shouldReceive('info')->once()->with('ProcessYouTubeAudio job started', [
         'library_item_id' => $libraryItem->id,
     ]);
-    Log::shouldReceive('error')->once()->with('ProcessYouTubeAudio job exception', [
-        'library_item_id' => $libraryItem->id,
-        'error' => 'YouTube processing failed',
-    ]);
-
-    // Mock the processing service to avoid actual YouTube processing
     $processingService = mock(YouTubeProcessingService::class);
     $processingService->shouldReceive('processYouTubeUrl')
         ->once()
         ->andThrow(new Exception("Test error: {$sensitiveUrl}"));
 
-    $job->handle($processingService);
+    expect(fn () => $job->handle($processingService))->toThrow(Exception::class);
+
+    $job->failed(new Exception("Test error: {$sensitiveUrl}"));
 
     $libraryItem->refresh();
-    $this->assertStringContainsString($sensitiveUrl, $libraryItem->processing_error);
+    expect($libraryItem->processing_status)->toBe(ProcessingStatusType::FAILED);
+    $this->assertSame('YouTube processing failed.', $libraryItem->processing_error);
+    $this->assertStringNotContainsString($sensitiveUrl, $libraryItem->processing_error);
 });
 
 it('does not log sensitive YouTube processing data', function () {
