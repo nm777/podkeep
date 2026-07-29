@@ -27,7 +27,12 @@ class FileUploadProcessor
         $tempPath = $file->store('temp-uploads', 'public');
         $userId = auth()->id();
 
-        $tempLibraryItem = $this->libraryItemFactory->createFromValidated($validated, $sourceType, null, $userId);
+        $tempLibraryItem = $this->libraryItemFactory->createFromValidated(
+            array_merge($validated, ['feed_ids' => []]),
+            $sourceType,
+            null,
+            $userId
+        );
 
         $duplicateResult = $this->duplicateProcessor->processFileDuplicate($tempLibraryItem, $tempPath);
 
