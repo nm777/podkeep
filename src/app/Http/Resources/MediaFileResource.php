@@ -4,7 +4,9 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\URL;
 
+/** @mixin \App\Models\MediaFile */
 class MediaFileResource extends JsonResource
 {
     /**
@@ -16,7 +18,7 @@ class MediaFileResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'public_url' => $this->public_url,
+            'public_url' => URL::temporarySignedRoute('files.show', now()->addHour(), ['file_path' => $this->file_path]),
             'file_hash' => $this->file_hash,
             'mime_type' => $this->mime_type,
             'filesize' => $this->filesize,

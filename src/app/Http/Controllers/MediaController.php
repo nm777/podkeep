@@ -15,6 +15,10 @@ class MediaController extends Controller
     {
         $mediaFile = MediaFile::where('file_path', $file_path)->firstOrFail();
 
+        if ($request->hasValidSignature()) {
+            return $this->serveMediaFile($file_path, $mediaFile);
+        }
+
         // Check if this is for an RSS feed (public or private with token)
         $feedToken = $request->query('feed_token');
 

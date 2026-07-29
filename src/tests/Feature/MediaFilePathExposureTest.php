@@ -13,7 +13,9 @@ it('media file resource includes public_url but not file_path', function () {
 
     expect($data)->not->toHaveKey('file_path');
     expect($data)->toHaveKey('public_url');
-    expect($data['public_url'])->toBe($mediaFile->public_url);
+    expect($data['public_url'])->toContain('/files/'.$mediaFile->file_path)
+        ->toContain('expires=')
+        ->toContain('signature=');
 });
 
 it('library item resource does not leak file_path through nested media_file', function () {

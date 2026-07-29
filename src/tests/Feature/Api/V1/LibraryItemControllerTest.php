@@ -3,11 +3,13 @@
 use App\Models\Feed;
 use App\Models\FeedItem;
 use App\Models\LibraryItem;
+use App\Models\MediaFile;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 describe('media upload', function () {
     it('uploads a media file successfully', function () {
@@ -170,6 +172,46 @@ describe('library listing', function () {
                 ],
             ],
         ]);
+    });
+
+    it('returns a signed files URL that serves media without authentication', function () {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $mediaFile = MediaFile::factory()->create([
+            'user_id' => $user->id,
+            'file_path' => 'media/api-audio.mp3',
+        ]);
+        Storage::disk('public')->put($mediaFile->file_path, 'fake audio content');
+        $item = LibraryItem::factory()->create([
+            'user_id' => $user->id,
+            'media_file_id' => $mediaFile->id,
+        ]);
+
+        $mediaUrl = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/library/'.$item->id)
+            ->assertOk()
+            ->json('data.media_file.public_url');
+
+        expect($mediaUrl)->toContain('/files/'.$mediaFile->file_path)
+            ->toContain('expires=')
+            ->toContain('signature=');
+
+        $this->get($mediaUrl)->assertOk();
+    });
+
+    it('rejects tampered and expired signed media URLs', function () {
+        Storage::fake('public');
+
+        $mediaFile = MediaFile::factory()->create(['file_path' => 'media/signed-audio.mp3']);
+        Storage::disk('public')->put($mediaFile->file_path, 'fake audio content');
+
+        $url = URL::temporarySignedRoute('files.show', now()->addHour(), ['file_path' => $mediaFile->file_path]);
+        $expiredUrl = URL::temporarySignedRoute('files.show', now()->subSecond(), ['file_path' => $mediaFile->file_path]);
+
+        $this->get($url.'&tampered=1')->assertForbidden();
+        $this->get($expiredUrl)->assertForbidden();
     });
 });
 
