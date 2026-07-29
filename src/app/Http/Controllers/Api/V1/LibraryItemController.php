@@ -10,7 +10,6 @@ use App\Services\MediaFileRetirementService;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 
 class LibraryItemController extends Controller
 {
@@ -72,10 +71,6 @@ class LibraryItemController extends Controller
 
         $libraryItem->update($validated);
 
-        foreach ($libraryItem->feedItems()->pluck('feed_id') as $feedId) {
-            Cache::forget("rss.{$feedId}");
-        }
-
         return (new LibraryItemResource($libraryItem))
             ->response()
             ->setStatusCode(200);
@@ -90,16 +85,10 @@ class LibraryItemController extends Controller
 
         $mediaFile = $libraryItem->mediaFile;
 
-        $feedIds = $libraryItem->feedItems()->pluck('feed_id');
-
         $libraryItem->delete();
 
         if ($mediaFile) {
             MediaFileRetirementService::retire($mediaFile);
-        }
-
-        foreach ($feedIds as $feedId) {
-            Cache::forget("rss.{$feedId}");
         }
 
         return response()->json(null, 204);

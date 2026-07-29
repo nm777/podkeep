@@ -17,7 +17,7 @@ class LibraryItem extends Model
     protected static function booted(): void
     {
         static::updated(function (LibraryItem $libraryItem): void {
-            if (! $libraryItem->wasChanged('media_file_id') || ! $libraryItem->media_file_id) {
+            if (! $libraryItem->wasChanged(['media_file_id', 'title', 'description'])) {
                 return;
             }
 
@@ -25,6 +25,8 @@ class LibraryItem extends Model
         });
 
         static::deleting(function (LibraryItem $libraryItem): void {
+            $libraryItem->forgetRssCache();
+
             if ($libraryItem->temp_file_path) {
                 Storage::disk('public')->delete($libraryItem->temp_file_path);
             }

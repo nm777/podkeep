@@ -52,11 +52,6 @@ class LibraryController extends Controller
 
         $mediaFile = $libraryItem->mediaFile;
 
-        $feedIds = $libraryItem->feedItems()->pluck('feed_id');
-        foreach ($feedIds as $feedId) {
-            Cache::forget("rss.{$feedId}");
-        }
-
         $libraryItem->delete();
 
         if ($mediaFile) {
@@ -140,10 +135,6 @@ class LibraryController extends Controller
         $validated = $request->validated();
 
         $libraryItem->update($validated);
-
-        foreach ($libraryItem->feedItems()->pluck('feed_id') as $feedId) {
-            Cache::forget("rss.{$feedId}");
-        }
 
         return back()->with('success', 'Media file details updated successfully.');
     }

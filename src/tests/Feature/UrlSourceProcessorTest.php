@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Feed;
+use App\Models\FeedItem;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
@@ -8,6 +9,8 @@ use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use App\Services\SourceProcessors\LibraryItemFactory;
 use App\Services\SourceProcessors\SourceStrategyInterface;
 use App\Services\SourceProcessors\UrlSourceProcessor;
+use App\Services\SourceProcessors\UrlStrategy;
+use Illuminate\Support\Facades\Cache;
 
 describe('UrlSourceProcessor', function () {
     beforeEach(function () {
@@ -141,6 +144,42 @@ describe('UrlSourceProcessor', function () {
         );
 
         expect($existingItem->fresh()->feedItems()->count())->toBe(1);
+    });
+
+    it('invalidates every attached RSS cache when updating a duplicate URL item', function () {
+        $mediaFile = MediaFile::factory()->create(['user_id' => $this->user->id]);
+        $existingItem = LibraryItem::factory()->create([
+            'user_id' => $this->user->id,
+            'media_file_id' => $mediaFile->id,
+            'source_url' => 'https://example.com/dup.mp3',
+        ]);
+        $feeds = Feed::factory()->count(2)->create(['user_id' => $this->user->id, 'is_public' => true]);
+
+        foreach ($feeds as $feed) {
+            FeedItem::factory()->create([
+                'feed_id' => $feed->id,
+                'library_item_id' => $existingItem->id,
+            ]);
+
+            $this->get(route('rss.show', ['user_guid' => $feed->user_guid, 'feed_slug' => $feed->slug]))->assertOk();
+            expect(Cache::has("rss.{$feed->id}"))->toBeTrue();
+        }
+
+        (new UrlSourceProcessor(
+            new LibraryItemFactory,
+            app(UrlStrategy::class),
+            app(UnifiedDuplicateProcessor::class),
+        ))->process(
+            ['title' => 'Updated Title', 'description' => 'Updated Description'],
+            'url',
+            'https://example.com/dup.mp3'
+        );
+
+        expect($existingItem->fresh()->title)->toBe('Updated Title');
+
+        foreach ($feeds as $feed) {
+            expect(Cache::has("rss.{$feed->id}"))->toBeFalse();
+        }
     });
 
     it('does not include source URLs in broken-item cleanup logs', function () {
