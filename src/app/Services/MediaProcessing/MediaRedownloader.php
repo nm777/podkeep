@@ -3,6 +3,7 @@
 namespace App\Services\MediaProcessing;
 
 use App\Models\LibraryItem;
+use App\Models\MediaFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -50,8 +51,28 @@ class MediaRedownloader
             $oldHash = $mediaFile->file_hash;
 
             $hashChanged = $storageInfo['file_hash'] !== $oldHash;
+            $hasOtherLibraryItems = $mediaFile->libraryItems()
+                ->whereKeyNot($libraryItem->id)
+                ->exists();
 
-            DB::transaction(function () use ($mediaFile, $storageInfo, $metadata, $hashChanged): void {
+            DB::transaction(function () use ($libraryItem, $mediaFile, $storageInfo, $metadata, $hashChanged, $hasOtherLibraryItems): void {
+                if ($hashChanged && $hasOtherLibraryItems) {
+                    $replacement = MediaFile::findByHash($storageInfo['file_hash'])
+                        ?? MediaFile::create([
+                            'user_id' => $libraryItem->user_id,
+                            'file_path' => $storageInfo['file_path'],
+                            'file_hash' => $storageInfo['file_hash'],
+                            'filesize' => $storageInfo['filesize'],
+                            'mime_type' => $metadata['mime_type'],
+                            'duration' => $metadata['duration'] ?? null,
+                            'source_url' => $mediaFile->source_url,
+                        ]);
+
+                    $libraryItem->update(['media_file_id' => $replacement->id]);
+
+                    return;
+                }
+
                 $mediaFile->update([
                     'file_path' => $storageInfo['file_path'],
                     'file_hash' => $storageInfo['file_hash'],
@@ -72,7 +93,8 @@ class MediaRedownloader
                 }
             });
 
-            if ($hashChanged && $fileExisted && $oldFilePath !== $storageInfo['file_path']) {
+            if ($hashChanged && $fileExisted && $oldFilePath !== $storageInfo['file_path']
+                && ! MediaFile::where('file_path', $oldFilePath)->exists()) {
                 Storage::disk('public')->delete($oldFilePath);
             }
 
