@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\MediaFile;
+use App\Services\MediaFileRetirementService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,10 +52,20 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        $mediaFileIds = $user->libraryItems()
+            ->whereNotNull('media_file_id')
+            ->pluck('media_file_id')
+            ->unique();
 
         Auth::logout();
 
         $user->delete();
+
+        MediaFile::whereKey($mediaFileIds)->each(
+            function (MediaFile $mediaFile): void {
+                MediaFileRetirementService::retire($mediaFile);
+            }
+        );
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
