@@ -50,8 +50,33 @@ test('cleans converted and source temporary files when processing fails', functi
 
     $result = $service->processFromUrl($libraryItem, 'https://example.com/video.mp4', 'audio');
 
-    expect($result['error'])->toBe('Invalid audio');
+    expect($result['error'])->toBe('media_processing_failed');
     Storage::disk('public')->assertMissing([$sourcePath, $convertedPath]);
+});
+
+test('does not persist or return exception text', function () {
+    $sourcePath = 'temp-downloads/video.mp4';
+    $convertedPath = 'temp-downloads/video.mp3';
+    $sensitiveError = 'Invalid audio from https://user:secret@example.com/audio.mp3?token=secret';
+
+    Storage::disk('public')->put($sourcePath, hex2bin('000000186674797069736f6d0000020069736f6d69736f32617663316d703431'));
+    Storage::disk('public')->put($convertedPath, 'converted audio');
+
+    $service = mediaProcessingService($sourcePath, $convertedPath, null, null, true, $sensitiveError);
+    $libraryItem = LibraryItem::factory()->create(['user_id' => User::factory()]);
+
+    $result = $service->processFromUrl($libraryItem, 'https://example.com/video.mp4', 'audio');
+
+    $libraryItem->refresh();
+
+    $this->assertSame('Media processing failed.', $libraryItem->processing_error);
+    $this->assertStringNotContainsString($sensitiveError, (string) $libraryItem->processing_error);
+    $this->assertSame([
+        'is_duplicate' => false,
+        'media_file' => null,
+        'error' => 'media_processing_failed',
+        'message' => 'Media processing failed.',
+    ], $result);
 });
 
 function mediaProcessingService(
@@ -60,6 +85,7 @@ function mediaProcessingService(
     ?string $hash,
     ?string $content,
     bool $validationFails = false,
+    string $validationError = 'Invalid audio',
 ): MediaProcessingService {
     $downloader = new class($sourcePath) extends MediaDownloader
     {
@@ -131,15 +157,15 @@ function mediaProcessingService(
         }
     };
 
-    $validator = new class($validationFails) extends MediaValidator
+    $validator = new class($validationFails, $validationError) extends MediaValidator
     {
-        public function __construct(private bool $validationFails) {}
+        public function __construct(private bool $validationFails, private string $validationError) {}
 
         /** @return array{} */
         public function validate(string $filePath): array
         {
             if ($this->validationFails) {
-                throw new RuntimeException('Invalid audio');
+                throw new RuntimeException($this->validationError);
             }
 
             return [];

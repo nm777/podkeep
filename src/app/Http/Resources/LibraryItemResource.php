@@ -32,7 +32,7 @@ class LibraryItemResource extends JsonResource
             'processing_status_display' => $this->processing_status_display,
             'processing_started_at' => $this->processing_started_at,
             'processing_completed_at' => $this->processing_completed_at,
-            'processing_error' => $this->processing_error,
+            'processing_error' => $this->processing_error ? 'Media processing failed.' : null,
             'is_processing' => $this->isProcessing(),
             'is_pending' => $this->isPending(),
             'has_completed' => $this->hasCompleted(),

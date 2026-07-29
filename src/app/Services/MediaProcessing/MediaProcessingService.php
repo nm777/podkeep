@@ -191,14 +191,14 @@ class MediaProcessingService
         $libraryItem->update([
             'processing_status' => ProcessingStatusType::FAILED,
             'processing_completed_at' => now(),
-            'processing_error' => 'Processing failed: '.$e->getMessage(),
+            'processing_error' => 'Media processing failed.',
         ]);
 
         return [
             'is_duplicate' => false,
             'media_file' => null,
-            'error' => $e->getMessage(),
-            'message' => 'Processing failed: '.$e->getMessage(),
+            'error' => 'media_processing_failed',
+            'message' => 'Media processing failed.',
         ];
     }
 }

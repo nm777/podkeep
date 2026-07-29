@@ -2,6 +2,7 @@
 
 use App\Services\MediaProcessing\MediaDownloader;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -44,6 +45,20 @@ test('throws exception for failed http request', function () {
 
     expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
         ->toThrow(Exception::class, 'Failed to download file: HTTP 404');
+});
+
+test('logs a generic error when a download exception contains credentials', function () {
+    $url = 'https://user:secret@example.com/audio.mp3?token=secret';
+
+    Http::fake(fn () => throw new RuntimeException("Download failed: {$url}"));
+
+    Log::shouldReceive('error')->once()->with('Media download failed', [
+        'error_code' => 'media_download_failed',
+        'message' => 'Media download failed.',
+    ]);
+
+    expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
+        ->toThrow(RuntimeException::class, "Download failed: {$url}");
 });
 
 test('throws exception for empty content', function () {

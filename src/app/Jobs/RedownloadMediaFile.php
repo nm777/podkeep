@@ -45,7 +45,7 @@ class RedownloadMediaFile implements ShouldQueue
         $libraryItem = $this->libraryItem->refresh();
 
         if (! $libraryItem->mediaFile || ! $libraryItem->mediaFile->source_url) {
-            $this->failRedownload('No source URL available for this media file');
+            $this->failRedownload();
 
             return;
         }
@@ -65,21 +65,22 @@ class RedownloadMediaFile implements ShouldQueue
                 'hash_changed' => $result['hash_changed'],
             ]);
         } catch (\Exception $e) {
-            $this->failRedownload($e->getMessage());
+            $this->failRedownload();
         }
     }
 
-    private function failRedownload(string $error): void
+    private function failRedownload(): void
     {
         $this->libraryItem->update([
             'processing_status' => ProcessingStatusType::FAILED,
             'processing_completed_at' => now(),
-            'processing_error' => $error,
+            'processing_error' => 'Media redownload failed.',
         ]);
 
         Log::error('Media redownload job failed', [
             'library_item_id' => $this->libraryItem->id,
-            'error' => $error,
+            'error_code' => 'media_redownload_failed',
+            'message' => 'Media redownload failed.',
         ]);
     }
 }

@@ -168,7 +168,7 @@ it('fails when JavaScript redirect cannot be resolved', function () {
     $libraryItem->refresh();
 
     expect($libraryItem->processing_status)->toBe(ProcessingStatusType::FAILED);
-    expect($libraryItem->processing_error)->toContain('Failed to download file: HTTP 404');
+    expect($libraryItem->processing_error)->toBe('Media processing failed.');
 });
 
 it('handles JavaScript redirect with URL substring replacement pattern', function () {

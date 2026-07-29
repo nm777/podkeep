@@ -24,8 +24,8 @@ class MediaDownloader
             return $this->downloadToTempFile($url, ip: $ip);
         } catch (\Exception $e) {
             Log::error('Media download failed', [
-                'url' => $url,
-                'error' => $e->getMessage(),
+                'error_code' => 'media_download_failed',
+                'message' => 'Media download failed.',
             ]);
 
             throw $e;

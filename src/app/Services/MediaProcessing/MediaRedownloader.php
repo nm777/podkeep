@@ -122,8 +122,8 @@ class MediaRedownloader
             Log::error('Media redownload failed', [
                 'library_item_id' => $libraryItem->id,
                 'media_file_id' => $mediaFile->id,
-                'source_url' => $mediaFile->source_url,
-                'error' => $e->getMessage(),
+                'error_code' => 'media_redownload_failed',
+                'message' => 'Media redownload failed.',
             ]);
 
             throw $e;

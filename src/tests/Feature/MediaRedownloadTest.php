@@ -16,6 +16,7 @@ use App\Services\MediaProcessing\MediaValidator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
@@ -495,7 +496,42 @@ it('returns error when source url returns 404', function () {
 
     $libraryItem->refresh();
     expect($libraryItem->processing_status->value)->toBe('failed');
-    expect($libraryItem->processing_error)->toContain('Failed to download file');
+    expect($libraryItem->processing_error)->toBe('Media redownload failed.');
+});
+
+it('logs a generic error when redownload exception contains credentials', function () {
+    $user = User::factory()->create();
+    $url = 'https://user:secret@example.com/audio.mp3?token=secret';
+    $mediaFile = MediaFile::factory()->create(['user_id' => $user->id, 'source_url' => $url]);
+    $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id, 'media_file_id' => $mediaFile->id]);
+    $downloader = new class($url) extends MediaDownloader
+    {
+        public bool $called = false;
+
+        public function __construct(private string $url) {}
+
+        public function downloadFromUrl(string $url): string
+        {
+            $this->called = true;
+
+            throw new RuntimeException("Download failed: {$this->url}");
+        }
+    };
+
+    Log::shouldReceive('error')->once()->with('Media redownload failed', [
+        'library_item_id' => $libraryItem->id,
+        'media_file_id' => $mediaFile->id,
+        'error_code' => 'media_redownload_failed',
+        'message' => 'Media redownload failed.',
+    ]);
+
+    expect(fn () => new MediaRedownloader(
+        $downloader,
+        app(MediaStorageManager::class),
+        app(MediaValidator::class),
+    )->redownload($libraryItem))->toThrow(RuntimeException::class, "Download failed: {$url}");
+
+    $this->assertTrue($downloader->called);
 });
 
 it('dispatches process youtube audio job for youtube items', function () {

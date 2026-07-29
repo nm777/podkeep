@@ -89,5 +89,5 @@ it('updates processing status when job fails', function () {
 
     expect($libraryItem->processing_status)->toBe(ProcessingStatusType::FAILED);
     expect($libraryItem->processing_completed_at)->not->toBeNull();
-    expect($libraryItem->processing_error)->toContain('Failed to download file');
+    expect($libraryItem->processing_error)->toBe('Media processing failed.');
 });
