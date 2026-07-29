@@ -29,5 +29,9 @@ su-exec www-data php artisan view:clear
 su-exec www-data php artisan config:clear
 su-exec www-data php artisan cache:clear
 
-# Run the main process (php-fpm starts as root, drops to www-data via pool config)
-exec "$@"
+# PHP-FPM starts as root and drops to www-data through its pool configuration.
+if [ "$1" = "php-fpm" ]; then
+    exec "$@"
+fi
+
+exec su-exec www-data "$@"

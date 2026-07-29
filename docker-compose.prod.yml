@@ -104,8 +104,7 @@ services:
     working_dir: /var/www/html
     volumes:
       - podcast-storage:/var/www/html/storage
-    entrypoint: ["sh", "-c"]
-    command: ["echo '* * * * * /usr/local/bin/php /var/www/html/artisan schedule:run >> /dev/null 2>&1' > /etc/crontabs/root && chmod 600 /etc/crontabs/root && exec crond -f -l 8"]
+    command: php artisan schedule:work
     depends_on:
       app:
         condition: service_healthy
