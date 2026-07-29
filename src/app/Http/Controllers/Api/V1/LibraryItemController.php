@@ -39,12 +39,6 @@ class LibraryItemController extends Controller
         $sourceType = $request->input('source_type', $request->hasFile('file') ? 'upload' : 'url');
         $sourceUrl = $request->input('source_url', $request->input('url'));
 
-        if ($redirectResponse = SourceProcessorFactory::validate($sourceType, $sourceUrl)) {
-            return response()->json([
-                'message' => $redirectResponse->getSession()->get('error'),
-            ], 422);
-        }
-
         $processor = SourceProcessorFactory::create($sourceType);
         [$libraryItem, $message] = $processor->process($request, $validated, $sourceType, $sourceUrl);
 

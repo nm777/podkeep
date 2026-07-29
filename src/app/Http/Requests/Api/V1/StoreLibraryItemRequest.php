@@ -3,9 +3,11 @@
 namespace App\Http\Requests\Api\V1;
 
 use App\Enums\MediaType;
+use App\Services\YouTubeUrlValidator;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreLibraryItemRequest extends FormRequest
 {
@@ -37,5 +39,24 @@ class StoreLibraryItemRequest extends FormRequest
             'feed_ids.*' => ['integer', Rule::exists('feeds', 'id')->where('user_id', $this->user()?->id)],
             'published_at' => ['nullable', 'date'],
         ];
+    }
+
+    /**
+     * @return array<int, \Closure(Validator): void>
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            if ($this->input('source_type') !== 'youtube') {
+                return;
+            }
+
+            $urlField = $this->filled('source_url') ? 'source_url' : 'url';
+            $sourceUrl = $this->input($urlField);
+
+            if (is_string($sourceUrl) && ! YouTubeUrlValidator::isValidYouTubeUrl($sourceUrl)) {
+                $validator->errors()->add($urlField, 'Invalid YouTube URL');
+            }
+        }];
     }
 }

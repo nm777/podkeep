@@ -159,6 +159,38 @@ describe('media via URL', function () {
     });
 });
 
+describe('media via YouTube URL', function () {
+    it('returns validation errors for an invalid YouTube source URL', function () {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/library', [
+                'title' => 'Invalid YouTube URL',
+                'source_type' => 'youtube',
+                'source_url' => 'https://example.com/not-youtube',
+            ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['source_url' => 'Invalid YouTube URL']);
+    });
+
+    it('returns validation errors when YouTube uses the URL fallback', function () {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/library', [
+                'title' => 'Invalid YouTube URL',
+                'source_type' => 'youtube',
+                'url' => 'https://example.com/not-youtube.mp3',
+            ]);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['url' => 'Invalid YouTube URL']);
+    });
+});
+
 describe('library listing', function () {
     it('lists only the authenticated users items', function () {
         $userA = User::factory()->create();
