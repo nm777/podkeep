@@ -3,6 +3,7 @@
 use App\Enums\ProcessingStatusType;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Jobs\RedownloadMediaFile;
+use App\Jobs\TranscribeMediaFile;
 use App\Models\Chapter;
 use App\Models\Feed;
 use App\Models\FeedItem;
@@ -13,6 +14,7 @@ use App\Services\MediaProcessing\MediaDownloader;
 use App\Services\MediaProcessing\MediaRedownloader;
 use App\Services\MediaProcessing\MediaStorageManager;
 use App\Services\MediaProcessing\MediaValidator;
+use App\Services\Transcription\WhisperClient;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -199,6 +201,52 @@ it('updates media file when content has changed', function () {
 
     Storage::disk('public')->assertMissing('media/'.$oldHash.'.mp3');
     Storage::disk('public')->assertExists('media/'.$newHash.'.mp3');
+});
+
+it('prevents an old transcription job from checkpointing after an in-place redownload', function () {
+    $user = User::factory()->create();
+    $oldContent = 'RIFFfake audio content';
+    $oldHash = hash('sha256', $oldContent);
+
+    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'file_hash' => $oldHash,
+        'source_url' => 'https://example.com/new-audio.mp3',
+        'duration' => 600,
+    ]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+    $whisper = new class($libraryItem) extends WhisperClient
+    {
+        public function __construct(private LibraryItem $libraryItem) {}
+
+        public function chunk(string $source, int $chunkSeconds): array
+        {
+            return ['dir' => '/tmp/fake', 'segments' => [['path' => '/tmp/c0.wav', 'offset' => 0]]];
+        }
+
+        public function transcribeFile(string $wavPath): array
+        {
+            app(MediaRedownloader::class)->redownload($this->libraryItem);
+
+            return [['start' => 0, 'end' => 5, 'text' => 'stale checkpoint']];
+        }
+
+        public function cleanupChunks(string $dir): void {}
+    };
+
+    (new TranscribeMediaFile($mediaFile))->handle($whisper);
+
+    expect($mediaFile->fresh()->only(['chapter_generation_version', 'transcript', 'chapter_generation_status']))->toBe([
+        'chapter_generation_version' => 1,
+        'transcript' => null,
+        'chapter_generation_status' => null,
+    ]);
 });
 
 it('evicts cached RSS when an in-place redownload changes the enclosure path', function () {

@@ -80,6 +80,7 @@ class MediaRedownloader
                     'mime_type' => $metadata['mime_type'],
                     'duration' => $metadata['duration'] ?? null,
                     ...($hashChanged ? [
+                        'chapter_generation_version' => DB::raw('chapter_generation_version + 1'),
                         'transcript' => null,
                         'chapter_generation_status' => null,
                         'chapter_proposal' => null,
