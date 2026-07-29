@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\ProcessingStatusType;
 use App\Jobs\ProcessMediaFile;
+use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
@@ -56,6 +57,9 @@ class RetryPendingProcessing extends Command
 
             if ($item->temp_file_path && Storage::disk('public')->exists($item->temp_file_path)) {
                 ProcessMediaFile::dispatch($item, null, $item->temp_file_path);
+                $redispatched++;
+            } elseif ($item->source_type === 'youtube' && $item->source_url) {
+                ProcessYouTubeAudio::dispatch($item, $item->source_url);
                 $redispatched++;
             } elseif ($item->source_url) {
                 ProcessMediaFile::dispatch($item, $item->source_url, null);
