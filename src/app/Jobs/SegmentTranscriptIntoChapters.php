@@ -29,8 +29,11 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
         $transcript = $mediaFile->transcript ?? [];
         $transcriptHash = md5(json_encode($transcript));
 
-        // Idempotent: chapters already exist for this exact transcript, so skip.
-        if ($mediaFile->chapter_proposal_for_hash === $transcriptHash && $mediaFile->chapters()->exists()) {
+        // Idempotent: chapters already exist for this transcript, including after it was cleared on success.
+        if ($mediaFile->chapters()->exists() && (
+            $mediaFile->chapter_proposal_for_hash === $transcriptHash ||
+            ($mediaFile->chapter_generation_status === 'completed' && $mediaFile->transcript === null && $mediaFile->chapter_proposal_for_hash !== null)
+        )) {
             $mediaFile->update(['chapter_generation_status' => 'completed']);
 
             return;
@@ -53,6 +56,8 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
                 }
 
                 $mediaFile->update([
+                    'transcript' => null,
+                    'chapter_proposal' => null,
                     'chapter_proposal_for_hash' => $transcriptHash,
                     'chapter_generation_status' => 'completed',
                     'chapter_generation_error' => null,

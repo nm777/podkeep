@@ -17,6 +17,9 @@ class MediaFile extends Model
 
     protected $hidden = [
         'source_url',
+        'transcript',
+        'chapter_proposal',
+        'chapter_generation_error',
     ];
 
     protected $fillable = [

@@ -8,6 +8,20 @@ use App\Services\LlmClient;
 use App\Services\Transcription\WhisperClient;
 use Illuminate\Support\Facades\Http;
 
+it('hides transcript generation data from media file serialization', function () {
+    $mediaFile = MediaFile::factory()->create([
+        'transcript' => [['start' => 0, 'end' => 5, 'text' => 'Private transcript.']],
+        'chapter_proposal' => [['start_time' => 0, 'title' => 'Private proposal']],
+        'chapter_generation_error' => 'Private error',
+    ]);
+
+    $serialized = $mediaFile->toArray();
+
+    $this->assertArrayNotHasKey('transcript', $serialized);
+    $this->assertArrayNotHasKey('chapter_proposal', $serialized);
+    $this->assertArrayNotHasKey('chapter_generation_error', $serialized);
+});
+
 it('transcribes chunked audio and offsets each chunk by its start time', function () {
     $this->app->instance(WhisperClient::class, new class extends WhisperClient
     {
@@ -161,9 +175,18 @@ it('writes generated chapters directly to the chapters table (not a proposal)', 
 
     $fresh = $mediaFile->fresh();
     expect($fresh->chapter_generation_status)->toBe('completed');
+    expect($fresh->transcript)->toBeNull();
+    expect($fresh->chapter_proposal)->toBeNull();
+    expect($fresh->chapter_proposal_for_hash)->toBe(md5(json_encode([
+        ['start' => 0, 'end' => 5, 'text' => 'Hello world.'],
+    ])));
     $chapters = Chapter::where('media_file_id', $mediaFile->id)->get();
     expect($chapters)->toHaveCount(2);
     expect($chapters[0])->toMatchArray(['start_time' => 0, 'title' => 'Intro']);
+
+    dispatch_sync(new SegmentTranscriptIntoChapters($mediaFile));
+
+    Http::assertSentCount(1);
 });
 
 it('marks status failed when the LLM call fails', function () {
