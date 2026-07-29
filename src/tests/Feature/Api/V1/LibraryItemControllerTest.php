@@ -44,6 +44,34 @@ describe('media upload', function () {
         ]);
     });
 
+    it('uploads a webm video with automatic chapter generation', function () {
+        Storage::fake('public');
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $file = UploadedFile::fake()->create('test.webm', 100, 'video/webm');
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->post('/api/v1/library', [
+                'title' => 'Test Video Upload',
+                'file' => $file,
+                'media_type' => 'video',
+                'auto_generate_chapters' => true,
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.media_type', 'video');
+        $response->assertJsonPath('data.auto_generate_chapters', true);
+
+        $this->assertDatabaseHas('library_items', [
+            'user_id' => $user->id,
+            'title' => 'Test Video Upload',
+            'media_type' => 'video',
+            'auto_generate_chapters' => true,
+        ]);
+    });
+
     it('validates title is required', function () {
         Storage::fake('public');
         Queue::fake();

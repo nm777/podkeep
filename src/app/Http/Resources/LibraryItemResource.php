@@ -5,6 +5,10 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @property-read \App\Enums\MediaType|null $media_type
+ * @property-read bool $auto_generate_chapters
+ */
 class LibraryItemResource extends JsonResource
 {
     /**
@@ -20,6 +24,8 @@ class LibraryItemResource extends JsonResource
             'description' => $this->description,
             'source_type' => $this->source_type,
             'source_url' => $this->source_url,
+            'media_type' => $this->media_type?->value,
+            'auto_generate_chapters' => $this->auto_generate_chapters,
             'is_duplicate' => $this->is_duplicate,
             'duplicate_detected_at' => $this->duplicate_detected_at,
             'processing_status' => $this->processing_status?->value,
