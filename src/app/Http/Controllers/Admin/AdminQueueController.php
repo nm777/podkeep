@@ -95,9 +95,7 @@ class AdminQueueController extends Controller
 
     public function release(int $id): RedirectResponse
     {
-        DB::table('jobs')->where('id', $id)->whereNotNull('reserved_at')->update(['reserved_at' => null]);
-
-        return back()->with('success', 'Job released for re-processing.');
+        return back()->with('warning', 'Executing jobs cannot be released.');
     }
 
     public function retry(string $uuid): RedirectResponse

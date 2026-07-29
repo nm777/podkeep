@@ -100,23 +100,25 @@ it('allows an admin to cancel a pending job', function () {
     $this->assertDatabaseMissing('jobs', ['id' => $jobId]);
 });
 
-it('allows an admin to release an executing job', function () {
+it('does not release an executing job', function () {
     $admin = User::factory()->admin()->create();
+    $reservedAt = now()->timestamp;
 
     $jobId = DB::table('jobs')->insertGetId([
         'queue' => 'default',
         'payload' => json_encode(['displayName' => 'App\\Jobs\\TestJob', 'data' => []]),
         'attempts' => 1,
-        'reserved_at' => now()->timestamp,
+        'reserved_at' => $reservedAt,
         'available_at' => now()->subSeconds(60)->timestamp,
         'created_at' => now()->subSeconds(120)->timestamp,
     ]);
 
     $this->actingAs($admin)
         ->post("/admin/queue/{$jobId}/release")
-        ->assertRedirect();
+        ->assertRedirect()
+        ->assertSessionHas('warning', 'Executing jobs cannot be released.');
 
-    $this->assertDatabaseHas('jobs', ['id' => $jobId, 'reserved_at' => null]);
+    $this->assertDatabaseHas('jobs', ['id' => $jobId, 'reserved_at' => $reservedAt]);
 });
 
 it('allows an admin to retry a failed job', function () {
