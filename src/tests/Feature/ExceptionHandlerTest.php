@@ -4,6 +4,7 @@ use App\Exceptions\Handler;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 uses(RefreshDatabase::class);
@@ -46,5 +47,21 @@ describe('Exception handler', function () {
         $webRequest = Request::create('/test', 'GET');
         $webResponse = $handler->render($webRequest, new NotFoundHttpException('Test'));
         expect($webResponse->getContent())->not->toContain('"error"');
+    });
+
+    it('renders generic HTTP exceptions with their client error status', function () {
+        $handler = app(Handler::class);
+        $request = Request::create('/test', 'GET');
+        $request->headers->set('Accept', 'application/json');
+
+        $response = $handler->render($request, new HttpException(422, 'The request could not be processed.'));
+        $data = json_decode($response->getContent(), true);
+
+        expect($response->getStatusCode())->toBe(422);
+        expect($data)->toMatchArray([
+            'error' => 'HTTP Error',
+            'message' => 'The request could not be processed.',
+            'code' => 'HTTP_ERROR',
+        ]);
     });
 });

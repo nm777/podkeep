@@ -10,6 +10,7 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
@@ -122,6 +123,15 @@ class Handler extends ExceptionHandler
                 'message' => 'The given data was invalid.',
                 'code' => 'VALIDATION_FAILED',
                 'errors' => $e->errors(),
+            ];
+        } elseif ($e instanceof HttpExceptionInterface) {
+            $status = $e->getStatusCode();
+            $error = [
+                'error' => 'HTTP Error',
+                'message' => $status >= 500
+                    ? 'An unexpected error occurred. Please try again later.'
+                    : $e->getMessage(),
+                'code' => 'HTTP_ERROR',
             ];
         }
 
