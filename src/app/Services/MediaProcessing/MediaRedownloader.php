@@ -32,9 +32,17 @@ class MediaRedownloader
         }
 
         $fileExisted = $this->storageManager->fileExists($mediaFile->file_path);
+        $tempPath = null;
+        $storageInfo = null;
+        $finalPathExisted = false;
 
         try {
             $tempPath = $this->downloader->downloadFromUrl($mediaFile->source_url);
+
+            $fullPath = Storage::disk('public')->path($tempPath);
+            $metadata = $this->validator->validate($fullPath);
+            $finalPath = 'media/'.hash_file('sha256', $fullPath).'.'.pathinfo($fullPath, PATHINFO_EXTENSION);
+            $finalPathExisted = Storage::disk('public')->exists($finalPath);
 
             $storageInfo = $this->storageManager->moveTempFile($tempPath, $mediaFile->source_url);
 
@@ -42,9 +50,6 @@ class MediaRedownloader
             $oldHash = $mediaFile->file_hash;
 
             $hashChanged = $storageInfo['file_hash'] !== $oldHash;
-
-            $fullPath = Storage::disk('public')->path($storageInfo['file_path']);
-            $metadata = $this->validator->validate($fullPath);
 
             DB::transaction(function () use ($mediaFile, $storageInfo, $metadata, $hashChanged): void {
                 $mediaFile->update([
@@ -79,6 +84,14 @@ class MediaRedownloader
                 'new_hash' => $storageInfo['file_hash'],
             ];
         } catch (\Exception $e) {
+            if ($storageInfo && ! $finalPathExisted) {
+                Storage::disk('public')->delete($storageInfo['file_path']);
+            }
+
+            if ($tempPath) {
+                $this->storageManager->cleanupTempFile($tempPath);
+            }
+
             Log::error('Media redownload failed', [
                 'library_item_id' => $libraryItem->id,
                 'media_file_id' => $mediaFile->id,

@@ -7,6 +7,11 @@ use App\Models\Chapter;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\Services\MediaProcessing\MediaDownloader;
+use App\Services\MediaProcessing\MediaRedownloader;
+use App\Services\MediaProcessing\MediaStorageManager;
+use App\Services\MediaProcessing\MediaValidator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -154,6 +159,79 @@ it('updates media file when content has changed', function () {
 
     Storage::disk('public')->assertMissing('media/'.$oldHash.'.mp3');
     Storage::disk('public')->assertExists('media/'.$newHash.'.mp3');
+});
+
+it('removes a newly moved file when redownload persistence fails', function () {
+    $user = User::factory()->create();
+    $oldContent = 'RIFFfake audio content';
+    $oldHash = hash('sha256', $oldContent);
+    $newContent = 'RIFFnew audio content';
+    $newHash = hash('sha256', $newContent);
+
+    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'file_hash' => $oldHash,
+        'source_url' => 'https://example.com/new-audio.mp3',
+    ]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+
+    DB::shouldReceive('transaction')->once()->andThrow(new RuntimeException('Database unavailable'));
+
+    expect(fn () => app(MediaRedownloader::class)->redownload($libraryItem))
+        ->toThrow(RuntimeException::class, 'Database unavailable');
+
+    Storage::disk('public')->assertExists('media/'.$oldHash.'.mp3');
+    Storage::disk('public')->assertMissing('media/'.$newHash.'.mp3');
+    expect($mediaFile->fresh()->only(['file_path', 'file_hash']))->toBe([
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'file_hash' => $oldHash,
+    ]);
+});
+
+it('removes the downloaded temp file when redownload validation fails', function () {
+    $user = User::factory()->create();
+    $oldContent = 'RIFFfake audio content';
+    $oldHash = hash('sha256', $oldContent);
+
+    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'file_hash' => $oldHash,
+        'source_url' => 'https://example.com/new-audio.mp3',
+    ]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+    $validator = new class extends MediaValidator
+    {
+        /** @return array<string, mixed> */
+        public function validate(string $filePath): array
+        {
+            throw new RuntimeException('Invalid media');
+        }
+    };
+
+    expect(fn () => new MediaRedownloader(
+        app(MediaDownloader::class),
+        app(MediaStorageManager::class),
+        $validator,
+    )->redownload($libraryItem))->toThrow(RuntimeException::class, 'Invalid media');
+
+    Storage::disk('public')->assertDirectoryEmpty('temp-downloads');
+    Storage::disk('public')->assertExists('media/'.$oldHash.'.mp3');
+    expect($mediaFile->fresh()->only(['file_path', 'file_hash']))->toBe([
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'file_hash' => $oldHash,
+    ]);
 });
 
 it('restores missing media file when redownloading', function () {
