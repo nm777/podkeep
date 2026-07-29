@@ -13,7 +13,7 @@ class PruneFailedJobs extends Command
 
     public function handle(): int
     {
-        $days = (int) config('admin.failed_retention_days', 30);
+        $days = (int) config('services.admin.failed_retention_days', 30);
 
         $deleted = DB::table('failed_jobs')
             ->where('failed_at', '<', now()->subDays($days))

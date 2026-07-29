@@ -12,7 +12,7 @@ class PruneCompletedJobs extends Command
 
     public function handle(): int
     {
-        $days = (int) config('admin.completed_retention_days', 3);
+        $days = (int) config('services.admin.completed_retention_days', 3);
         $deleted = DB::table('completed_job_log')
             ->where('completed_at', '<', now()->subDays($days))
             ->delete();
