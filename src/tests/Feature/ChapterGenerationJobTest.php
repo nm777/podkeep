@@ -189,16 +189,22 @@ it('writes generated chapters directly to the chapters table (not a proposal)', 
     Http::assertSentCount(1);
 });
 
-it('marks status failed when the LLM call fails', function () {
+it('marks status failed and rethrows when the LLM call fails', function () {
     Http::fake(['*/chat/completions' => Http::response([], 500)]);
     $mediaFile = MediaFile::factory()->create([
         'duration' => 600,
         'transcript' => [['start' => 0, 'end' => 5, 'text' => 'Hi.']],
     ]);
 
-    dispatch_sync(new SegmentTranscriptIntoChapters($mediaFile));
+    $thrown = null;
+    try {
+        dispatch_sync(new SegmentTranscriptIntoChapters($mediaFile));
+    } catch (\Throwable $e) {
+        $thrown = $e;
+    }
 
     $fresh = $mediaFile->fresh();
+    expect($thrown)->not->toBeNull();
     expect($fresh->chapter_generation_status)->toBe('failed');
     expect($fresh->chapter_generation_error)->not->toBeNull();
 });

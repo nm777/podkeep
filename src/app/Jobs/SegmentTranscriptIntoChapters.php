@@ -94,6 +94,8 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
                 'chapter_generation_status' => 'failed',
                 'chapter_generation_error' => $e->getMessage(),
             ]);
+
+            throw $e;
         }
     }
 
