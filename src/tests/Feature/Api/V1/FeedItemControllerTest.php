@@ -1,9 +1,11 @@
 <?php
 
+use App\Jobs\AddLibraryItemToFeedsJob;
 use App\Models\Feed;
 use App\Models\FeedItem;
 use App\Models\LibraryItem;
 use App\Models\User;
+use App\Services\FeedItemOrderingService;
 
 describe('feed item attachment', function () {
     it('attaches a library item to a feed', function () {
@@ -118,6 +120,29 @@ describe('feed item attachment', function () {
         $second->assertCreated();
         $second->assertJsonPath('data.sequence', 1);
     });
+
+    it('uses the shared append sequence for API, web, and queued attachments', function () {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $feed = Feed::factory()->create(['user_id' => $user->id]);
+        $apiItem = LibraryItem::factory()->create(['user_id' => $user->id]);
+        $webItem = LibraryItem::factory()->create(['user_id' => $user->id]);
+        $jobItem = LibraryItem::factory()->create(['user_id' => $user->id]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/feeds/'.$feed->id.'/items', ['library_item_id' => $apiItem->id])
+            ->assertCreated()
+            ->assertJsonPath('data.sequence', 0);
+
+        $this->actingAs($user)
+            ->post("/library/{$webItem->id}/feeds", ['feed_id' => $feed->id])
+            ->assertRedirect();
+
+        (new AddLibraryItemToFeedsJob($jobItem, [$feed->id]))->handle(app(FeedItemOrderingService::class));
+
+        expect(FeedItem::where('feed_id', $feed->id)->orderBy('sequence')->pluck('sequence')->all())
+            ->toBe([0, 1, 2]);
+    });
 });
 
 describe('feed item reordering', function () {
@@ -181,6 +206,39 @@ describe('feed item reordering', function () {
         $response->assertNotFound();
 
         expect(FeedItem::find($feedItem->id)->sequence)->toBe(0);
+    });
+
+    it('rejects a partial reorder', function () {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $feed = Feed::factory()->create(['user_id' => $user->id]);
+        $first = FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => LibraryItem::factory()->create(['user_id' => $user->id]), 'sequence' => 0]);
+        FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => LibraryItem::factory()->create(['user_id' => $user->id]), 'sequence' => 1]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/feeds/'.$feed->id.'/items/reorder', [
+                'items' => [['id' => $first->id, 'sequence' => 0]],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('items');
+    });
+
+    it('rejects duplicate reorder sequences', function () {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $feed = Feed::factory()->create(['user_id' => $user->id]);
+        $first = FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => LibraryItem::factory()->create(['user_id' => $user->id]), 'sequence' => 0]);
+        $second = FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => LibraryItem::factory()->create(['user_id' => $user->id]), 'sequence' => 1]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/feeds/'.$feed->id.'/items/reorder', [
+                'items' => [
+                    ['id' => $first->id, 'sequence' => 0],
+                    ['id' => $second->id, 'sequence' => 0],
+                ],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('items.1.sequence');
     });
 });
 

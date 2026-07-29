@@ -3,15 +3,14 @@
 namespace App\Jobs;
 
 use App\Models\Feed;
-use App\Models\FeedItem;
 use App\Models\LibraryItem;
+use App\Services\FeedItemOrderingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class AddLibraryItemToFeedsJob implements ShouldQueue
 {
@@ -22,30 +21,14 @@ class AddLibraryItemToFeedsJob implements ShouldQueue
         public array $feedIds
     ) {}
 
-    public function handle(): void
+    public function handle(FeedItemOrderingService $feedItemOrdering): void
     {
         $feeds = Feed::whereIn('id', $this->feedIds)
             ->where('user_id', $this->libraryItem->user_id)
             ->get();
 
         foreach ($feeds as $feed) {
-            DB::transaction(function () use ($feed) {
-                // ponytail: lock the feed row to serialize concurrent sequence assignments.
-                // PostgreSQL rejects FOR UPDATE on aggregate queries, so we lock the parent row.
-                Feed::lockForUpdate()->find($feed->id);
-
-                if ($feed->items()->where('library_item_id', $this->libraryItem->id)->exists()) {
-                    return;
-                }
-
-                $maxSequence = $feed->items()->max('sequence') ?? 0;
-
-                FeedItem::create([
-                    'feed_id' => $feed->id,
-                    'library_item_id' => $this->libraryItem->id,
-                    'sequence' => $maxSequence + 1,
-                ]);
-            });
+            $feedItemOrdering->append($feed, $this->libraryItem->id);
 
             Cache::forget("rss.{$feed->id}");
         }

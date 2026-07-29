@@ -8,8 +8,8 @@ use App\Http\Requests\UpdateLibraryItemRequest;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Jobs\RedownloadMediaFile;
 use App\Models\Feed;
-use App\Models\FeedItem;
 use App\Models\LibraryItem;
+use App\Services\FeedItemOrderingService;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -145,7 +145,7 @@ class LibraryController extends Controller
         return back()->with('success', 'Media file details updated successfully.');
     }
 
-    public function attachFeed(Request $request, int $id): RedirectResponse
+    public function attachFeed(Request $request, int $id, FeedItemOrderingService $feedItemOrdering): RedirectResponse
     {
         $libraryItem = LibraryItem::findOrFail($id);
         Gate::authorize('update', $libraryItem);
@@ -156,19 +156,7 @@ class LibraryController extends Controller
 
         $feed = Feed::find($validated['feed_id']);
 
-        $alreadyInFeed = FeedItem::where('feed_id', $feed->id)
-            ->where('library_item_id', $libraryItem->id)
-            ->exists();
-
-        if (! $alreadyInFeed) {
-            $maxSequence = $feed->items()->max('sequence') ?? 0;
-
-            FeedItem::create([
-                'feed_id' => $feed->id,
-                'library_item_id' => $libraryItem->id,
-                'sequence' => $maxSequence + 1,
-            ]);
-
+        if ($feedItemOrdering->append($feed, $libraryItem->id) !== null) {
             Cache::forget("rss.{$feed->id}");
         }
 

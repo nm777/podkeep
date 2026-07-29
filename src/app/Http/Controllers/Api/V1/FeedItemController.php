@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\AttachFeedItemRequest;
 use App\Http\Resources\FeedItemResource;
 use App\Models\LibraryItem;
+use App\Services\FeedItemOrderingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class FeedItemController extends Controller
 {
@@ -35,7 +35,7 @@ class FeedItemController extends Controller
     /**
      * Attach a library item to the feed.
      */
-    public function store(AttachFeedItemRequest $request, int $feedId): JsonResponse
+    public function store(AttachFeedItemRequest $request, int $feedId, FeedItemOrderingService $feedItemOrdering): JsonResponse
     {
         $feed = Auth::user()->feeds()->findOrFail($feedId);
 
@@ -48,15 +48,9 @@ class FeedItemController extends Controller
             ], 403);
         }
 
-        if ($sequence === null) {
-            $sequence = ($feed->items()->max('sequence') ?? -1) + 1;
-        }
+        $feedItem = $feedItemOrdering->append($feed, $libraryItemId, $sequence);
 
-        $feedItem = $feed->items()->create([
-            'feed_id' => $feed->id,
-            'library_item_id' => $libraryItemId,
-            'sequence' => $sequence,
-        ]);
+        abort_if($feedItem === null, 422, 'The library item is already attached to this feed.');
 
         $feedItem->load('libraryItem');
 
@@ -70,28 +64,17 @@ class FeedItemController extends Controller
     /**
      * Reorder the feed's items.
      */
-    public function reorder(Request $request, int $feedId): JsonResponse
+    public function reorder(Request $request, int $feedId, FeedItemOrderingService $feedItemOrdering): JsonResponse
     {
         $feed = Auth::user()->feeds()->findOrFail($feedId);
 
         $validated = $request->validate([
             'items' => ['required', 'array'],
-            'items.*.id' => ['required', 'integer'],
-            'items.*.sequence' => ['required', 'integer', 'min:0'],
+            'items.*.id' => ['required', 'integer', 'distinct'],
+            'items.*.sequence' => ['required', 'integer', 'min:0', 'distinct'],
         ]);
 
-        $items = DB::transaction(function () use ($feed, $validated) {
-            foreach ($validated['items'] as $item) {
-                $feed->items()
-                    ->where('id', $item['id'])
-                    ->update(['sequence' => $item['sequence']]);
-            }
-
-            return $feed->items()
-                ->with('libraryItem')
-                ->orderBy('sequence')
-                ->get();
-        });
+        $items = $feedItemOrdering->reorder($feed, $validated['items']);
 
         Cache::forget("rss.{$feedId}");
 
