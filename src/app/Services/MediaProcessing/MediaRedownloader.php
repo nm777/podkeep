@@ -4,6 +4,7 @@ namespace App\Services\MediaProcessing;
 
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
+use App\Services\MediaFileRetirementService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -55,22 +56,23 @@ class MediaRedownloader
                 ->whereKeyNot($libraryItem->id)
                 ->exists();
 
-            DB::transaction(function () use ($libraryItem, $mediaFile, $storageInfo, $metadata, $hashChanged, $hasOtherLibraryItems): void {
-                if ($hashChanged && $hasOtherLibraryItems) {
-                    $replacement = MediaFile::findByHash($storageInfo['file_hash'])
-                        ?? MediaFile::create([
-                            'user_id' => $libraryItem->user_id,
-                            'file_path' => $storageInfo['file_path'],
-                            'file_hash' => $storageInfo['file_hash'],
-                            'filesize' => $storageInfo['filesize'],
-                            'mime_type' => $metadata['mime_type'],
-                            'duration' => $metadata['duration'] ?? null,
-                            'source_url' => $mediaFile->source_url,
-                        ]);
+            $replacement = DB::transaction(function () use ($libraryItem, $mediaFile, $storageInfo, $metadata, $hashChanged, $hasOtherLibraryItems): ?MediaFile {
+                $replacement = $hashChanged ? MediaFile::findByHash($storageInfo['file_hash']) : null;
+
+                if ($replacement || ($hashChanged && $hasOtherLibraryItems)) {
+                    $replacement ??= MediaFile::create([
+                        'user_id' => $libraryItem->user_id,
+                        'file_path' => $storageInfo['file_path'],
+                        'file_hash' => $storageInfo['file_hash'],
+                        'filesize' => $storageInfo['filesize'],
+                        'mime_type' => $metadata['mime_type'],
+                        'duration' => $metadata['duration'] ?? null,
+                        'source_url' => $mediaFile->source_url,
+                    ]);
 
                     $libraryItem->updateQuietly(['media_file_id' => $replacement->id]);
 
-                    return;
+                    return $replacement;
                 }
 
                 $mediaFile->update([
@@ -92,14 +94,28 @@ class MediaRedownloader
                 if ($hashChanged) {
                     $mediaFile->chapters()->delete();
                 }
+
+                return null;
             });
+
+            if ($replacement && ! $hasOtherLibraryItems) {
+                MediaFileRetirementService::retire($mediaFile);
+            }
+
+            if ($replacement && $replacement->file_path !== $storageInfo['file_path']) {
+                if (Storage::disk('public')->exists($replacement->file_path)) {
+                    Storage::disk('public')->delete($storageInfo['file_path']);
+                } else {
+                    Storage::disk('public')->move($storageInfo['file_path'], $replacement->file_path);
+                }
+            }
 
             if ($hashChanged && $fileExisted && $oldFilePath !== $storageInfo['file_path']
                 && ! MediaFile::where('file_path', $oldFilePath)->exists()) {
                 Storage::disk('public')->delete($oldFilePath);
             }
 
-            ($hashChanged && $hasOtherLibraryItems
+            ($replacement
                 ? collect([$libraryItem])
                 : $mediaFile->libraryItems()->get()
             )->each->forgetRssCache();

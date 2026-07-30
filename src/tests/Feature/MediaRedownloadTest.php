@@ -279,6 +279,47 @@ it('evicts cached RSS when an in-place redownload changes the enclosure path', f
         ->and(Cache::has("rss.{$feed->id}"))->toBeFalse();
 });
 
+it('relinks a sole-reference redownload to an existing media hash', function () {
+    $user = User::factory()->create();
+    $oldContent = 'RIFFfake audio content';
+    $oldHash = hash('sha256', $oldContent);
+    $existingContent = 'RIFFnew audio content';
+    $existingHash = hash('sha256', $existingContent);
+
+    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+    Storage::disk('public')->put('media/'.$existingHash.'.mp3', $existingContent);
+
+    $oldMediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'file_hash' => $oldHash,
+        'source_url' => 'https://example.com/new-audio.mp3',
+    ]);
+    $existingMediaFile = MediaFile::factory()->create([
+        'file_path' => 'media/'.$existingHash.'.mp3',
+        'file_hash' => $existingHash,
+        'transcript' => [['start' => 0, 'end' => 5, 'text' => 'preserved']],
+    ]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $oldMediaFile->id,
+    ]);
+    $feed = Feed::factory()->create(['user_id' => $user->id, 'is_public' => true]);
+    FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $libraryItem->id]);
+
+    $this->get("/rss/{$feed->user_guid}/{$feed->slug}")->assertSuccessful();
+    expect(Cache::has("rss.{$feed->id}"))->toBeTrue();
+
+    app(MediaRedownloader::class)->redownload($libraryItem);
+
+    expect($libraryItem->fresh()->media_file_id)->toBe($existingMediaFile->id)
+        ->and($existingMediaFile->fresh()->transcript)->toBe([['start' => 0, 'end' => 5, 'text' => 'preserved']])
+        ->and(Cache::has("rss.{$feed->id}"))->toBeFalse();
+    $this->assertModelMissing($oldMediaFile);
+    Storage::disk('public')->assertMissing('media/'.$oldHash.'.mp3');
+    Storage::disk('public')->assertExists('media/'.$existingHash.'.mp3');
+});
+
 it('relinks only the requested item when redownloading shared media with changed content', function () {
     $owner = User::factory()->create();
     $otherUser = User::factory()->create();
