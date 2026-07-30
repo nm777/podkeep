@@ -4,6 +4,7 @@ use App\Enums\ProcessingStatusType;
 use App\Jobs\ProcessMediaFile;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Queue;
 
 it('does not redispatch an old item retried recently by a user', function () {
@@ -21,21 +22,31 @@ it('does not redispatch an old item retried recently by a user', function () {
     Queue::assertNothingPushed();
 });
 
-it('claims a stale pending item before redispatching it', function () {
+it('marks a claimed pending item as processing so a later recovery does not redispatch it', function () {
     Queue::fake();
+
+    $now = now();
+    Carbon::setTestNow($now);
 
     $item = LibraryItem::factory()->create([
         'source_url' => 'https://example.com/stale.mp3',
         'processing_status' => ProcessingStatusType::PENDING,
-        'processing_started_at' => now()->subMinutes(10),
+        'processing_started_at' => $now->copy()->subMinutes(10),
     ]);
 
-    $this->artisan('media:retry-pending', ['--minutes' => 5])->assertSuccessful();
-    $this->artisan('media:retry-pending', ['--minutes' => 5])->assertSuccessful();
+    try {
+        $this->artisan('media:retry-pending', ['--minutes' => 5])->assertSuccessful();
 
-    Queue::assertPushed(ProcessMediaFile::class, 1);
-    expect($item->refresh()->getRawOriginal('processing_started_at'))
-        ->toBeGreaterThan(now()->subMinutes(5)->toDateTimeString());
+        expect($item->refresh()->processing_status)->toBe(ProcessingStatusType::PROCESSING);
+
+        Carbon::setTestNow($now->copy()->addMinutes(6));
+        $this->artisan('media:retry-pending', ['--minutes' => 5])->assertSuccessful();
+
+        Queue::assertPushed(ProcessMediaFile::class, 1);
+    } finally {
+        Carbon::setTestNow();
+    }
+
 });
 
 it('redispatches a stale pending YouTube item with its YouTube job', function () {

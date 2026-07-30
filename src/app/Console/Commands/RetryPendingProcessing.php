@@ -49,7 +49,10 @@ class RetryPendingProcessing extends Command
                                 ->where('created_at', '<', $cutoff);
                         });
                 })
-                ->update(['processing_started_at' => $now]);
+                ->update([
+                    'processing_status' => ProcessingStatusType::PROCESSING,
+                    'processing_started_at' => $now,
+                ]);
 
             if ($claimed === 0) {
                 continue;
