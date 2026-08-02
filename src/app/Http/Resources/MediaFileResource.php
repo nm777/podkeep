@@ -2,11 +2,12 @@
 
 namespace App\Http\Resources;
 
+use App\Models\MediaFile;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\URL;
 
-/** @mixin \App\Models\MediaFile */
+/** @mixin MediaFile */
 class MediaFileResource extends JsonResource
 {
     /**
@@ -24,6 +25,9 @@ class MediaFileResource extends JsonResource
             'filesize' => $this->filesize,
             'duration' => $this->duration,
             'source_url' => $this->when($request->user()?->id === $this->user_id, $this->source_url),
+            'transcript' => $this->when($request->user()?->id === $this->user_id, $this->transcript),
+            'chapter_generation_status' => $this->when($request->user()?->id === $this->user_id, $this->chapter_generation_status),
+            'chapter_generation_error' => $this->when($request->user()?->id === $this->user_id, $this->chapter_generation_error),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
