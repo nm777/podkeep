@@ -78,6 +78,7 @@ class ChapterController extends Controller
                 'chapter_generation_version' => $mediaFile->chapter_generation_version + 1,
                 'chapter_generation_status' => 'pending',
                 'chapter_generation_error' => null,
+                'chapter_proposal' => null,
             ];
             if ($mediaFile->chapter_generation_status === 'completed') {
                 $updates['chapter_proposal_for_hash'] = null;

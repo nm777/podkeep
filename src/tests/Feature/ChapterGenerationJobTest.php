@@ -93,7 +93,7 @@ it('skips transcription when the transcript already covers the file', function (
     {
         public function chunk(string $source, int $chunkSeconds): array
         {
-            throw new \RuntimeException('chunk() should not be called');
+            throw new RuntimeException('chunk() should not be called');
         }
     });
 
@@ -119,7 +119,7 @@ it('keeps transcription checkpoints for retries and clears them on terminal fail
         public function transcribeFile(string $wavPath): array
         {
             if ($wavPath === '/tmp/c1.wav') {
-                throw new \RuntimeException('whisper.cpp failed: model not found');
+                throw new RuntimeException('whisper.cpp failed: model not found');
             }
 
             return [['start' => 0, 'end' => 5, 'text' => 'checkpoint']];
@@ -131,14 +131,14 @@ it('keeps transcription checkpoints for retries and clears them on terminal fail
     $mediaFile = MediaFile::factory()->create(['duration' => 3600, 'mime_type' => 'audio/mpeg']);
     $job = new TranscribeMediaFile($mediaFile);
 
-    expect(fn () => $job->handle($fake))->toThrow(\RuntimeException::class, 'whisper.cpp failed: model not found');
+    expect(fn () => $job->handle($fake))->toThrow(RuntimeException::class, 'whisper.cpp failed: model not found');
 
     $checkpoint = $mediaFile->fresh();
     expect($checkpoint->transcript)->toBe([['start' => 0, 'end' => 5, 'text' => 'checkpoint']]);
     expect($checkpoint->chapter_generation_status)->toBe('failed');
     expect($checkpoint->chapter_generation_error)->toContain('whisper.cpp');
 
-    $job->failed(new \RuntimeException('whisper.cpp failed: model not found'));
+    $job->failed(new RuntimeException('whisper.cpp failed: model not found'));
 
     $failed = $mediaFile->fresh();
     expect($failed->transcript)->toBeNull();
@@ -210,7 +210,7 @@ it('marks status failed and rethrows when the LLM call fails', function () {
     $thrown = null;
     try {
         dispatch_sync(new SegmentTranscriptIntoChapters($mediaFile));
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         $thrown = $e;
     }
 
@@ -218,6 +218,35 @@ it('marks status failed and rethrows when the LLM call fails', function () {
     expect($thrown)->not->toBeNull();
     expect($fresh->chapter_generation_status)->toBe('failed');
     expect($fresh->chapter_generation_error)->not->toBeNull();
+});
+
+it('checkpoints completed LLM sections before retrying a failed section', function () {
+    config(['services.llm.section_chars' => 5]);
+
+    $mediaFile = MediaFile::factory()->create([
+        'duration' => 600,
+        'transcript' => [
+            ['start' => 0, 'end' => 5, 'text' => 'first segment'],
+            ['start' => 100, 'end' => 105, 'text' => 'second segment'],
+        ],
+    ]);
+    $job = new SegmentTranscriptIntoChapters($mediaFile);
+
+    Http::fake([
+        '*/chat/completions' => Http::sequence()
+            ->push(['choices' => [['message' => ['content' => json_encode(['chapters' => [['start' => 0, 'title' => 'Opening']]])]]]])
+            ->push([], 500)
+            ->push(['choices' => [['message' => ['content' => json_encode(['chapters' => [['start' => 100, 'title' => 'Chapter One']]])]]]]),
+    ]);
+
+    expect(fn () => $job->handle(new LlmClient))->toThrow(RuntimeException::class);
+    expect($mediaFile->fresh()->chapter_proposal)->toBe([[['start' => 0, 'title' => 'Opening']]]);
+    expect($job->backoff)->toBe([60, 300]);
+
+    $job->handle(new LlmClient);
+
+    Http::assertSentCount(3);
+    expect($mediaFile->fresh()->chapters->pluck('title')->all())->toBe(['Opening', 'Chapter One']);
 });
 
 it('splits long transcripts into multiple LLM calls and merges the chapters', function () {
@@ -271,7 +300,7 @@ it('keeps distinct chapters across merged sections and dedupes boundary duplicat
 });
 
 it('parses whisper stdout segments into timestamped text', function () {
-    $client = new WhisperClient();
+    $client = new WhisperClient;
 
     $output = "[00:00:00.000 --> 00:00:17.000]   They were hopeless, beaten and so weary\n".
         "[00:00:17.000 --> 00:00:26.000]   Just to see the glorious sunrise\n";

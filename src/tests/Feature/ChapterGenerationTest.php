@@ -25,6 +25,22 @@ it('sets status pending and dispatches the chain on the chapters connection', fu
     );
 });
 
+it('clears a previous generation checkpoint when restarting chapter generation', function () {
+    Queue::fake();
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'duration' => 600,
+        'chapter_generation_status' => 'failed',
+        'chapter_proposal' => [[['start' => 0, 'title' => 'Old checkpoint']]],
+    ]);
+    $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id, 'media_file_id' => $mediaFile->id]);
+
+    $this->actingAs($user)->post("/library/{$libraryItem->id}/chapters/generate")->assertRedirect();
+
+    expect($mediaFile->fresh()->chapter_proposal)->toBeNull();
+});
+
 it('coalesces requests while chapter generation is active', function () {
     Queue::fake();
     $user = User::factory()->create();

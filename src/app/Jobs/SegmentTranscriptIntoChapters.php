@@ -11,11 +11,15 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class SegmentTranscriptIntoChapters implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /** @var list<int> */
+    public array $backoff = [60, 300];
 
     public function __construct(public MediaFile $mediaFile, public int $generationVersion = 0)
     {
@@ -49,7 +53,17 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
         }
 
         try {
-            $proposed = $llm->proposeChapters($transcript, (int) $mediaFile->duration);
+            /** @var array<int, array<int, array{start: mixed, title: mixed}>> $checkpoints */
+            $checkpoints = $mediaFile->chapter_proposal ?? [];
+
+            $proposed = $llm->proposeChapters(
+                $transcript,
+                (int) $mediaFile->duration,
+                $checkpoints,
+                function (array $checkpoints): void {
+                    $this->updateCurrent(['chapter_proposal' => $checkpoints]);
+                },
+            );
             $chapters = $this->sanitize($proposed, (int) $mediaFile->duration);
 
             $generated = DB::transaction(function () use ($mediaFile, $chapters, $transcriptHash) {
@@ -86,7 +100,7 @@ class SegmentTranscriptIntoChapters implements ShouldQueue
             // Invalidate RSS cache for affected feeds.
             foreach ($mediaFile->libraryItems()->with('feedItems')->get() as $libItem) {
                 foreach ($libItem->feedItems as $feedItem) {
-                    \Illuminate\Support\Facades\Cache::forget("rss.{$feedItem->feed_id}");
+                    Cache::forget("rss.{$feedItem->feed_id}");
                 }
             }
         } catch (\Throwable $e) {

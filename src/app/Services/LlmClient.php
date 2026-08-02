@@ -14,9 +14,11 @@ class LlmClient
      * then merged — so this works on any model regardless of its context window.
      *
      * @param  array<int, array{start: int, end: int, text: string}>  $transcript
+     * @param  array<int, array<int, array{start: mixed, title: mixed}>>  $completedProposals
+     * @param  null|\Closure(array<int, array<int, array{start: mixed, title: mixed}>>): void  $checkpoint
      * @return array<int, array{start: int, title: string}>
      */
-    public function proposeChapters(array $transcript, int $duration): array
+    public function proposeChapters(array $transcript, int $duration, array $completedProposals = [], ?\Closure $checkpoint = null): array
     {
         $sections = $this->splitIntoSections($transcript);
 
@@ -24,9 +26,18 @@ class LlmClient
         // gets chapters throughout, not just the first part.
         $perSectionMax = max(1, (int) ceil(20 / max(1, count($sections))));
 
-        $proposed = [];
         foreach ($sections as $i => $section) {
-            $proposed = array_merge($proposed, $this->proposeForSection($section, $duration, $i === 0, $perSectionMax));
+            if (array_key_exists($i, $completedProposals)) {
+                continue;
+            }
+
+            $completedProposals[$i] = $this->proposeForSection($section, $duration, $i === 0, $perSectionMax);
+            $checkpoint?->__invoke($completedProposals);
+        }
+
+        $proposed = [];
+        foreach ($completedProposals as $sectionProposals) {
+            $proposed = array_merge($proposed, $sectionProposals);
         }
 
         return $this->mergeChapters($proposed, $duration);
