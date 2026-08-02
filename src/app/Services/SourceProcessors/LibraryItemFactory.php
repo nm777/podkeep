@@ -5,7 +5,9 @@ namespace App\Services\SourceProcessors;
 use App\Enums\ProcessingStatusType;
 use App\Jobs\AddLibraryItemToFeedsJob;
 use App\Models\LibraryItem;
+use App\Models\MediaFile;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
 class LibraryItemFactory
 {
@@ -84,7 +86,7 @@ class LibraryItemFactory
     public function createFromValidatedWithMediaFile($mediaFile, array $validated, string $sourceType, ?string $sourceUrl = null, ?int $userId = null): LibraryItem
     {
         $currentUserId = $userId ?? auth()->id();
-        $libraryItem = LibraryItem::create([
+        $attributes = [
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'published_at' => $validated['published_at'] ?? null,
@@ -97,7 +99,13 @@ class LibraryItemFactory
             'is_duplicate' => false,
             'processing_status' => ProcessingStatusType::COMPLETED,
             'processing_completed_at' => now(),
-        ]);
+        ];
+
+        $libraryItem = DB::transaction(function () use ($mediaFile, $attributes): LibraryItem {
+            MediaFile::query()->lockForUpdate()->findOrFail($mediaFile->id);
+
+            return LibraryItem::create($attributes);
+        });
 
         $this->dispatchFeedJob($libraryItem, $validated);
 

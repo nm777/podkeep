@@ -130,8 +130,7 @@ class MediaProcessingService
                     Storage::disk('media')->delete($fileData['file_path']);
                 }
 
-                $libraryItem->media_file_id = $mediaFile->id;
-                $libraryItem->update([
+                $libraryItem->linkMediaFile($mediaFile, [
                     'processing_status' => ProcessingStatusType::COMPLETED,
                     'processing_completed_at' => now(),
                     'temp_file_path' => null,
@@ -145,8 +144,7 @@ class MediaProcessingService
             }
 
             // Link to library item
-            $libraryItem->media_file_id = $mediaFile->id;
-            $libraryItem->update([
+            $libraryItem->linkMediaFile($mediaFile, [
                 'processing_status' => ProcessingStatusType::COMPLETED,
                 'processing_completed_at' => now(),
                 'temp_file_path' => null,

@@ -104,8 +104,7 @@ class YouTubeProcessingService
             $this->fileProcessor->updateLibraryItemWithMetadata($libraryItem, $metadata);
 
             // Update library item with media file and status
-            $libraryItem->media_file_id = $result['media_file']->id;
-            $libraryItem->update([
+            $libraryItem->linkMediaFile($result['media_file'], [
                 'processing_status' => ProcessingStatusType::COMPLETED,
                 'processing_completed_at' => now(),
             ]);

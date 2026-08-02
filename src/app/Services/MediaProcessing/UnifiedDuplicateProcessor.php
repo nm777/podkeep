@@ -123,7 +123,7 @@ class UnifiedDuplicateProcessor
             'existing_media_file_id' => $existingLibraryItem->media_file_id,
         ]);
 
-        $libraryItem->media_file_id = $existingLibraryItem->media_file_id;
+        $libraryItem->linkMediaFile($existingLibraryItem->mediaFile);
         $this->markAsCompleted($libraryItem, true);
         $this->scheduleCleanup($libraryItem);
 
@@ -146,7 +146,7 @@ class UnifiedDuplicateProcessor
             'media_file_id' => $mediaFile->id,
         ]);
 
-        $libraryItem->media_file_id = $mediaFile->id;
+        $libraryItem->linkMediaFile($mediaFile);
         $this->markAsCompleted($libraryItem);
 
         return $this->buildSuccessResponse(
@@ -170,7 +170,7 @@ class UnifiedDuplicateProcessor
             'current_user_id' => $libraryItem->user_id,
         ]);
 
-        $libraryItem->media_file_id = $globalMediaFile->id;
+        $libraryItem->linkMediaFile($globalMediaFile);
         $this->markAsCompleted($libraryItem);
 
         return $this->buildSuccessResponse(
@@ -193,7 +193,7 @@ class UnifiedDuplicateProcessor
             $userDuplicateMediaFile->save();
         }
 
-        $libraryItem->media_file_id = $userDuplicateMediaFile->id;
+        $libraryItem->linkMediaFile($userDuplicateMediaFile);
         $this->markAsCompleted($libraryItem, true);
         $this->scheduleCleanup($libraryItem);
 
@@ -211,7 +211,7 @@ class UnifiedDuplicateProcessor
     {
         $globalDuplicateMediaFile = $duplicateAnalysis['global_duplicate_media_file'];
 
-        $libraryItem->media_file_id = $globalDuplicateMediaFile->id;
+        $libraryItem->linkMediaFile($globalDuplicateMediaFile);
         $this->markAsCompleted($libraryItem);
 
         return $this->buildSuccessResponse(

@@ -52,11 +52,13 @@ class MediaRedownloader
             $oldHash = $mediaFile->file_hash;
 
             $hashChanged = $storageInfo['file_hash'] !== $oldHash;
-            $hasOtherLibraryItems = $mediaFile->libraryItems()
-                ->whereKeyNot($libraryItem->id)
-                ->exists();
+            $hasOtherLibraryItems = false;
 
-            $replacement = DB::transaction(function () use ($libraryItem, $mediaFile, $storageInfo, $metadata, $hashChanged, $hasOtherLibraryItems): ?MediaFile {
+            $replacement = DB::transaction(function () use ($libraryItem, $mediaFile, $storageInfo, $metadata, $hashChanged, &$hasOtherLibraryItems): ?MediaFile {
+                $mediaFile = MediaFile::query()->lockForUpdate()->findOrFail($mediaFile->id);
+                $hasOtherLibraryItems = $mediaFile->libraryItems()
+                    ->whereKeyNot($libraryItem->id)
+                    ->exists();
                 $replacement = $hashChanged ? MediaFile::findByHash($storageInfo['file_hash']) : null;
 
                 if ($replacement || ($hashChanged && $hasOtherLibraryItems)) {

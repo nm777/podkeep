@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class LibraryItem extends Model
@@ -89,6 +90,21 @@ class LibraryItem extends Model
     public function mediaFile(): BelongsTo
     {
         return $this->belongsTo(MediaFile::class);
+    }
+
+    /**
+     * Link this item to an existing media file while preventing a concurrent
+     * redownload from treating that file as unshared.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function linkMediaFile(MediaFile $mediaFile, array $attributes = []): void
+    {
+        DB::transaction(function () use ($mediaFile, $attributes): void {
+            MediaFile::query()->lockForUpdate()->findOrFail($mediaFile->id);
+
+            $this->update(['media_file_id' => $mediaFile->id, ...$attributes]);
+        });
     }
 
     /**

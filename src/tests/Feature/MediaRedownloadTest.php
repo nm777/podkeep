@@ -407,6 +407,58 @@ it('relinks only the requested item when redownloading shared media with changed
     Storage::disk('media')->assertExists('media/'.$newHash.'.mp3');
 });
 
+it('rechecks references after a concurrent duplicate link before redownloading', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $oldContent = 'RIFFfake audio content';
+    $oldHash = hash('sha256', $oldContent);
+    $newHash = hash('sha256', 'RIFFnew audio content');
+
+    Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
+
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $owner->id,
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'file_hash' => $oldHash,
+        'source_url' => 'https://example.com/new-audio.mp3',
+        'transcript' => [['start' => 0, 'end' => 5, 'text' => 'cached']],
+    ]);
+    $requestedItem = LibraryItem::factory()->create([
+        'user_id' => $owner->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+    $otherItem = LibraryItem::factory()->create([
+        'user_id' => $otherUser->id,
+        'media_file_id' => null,
+    ]);
+    $storageManager = new class($otherItem, $mediaFile) extends MediaStorageManager
+    {
+        public function __construct(private LibraryItem $otherItem, private MediaFile $mediaFile) {}
+
+        /** @return array{file_path: string, file_hash: string, filesize: int, source_url: string|null} */
+        public function moveTempFile(string $tempPath, ?string $sourceUrl = null): array
+        {
+            $this->otherItem->linkMediaFile($this->mediaFile);
+
+            return parent::moveTempFile($tempPath, $sourceUrl);
+        }
+    };
+
+    (new MediaRedownloader(
+        app(MediaDownloader::class),
+        $storageManager,
+        app(MediaValidator::class),
+    ))->redownload($requestedItem);
+
+    expect($otherItem->fresh()->media_file_id)->toBe($mediaFile->id);
+    expect($mediaFile->fresh()->only(['file_hash', 'file_path', 'transcript']))->toBe([
+        'file_hash' => $oldHash,
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'transcript' => [['start' => 0, 'end' => 5, 'text' => 'cached']],
+    ]);
+    expect($requestedItem->fresh()->mediaFile->file_hash)->toBe($newHash);
+});
+
 it('removes a newly moved file when redownload persistence fails', function () {
     $user = User::factory()->create();
     $oldContent = 'RIFFfake audio content';
