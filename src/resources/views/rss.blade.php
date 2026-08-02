@@ -17,12 +17,20 @@
         <atom:link
             href="{{ route('rss.show', ['user_guid' => $feed->user_guid, 'feed_slug' => $feed->slug]) }}"
             rel="self" type="application/rss+xml" />
-        @php($episodeIndex = 0)
         @foreach ($feed->items as $item)
             @if($item->libraryItem->mediaFile)
+            @php
+                $chapters = $item->libraryItem->mediaFile->chapters;
+                $episodeDescription = trim(implode("\n\n", array_filter([
+                    $feed->feed_type->isAppend() && $item->display_date ? '[' . $item->display_date->format('M j, Y') . ']' : null,
+                    $item->libraryItem->description,
+                    $chapters->isNotEmpty() ? "Chapters:\n" . $chapters->map(fn ($chapter) => "{$chapter->formattedStart()} {$chapter->title}")->implode("\n") : null,
+                ])));
+            @endphp
         <item>
             <title>{{ $item->libraryItem->title }}</title>
-            <description><![CDATA[{!! $feed->feed_type->isAppend() && $item->display_date ? '[' . $item->display_date->format('M j, Y') . '] ' : '' !!}{!! str_replace(']]>', ']]]]><![CDATA[>', $item->libraryItem->description) !!}]]></description>
+            <description><![CDATA[{!! str_replace(']]>', ']]]]><![CDATA[>', $episodeDescription) !!}]]></description>
+            <itunes:summary><![CDATA[{!! str_replace(']]>', ']]]]><![CDATA[>', $episodeDescription) !!}]]></itunes:summary>
             <pubDate>{{ ($feed->feed_type->isStatic()
                 ? $feed->created_at->copy()->addMinutes($item->sequence)
                 : $item->created_at)->toRfc822String() }}</pubDate>
@@ -30,13 +38,12 @@
             <enclosure url="{{ $item->libraryItem->mediaFile->rss_url }}{{ $feed->is_public ? '' : '?feed_token=' . $feed->token }}"
                 length="{{ $item->libraryItem->mediaFile->filesize }}"
                 type="{{ $item->libraryItem->mediaFile->mime_type }}" />
-            @if($item->libraryItem->mediaFile->chapters->isNotEmpty())
-            <psc:chapters version="1.2">@foreach($item->libraryItem->mediaFile->chapters as $chapter)
+            @if($chapters->isNotEmpty())
+            <psc:chapters version="1.2">@foreach($chapters as $chapter)
                 <psc:chapter start="{{ $chapter->formattedStart() }}" title="{{ $chapter->title }}" />@endforeach
             </psc:chapters>
             @endif
         </item>
-            @php($episodeIndex++)
             @endif
         @endforeach
     </channel>

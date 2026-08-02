@@ -40,6 +40,25 @@ it('includes psc:chapters in the RSS item when the media file has chapters', fun
     expect($xml)->toContain('start="0:05:30" title="Main Point"');
 });
 
+it('includes chapters in the episode description and iTunes summary', function () {
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create(['user_id' => $user->id, 'duration' => 3800]);
+    [$feed, $libraryItem] = chapterFeedWithItem($user, $mediaFile);
+    $libraryItem->update(['description' => 'Episode details']);
+
+    Chapter::factory()->create(['media_file_id' => $mediaFile->id, 'start_time' => 0, 'title' => 'Intro']);
+    Chapter::factory()->create(['media_file_id' => $mediaFile->id, 'start_time' => 330, 'title' => 'Main Point']);
+
+    $document = new DOMDocument;
+    $document->loadXML($this->get(route('rss.show', ['user_guid' => $feed->user_guid, 'feed_slug' => $feed->slug]))->content());
+    $xpath = new DOMXPath($document);
+    $xpath->registerNamespace('itunes', 'http://www.itunes.com/dtds/podcast-1.0.dtd');
+    $expected = "Episode details\n\nChapters:\n0:00:00 Intro\n0:05:30 Main Point";
+
+    expect($xpath->evaluate('string(/rss/channel/item/description)'))->toBe($expected)
+        ->and($xpath->evaluate('string(/rss/channel/item/itunes:summary)'))->toBe($expected);
+});
+
 it('omits any chapter element when the media file has no chapters', function () {
     $user = User::factory()->create();
     $mediaFile = MediaFile::factory()->create(['user_id' => $user->id, 'duration' => 600]);
