@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 interface SheetPanelProps {
     open: boolean;
@@ -10,9 +10,10 @@ interface SheetPanelProps {
     children: ReactNode;
     footer: ReactNode;
     onSubmit?: (e: React.FormEvent) => void;
+    onOpenAutoFocus?: ComponentProps<typeof SheetContent>['onOpenAutoFocus'];
 }
 
-export default function SheetPanel({ open, onOpenChange, trigger, title, children, footer, onSubmit }: SheetPanelProps) {
+export default function SheetPanel({ open, onOpenChange, trigger, title, children, footer, onSubmit, onOpenAutoFocus }: SheetPanelProps) {
     const isMobile = useIsMobile();
 
     const inner = (
@@ -31,6 +32,7 @@ export default function SheetPanel({ open, onOpenChange, trigger, title, childre
             <SheetContent
                 side={isMobile ? 'bottom' : 'right'}
                 hideClose
+                onOpenAutoFocus={onOpenAutoFocus}
                 className={isMobile ? 'h-svh w-full overflow-x-hidden rounded-none p-0' : 'w-full overflow-x-hidden p-0 sm:max-w-md'}
             >
                 {onSubmit ? (

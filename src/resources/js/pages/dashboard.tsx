@@ -254,6 +254,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                 onOpenChange={handleEditDialogClose}
                 title="Edit Media"
                 onSubmit={handleEditSubmit}
+                onOpenAutoFocus={(event) => event.preventDefault()}
                 footer={
                     <>
                         <Button type="button" variant="outline" onClick={handleEditDialogClose}>
