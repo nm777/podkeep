@@ -30,6 +30,8 @@ class LibraryItemFactory
             $libraryItem = LibraryItem::findActiveBySourceUrlForUser($sourceUrl, $attributes['user_id']);
 
             if ($libraryItem) {
+                $this->dispatchFeedJob($libraryItem, $validated);
+
                 return $libraryItem;
             }
 
@@ -41,6 +43,8 @@ class LibraryItemFactory
                 if (! $libraryItem) {
                     throw $exception;
                 }
+
+                $this->dispatchFeedJob($libraryItem, $validated);
 
                 return $libraryItem;
             }

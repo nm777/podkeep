@@ -1,10 +1,13 @@
 <?php
 
 use App\Enums\ProcessingStatusType;
+use App\Jobs\AddLibraryItemToFeedsJob;
+use App\Models\Feed;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 use App\Services\SourceProcessors\LibraryItemFactory;
+use Illuminate\Support\Facades\Queue;
 
 describe('LibraryItemFactory', function () {
     beforeEach(function () {
@@ -28,6 +31,27 @@ describe('LibraryItemFactory', function () {
         expect($item->user_id)->toBe($this->user->id);
         expect($item->processing_status)->toBe(ProcessingStatusType::PENDING);
         $this->assertDatabaseHas('library_items', ['id' => $item->id, 'title' => 'My Podcast']);
+    });
+
+    it('dispatches the feed job when reusing a pending URL item', function () {
+        $feed = Feed::factory()->create(['user_id' => $this->user->id]);
+        $item = LibraryItem::factory()->create([
+            'user_id' => $this->user->id,
+            'source_url' => 'https://example.com/audio.mp3',
+            'processing_status' => ProcessingStatusType::PENDING,
+        ]);
+
+        Queue::fake();
+
+        $result = $this->factory->createFromValidated(
+            ['title' => 'My Podcast', 'feed_ids' => [$feed->id]],
+            'url',
+            $item->source_url,
+            $this->user->id
+        );
+
+        expect($result->id)->toBe($item->id);
+        Queue::assertPushed(AddLibraryItemToFeedsJob::class, fn (AddLibraryItemToFeedsJob $job) => $job->libraryItem->id === $item->id && $job->feedIds === [$feed->id]);
     });
 
     it('creates library item with minimal data', function () {
