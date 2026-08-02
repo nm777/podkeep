@@ -15,6 +15,21 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user): void {
+            MediaFile::where('user_id', $user->id)->each(function (MediaFile $mediaFile) use ($user): void {
+                $survivingUserId = $mediaFile->libraryItems()
+                    ->where('user_id', '!=', $user->id)
+                    ->value('user_id');
+
+                if ($survivingUserId) {
+                    $mediaFile->update(['user_id' => $survivingUserId]);
+                }
+            });
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *

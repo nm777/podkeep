@@ -59,7 +59,7 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        $user->deleteOrFail();
 
         MediaFile::whereKey($mediaFileIds)->each(
             function (MediaFile $mediaFile): void {

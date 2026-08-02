@@ -3,6 +3,8 @@
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\Jobs\RedownloadMediaFile;
+use Illuminate\Support\Facades\Queue;
 
 describe('cross-user dedup cascade safety', function () {
     it('does not cascade delete other users library items when media file owner deletes their item', function () {
@@ -50,17 +52,21 @@ describe('cross-user dedup cascade safety', function () {
     });
 
     it('preserves shared media when its owner deletes their account', function () {
+        Queue::fake();
+
         $owner = User::factory()->create();
         $linkedUser = User::factory()->create();
 
         $mediaFile = MediaFile::factory()->create([
             'user_id' => $owner->id,
             'file_hash' => 'shared-hash-owner-deletion',
+            'source_url' => 'https://example.com/audio.mp3',
         ]);
 
         $linkedItem = LibraryItem::factory()->create([
             'user_id' => $linkedUser->id,
             'media_file_id' => $mediaFile->id,
+            'source_type' => 'url',
         ]);
 
         $this->actingAs($owner)
@@ -72,6 +78,15 @@ describe('cross-user dedup cascade safety', function () {
         $preservedMediaFile = MediaFile::find($mediaFile->id);
 
         expect($preservedMediaFile)->not->toBeNull();
-        expect($preservedMediaFile->user_id)->toBeNull();
+        expect($preservedMediaFile->user_id)->toBe($linkedUser->id);
+
+        $this->actingAs($linkedUser)
+            ->post("/library/{$linkedItem->id}/redownload")
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Queue::assertPushed(RedownloadMediaFile::class, function (RedownloadMediaFile $job) use ($linkedItem): bool {
+            return $job->getLibraryItemId() === $linkedItem->id;
+        });
     });
 });
