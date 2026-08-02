@@ -42,7 +42,7 @@ class MediaProcessingService
             try {
                 // If user wants audio from a video source, convert it
                 if ($mediaType === 'audio') {
-                    $mimeType = Storage::disk('public')->mimeType($tempPath);
+                    $mimeType = Storage::disk('media')->mimeType($tempPath);
                     if (str_starts_with($mimeType, 'video/')) {
                         $tempPath = $this->videoToAudioConverter->convert($tempPath);
                     }
@@ -51,8 +51,8 @@ class MediaProcessingService
                 return $this->processFromFile($libraryItem, $tempPath, $sourceUrl);
             } finally {
                 foreach (array_unique([$sourceTempPath, $tempPath]) as $path) {
-                    if (Storage::disk('public')->exists($path)) {
-                        Storage::disk('public')->delete($path);
+                    if (Storage::disk('media')->exists($path)) {
+                        Storage::disk('media')->delete($path);
                     }
                 }
             }
@@ -99,7 +99,7 @@ class MediaProcessingService
             }
 
             // Validate and get file metadata
-            $fullPath = Storage::disk('public')->path($filePath);
+            $fullPath = Storage::disk('media')->path($filePath);
             $metadata = $this->validator->validate($fullPath);
             $fileHash = hash_file('sha256', $fullPath);
 
@@ -127,7 +127,7 @@ class MediaProcessingService
                 }
 
                 if ($mediaFile->file_path !== $fileData['file_path']) {
-                    Storage::disk('public')->delete($fileData['file_path']);
+                    Storage::disk('media')->delete($fileData['file_path']);
                 }
 
                 $libraryItem->media_file_id = $mediaFile->id;

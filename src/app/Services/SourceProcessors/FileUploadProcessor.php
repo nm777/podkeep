@@ -24,7 +24,7 @@ class FileUploadProcessor
     public function process(FormRequest $request, array $validated, string $sourceType): array
     {
         $file = $request->file('file');
-        $tempPath = $file->store('temp-uploads', 'public');
+        $tempPath = $file->store('temp-uploads', 'media');
         $userId = auth()->id();
 
         $tempLibraryItem = $this->libraryItemFactory->createFromValidated(
@@ -37,7 +37,7 @@ class FileUploadProcessor
         $duplicateResult = $this->duplicateProcessor->processFileDuplicate($tempLibraryItem, $tempPath);
 
         if ($duplicateResult['media_file']) {
-            Storage::disk('public')->delete($tempPath);
+            Storage::disk('media')->delete($tempPath);
 
             $tempLibraryItem->delete();
 
@@ -65,7 +65,7 @@ class FileUploadProcessor
 
         $tempLibraryItem->delete();
 
-        $fullTempPath = Storage::disk('public')->path($tempPath);
+        $fullTempPath = Storage::disk('media')->path($tempPath);
         $fileHash = hash_file('sha256', $fullTempPath);
 
         $libraryItem = $this->libraryItemFactory->createFromValidatedWithMediaData($validated, $sourceType, [

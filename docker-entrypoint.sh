@@ -2,7 +2,7 @@
 set -e
 
 echo "Fixing storage permissions..."
-mkdir -p storage/app/public/temp-youtube \
+mkdir -p storage/app/private/temp-youtube \
     storage/framework/cache/data \
     storage/framework/sessions \
     storage/framework/testing \
@@ -20,6 +20,7 @@ fi
 
 if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
     su-exec www-data php artisan migrate --force
+    su-exec www-data php artisan media:relocate-public-storage
 else
     echo "Skipping migrations (RUN_MIGRATIONS is not set; only the app service migrates)."
 fi

@@ -28,7 +28,7 @@ class LibraryItem extends Model
             $libraryItem->forgetRssCache();
 
             if ($libraryItem->temp_file_path) {
-                Storage::disk('public')->delete($libraryItem->temp_file_path);
+                Storage::disk('media')->delete($libraryItem->temp_file_path);
             }
         });
     }

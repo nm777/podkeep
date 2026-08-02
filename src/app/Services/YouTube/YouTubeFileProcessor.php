@@ -27,7 +27,7 @@ class YouTubeFileProcessor
      */
     public function processFile(string $downloadedFile, string $youtubeUrl, LibraryItem $libraryItem): array
     {
-        $fullPath = Storage::disk('public')->path($downloadedFile);
+        $fullPath = Storage::disk('media')->path($downloadedFile);
         $fileHash = hash_file('sha256', $fullPath);
         $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
         $finalPath = 'media/'.$fileHash.'.'.$extension;
@@ -43,14 +43,14 @@ class YouTubeFileProcessor
         if ($duplicateResult['media_file']) {
             $existingMediaFile = $duplicateResult['media_file'];
 
-            if (Storage::disk('public')->exists($existingMediaFile->file_path)) {
+            if (Storage::disk('media')->exists($existingMediaFile->file_path)) {
                 Log::info('File duplicate found, skipping file creation', [
                     'library_item_id' => $libraryItem->id,
                     'media_file_id' => $existingMediaFile->id,
                     'is_duplicate' => $duplicateResult['is_duplicate'],
                 ]);
 
-                Storage::disk('public')->delete($downloadedFile);
+                Storage::disk('media')->delete($downloadedFile);
 
                 return $duplicateResult;
             }
@@ -68,7 +68,7 @@ class YouTubeFileProcessor
 
         DuplicateDetectionService::cleanupOrphanedByHash($fileHash);
 
-        $moveSuccess = Storage::disk('public')->move($downloadedFile, $finalPath);
+        $moveSuccess = Storage::disk('media')->move($downloadedFile, $finalPath);
 
         Log::info('File move completed', [
             'library_item_id' => $libraryItem->id,
@@ -76,9 +76,9 @@ class YouTubeFileProcessor
             'final_path' => $finalPath,
         ]);
 
-        $mimeType = File::mimeType(Storage::disk('public')->path($finalPath));
-        $fileSize = File::size(Storage::disk('public')->path($finalPath));
-        $duration = $this->validator->probeDuration(Storage::disk('public')->path($finalPath));
+        $mimeType = File::mimeType(Storage::disk('media')->path($finalPath));
+        $fileSize = File::size(Storage::disk('media')->path($finalPath));
+        $duration = $this->validator->probeDuration(Storage::disk('media')->path($finalPath));
 
         Log::info('Creating media file record', [
             'library_item_id' => $libraryItem->id,

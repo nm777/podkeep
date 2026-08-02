@@ -46,14 +46,14 @@ class MediaDownloader
         $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'mp3';
         $relativePath = 'temp-downloads/'.uniqid().'.'.$extension;
 
-        Storage::disk('public')->makeDirectory('temp-downloads');
-        $absolutePath = Storage::disk('public')->path($relativePath);
+        Storage::disk('media')->makeDirectory('temp-downloads');
+        $absolutePath = Storage::disk('media')->path($relativePath);
 
         try {
             $response = $this->executeDownload($url, $absolutePath, $ip);
 
             if ($response->redirect() && $location = $response->header('Location')) {
-                Storage::disk('public')->delete($relativePath);
+                Storage::disk('media')->delete($relativePath);
 
                 return $this->downloadToTempFile(
                     $this->makeAbsoluteUrl($location, $url),
@@ -93,7 +93,7 @@ class MediaDownloader
             // Handle HTML redirects (redirect pages are small, safe to read fully)
             if ($this->isHtmlContent($firstBytes)) {
                 $html = file_get_contents($absolutePath);
-                Storage::disk('public')->delete($relativePath);
+                Storage::disk('media')->delete($relativePath);
 
                 $redirectUrl = $this->extractRedirectUrl($html, $url);
                 if ($redirectUrl) {
@@ -107,7 +107,7 @@ class MediaDownloader
 
             return $relativePath;
         } catch (\Exception $e) {
-            Storage::disk('public')->delete($relativePath);
+            Storage::disk('media')->delete($relativePath);
 
             throw $e;
         }

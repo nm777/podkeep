@@ -58,7 +58,7 @@ class RetryPendingProcessing extends Command
                 continue;
             }
 
-            if ($item->temp_file_path && Storage::disk('public')->exists($item->temp_file_path)) {
+            if ($item->temp_file_path && Storage::disk('media')->exists($item->temp_file_path)) {
                 ProcessMediaFile::dispatch($item, null, $item->temp_file_path);
                 $redispatched++;
             } elseif ($item->source_type === 'youtube' && $item->source_url) {

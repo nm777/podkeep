@@ -41,10 +41,10 @@ class MediaRedownloader
         try {
             $tempPath = $this->downloader->downloadFromUrl($mediaFile->source_url);
 
-            $fullPath = Storage::disk('public')->path($tempPath);
+            $fullPath = Storage::disk('media')->path($tempPath);
             $metadata = $this->validator->validate($fullPath);
             $finalPath = 'media/'.hash_file('sha256', $fullPath).'.'.pathinfo($fullPath, PATHINFO_EXTENSION);
-            $finalPathExisted = Storage::disk('public')->exists($finalPath);
+            $finalPathExisted = Storage::disk('media')->exists($finalPath);
 
             $storageInfo = $this->storageManager->moveTempFile($tempPath, $mediaFile->source_url);
 
@@ -103,16 +103,16 @@ class MediaRedownloader
             }
 
             if ($replacement && $replacement->file_path !== $storageInfo['file_path']) {
-                if (Storage::disk('public')->exists($replacement->file_path)) {
-                    Storage::disk('public')->delete($storageInfo['file_path']);
+                if (Storage::disk('media')->exists($replacement->file_path)) {
+                    Storage::disk('media')->delete($storageInfo['file_path']);
                 } else {
-                    Storage::disk('public')->move($storageInfo['file_path'], $replacement->file_path);
+                    Storage::disk('media')->move($storageInfo['file_path'], $replacement->file_path);
                 }
             }
 
             if ($hashChanged && $fileExisted && $oldFilePath !== $storageInfo['file_path']
                 && ! MediaFile::where('file_path', $oldFilePath)->exists()) {
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::disk('media')->delete($oldFilePath);
             }
 
             ($replacement
@@ -129,7 +129,7 @@ class MediaRedownloader
             ];
         } catch (\Exception $e) {
             if ($storageInfo && ! $finalPathExisted) {
-                Storage::disk('public')->delete($storageInfo['file_path']);
+                Storage::disk('media')->delete($storageInfo['file_path']);
             }
 
             if ($tempPath) {

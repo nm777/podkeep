@@ -42,7 +42,7 @@ class RedownloadMissingMedia extends Command
         $items = $query->with('mediaFile')->get();
         $missing = $items->filter(
             fn (LibraryItem $item) => $item->mediaFile
-                && ! Storage::disk('public')->exists($item->mediaFile->file_path)
+                && ! Storage::disk('media')->exists($item->mediaFile->file_path)
         )->values();
 
         if ($missing->isEmpty()) {

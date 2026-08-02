@@ -63,7 +63,7 @@ class MediaController extends Controller
 
     private function serveMediaFile(string $file_path, MediaFile $mediaFile): BinaryFileResponse
     {
-        $absolutePath = Storage::disk('public')->path($file_path);
+        $absolutePath = Storage::disk('media')->path($file_path);
 
         if (! file_exists($absolutePath)) {
             abort(404);

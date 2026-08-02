@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\Storage;
 use function Pest\Laravel\actingAs;
 
 it('allows users to only access their own media files', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user1 = User::factory()->create();
     $user2 = User::factory()->create();
 
     // Create a media file for user1 with actual file in storage
-    Storage::disk('public')->put('media/test-file.mp3', 'fake audio content');
+    Storage::disk('media')->put('media/test-file.mp3', 'fake audio content');
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user1->id,
         'file_path' => 'media/test-file.mp3',
@@ -42,13 +42,13 @@ it('allows users to only access their own media files', function () {
 });
 
 it('allows users to access media files linked to their library items', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $owner = User::factory()->create();
     $linkedUser = User::factory()->create();
     $unrelatedUser = User::factory()->create();
 
-    Storage::disk('public')->put('media/shared-file.mp3', 'fake audio content');
+    Storage::disk('media')->put('media/shared-file.mp3', 'fake audio content');
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $owner->id,
         'file_path' => 'media/shared-file.mp3',
@@ -69,7 +69,7 @@ it('allows users to access media files linked to their library items', function 
 });
 
 it('allows duplicate files for different users but links to existing media without duplicate flag', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user1 = User::factory()->create();
     $user2 = User::factory()->create();
@@ -163,7 +163,7 @@ it('only shows user-specific duplicates in URL check API', function () {
 });
 
 it('creates new media file when user uploads file with different hash', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
 
@@ -192,7 +192,7 @@ it('creates new media file when user uploads file with different hash', function
 });
 
 it('correctly sets is_duplicate flag for true duplicate file uploads', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake(); // Prevent jobs from actually running
 
     $user = User::factory()->create();
@@ -202,7 +202,7 @@ it('correctly sets is_duplicate flag for true duplicate file uploads', function 
     $fileHash = hash('sha256', $fileContent);
 
     // Store the file in storage to match the factory
-    Storage::disk('public')->put('media/'.$fileHash.'.mp3', $fileContent);
+    Storage::disk('media')->put('media/'.$fileHash.'.mp3', $fileContent);
 
     $existingMediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -242,7 +242,7 @@ it('correctly sets is_duplicate flag for true duplicate file uploads', function 
 });
 
 it('detects duplicate YouTube URLs correctly', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user1 = User::factory()->create();
 

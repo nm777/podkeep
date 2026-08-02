@@ -8,13 +8,13 @@ use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
 test('enclosure URL from RSS feed is accessible and returns media file', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
 
     $audioContent = str_repeat('fake audio data ', 500);
     $filePath = 'media/test-audio.mp3';
-    Storage::disk('public')->put($filePath, $audioContent);
+    Storage::disk('media')->put($filePath, $audioContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -57,7 +57,7 @@ test('enclosure URL from RSS feed is accessible and returns media file', functio
 });
 
 test('enclosure URL from RSS feed returns 404 when file missing from disk', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
 
@@ -101,7 +101,7 @@ test('enclosure URL from RSS feed returns 404 when file missing from disk', func
 });
 
 test('rss_url accessor generates URL matching the files.show route', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $mediaFile = MediaFile::factory()->create([
         'file_path' => 'media/abc123.mp3',
@@ -116,29 +116,26 @@ test('rss_url accessor generates URL matching the files.show route', function ()
     expect($parsedUrl['path'])->toBe('/files/media/abc123.mp3');
 });
 
-test('rss_url uses /files/ route not /storage/ symlink', function () {
-    Storage::fake('public');
+test('rss_url uses /files/ route and media disk has no public URL', function () {
+    Storage::fake('media');
 
     $mediaFile = MediaFile::factory()->create([
         'file_path' => 'media/test-file.mp3',
     ]);
 
     $rssUrl = $mediaFile->rss_url;
-    $publicUrl = $mediaFile->public_url;
-
     expect($rssUrl)->toContain('/files/media/test-file.mp3');
-    expect($publicUrl)->toContain('/storage/media/test-file.mp3');
-    expect($rssUrl)->not->toBe($publicUrl);
+    expect(config('filesystems.disks.media'))->not->toHaveKey('url');
 });
 
 test('private feed enclosure URL requires feed_token to access', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
 
     $audioContent = 'private audio content';
     $filePath = 'media/private-audio.mp3';
-    Storage::disk('public')->put($filePath, $audioContent);
+    Storage::disk('media')->put($filePath, $audioContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -187,7 +184,7 @@ test('private feed enclosure URL requires feed_token to access', function () {
 });
 
 test('multiple items in RSS feed all have accessible enclosure URLs', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
 
@@ -203,7 +200,7 @@ test('multiple items in RSS feed all have accessible enclosure URLs', function (
     ];
 
     foreach ($files as $i => $fileData) {
-        Storage::disk('public')->put($fileData['path'], $fileData['content']);
+        Storage::disk('media')->put($fileData['path'], $fileData['content']);
 
         $mediaFile = MediaFile::factory()->create([
             'user_id' => $user->id,
@@ -242,7 +239,7 @@ test('multiple items in RSS feed all have accessible enclosure URLs', function (
 });
 
 test('rss_url works with hash-based file paths from processing pipeline', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $fileHash = hash('sha256', 'test content');
     $filePath = 'media/'.$fileHash.'.mp3';

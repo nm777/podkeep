@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 test('rss feed includes items with proper enclosure', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
 
@@ -19,7 +19,7 @@ test('rss feed includes items with proper enclosure', function () {
         'mime_type' => 'audio/mpeg',
     ]);
 
-    Storage::disk('public')->put('media/test-audio.mp3', 'fake audio content');
+    Storage::disk('media')->put('media/test-audio.mp3', 'fake audio content');
 
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
@@ -57,7 +57,7 @@ test('rss feed includes items with proper enclosure', function () {
 });
 
 test('rss feed requires proper enclosure for podcast apps', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
 
@@ -67,7 +67,7 @@ test('rss feed requires proper enclosure for podcast apps', function () {
         'mime_type' => 'audio/mpeg',
     ]);
 
-    Storage::disk('public')->put('media/test-audio.mp3', 'fake audio content');
+    Storage::disk('media')->put('media/test-audio.mp3', 'fake audio content');
 
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
@@ -102,7 +102,7 @@ test('rss feed requires proper enclosure for podcast apps', function () {
 });
 
 test('rss feed includes youtube items with converted audio', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
 
@@ -112,7 +112,7 @@ test('rss feed includes youtube items with converted audio', function () {
         'mime_type' => 'audio/mpeg',
     ]);
 
-    Storage::disk('public')->put('media/youtube-audio.mp3', 'fake youtube audio content');
+    Storage::disk('media')->put('media/youtube-audio.mp3', 'fake youtube audio content');
 
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
@@ -183,7 +183,7 @@ test('rss feed excludes youtube items without converted audio', function () {
 });
 
 test('rss feed reflects updated library item title after cache invalidation', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
 
@@ -193,7 +193,7 @@ test('rss feed reflects updated library item title after cache invalidation', fu
         'mime_type' => 'audio/mpeg',
     ]);
 
-    Storage::disk('public')->put('media/test-audio.mp3', 'fake audio content');
+    Storage::disk('media')->put('media/test-audio.mp3', 'fake audio content');
 
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,

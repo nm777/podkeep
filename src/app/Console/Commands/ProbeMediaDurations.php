@@ -31,7 +31,7 @@ class ProbeMediaDurations extends Command
         $bar->start();
 
         foreach ($files as $mediaFile) {
-            $path = Storage::disk('public')->path($mediaFile->file_path);
+            $path = Storage::disk('media')->path($mediaFile->file_path);
 
             if (! file_exists($path)) {
                 $missing++;

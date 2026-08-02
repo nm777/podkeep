@@ -107,7 +107,7 @@ COPY --from=whisper /usr/local/bin/whisper-cli /usr/local/bin/whisper-cli
 COPY --from=whisper /models/ggml-small.en.bin /opt/whisper-models/ggml-small.en.bin
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
-    && mkdir -p storage/app/public/temp-youtube \
+    && mkdir -p storage/app/private/temp-youtube \
     && mkdir -p storage/framework/cache/data \
     && mkdir -p storage/framework/sessions \
     && mkdir -p storage/framework/testing \

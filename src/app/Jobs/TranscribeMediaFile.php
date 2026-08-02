@@ -43,7 +43,7 @@ class TranscribeMediaFile implements ShouldQueue
         }
 
         $chunkSeconds = (int) config('services.whisper.chunk_seconds', 1800);
-        $source = Storage::disk('public')->path($mediaFile->file_path);
+        $source = Storage::disk('media')->path($mediaFile->file_path);
         $chunking = $whisper->chunk($source, $chunkSeconds);
 
         try {

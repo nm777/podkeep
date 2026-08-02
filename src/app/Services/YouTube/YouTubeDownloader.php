@@ -20,7 +20,7 @@ class YouTubeDownloader
 
         try {
             // Create temp directory
-            Storage::disk('public')->makeDirectory($tempDir);
+            Storage::disk('media')->makeDirectory($tempDir);
 
             // Download audio using yt-dlp
             $command = [
@@ -32,7 +32,7 @@ class YouTubeDownloader
                 '0', // best quality
                 '--no-playlist',
                 '--output',
-                Storage::disk('public')->path($tempPath),
+                Storage::disk('media')->path($tempPath),
                 $youtubeUrl,
             ];
 
@@ -57,7 +57,7 @@ class YouTubeDownloader
             // Find downloaded file (yt-dlp might create different extensions)
             $downloadedFile = $this->findDownloadedFile($tempDir);
 
-            if (! $downloadedFile || ! Storage::disk('public')->exists($downloadedFile)) {
+            if (! $downloadedFile || ! Storage::disk('media')->exists($downloadedFile)) {
                 Log::error('No downloaded file found', [
                     'video_id' => $videoId,
                     'error' => 'Downloaded audio file not found',
@@ -88,13 +88,13 @@ class YouTubeDownloader
         $videoId = YouTubeUrlValidator::extractVideoId($youtubeUrl);
 
         try {
-            Storage::disk('public')->makeDirectory($tempDir);
+            Storage::disk('media')->makeDirectory($tempDir);
 
             $command = [
                 'yt-dlp',
                 '--format', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4/best',
                 '--no-playlist',
-                '--output', Storage::disk('public')->path($tempPath),
+                '--output', Storage::disk('media')->path($tempPath),
                 $youtubeUrl,
             ];
 
@@ -114,7 +114,7 @@ class YouTubeDownloader
 
             $downloadedFile = $this->findDownloadedFile($tempDir, 'video');
 
-            return $downloadedFile && Storage::disk('public')->exists($downloadedFile) ? $downloadedFile : null;
+            return $downloadedFile && Storage::disk('media')->exists($downloadedFile) ? $downloadedFile : null;
 
         } catch (\Exception $e) {
             Log::error('YouTube video download failed', [
@@ -131,7 +131,7 @@ class YouTubeDownloader
      */
     private function findDownloadedFile(string $tempDir, string $filename = 'audio'): ?string
     {
-        $files = Storage::disk('public')->allFiles($tempDir);
+        $files = Storage::disk('media')->allFiles($tempDir);
 
         foreach ($files as $file) {
             if (pathinfo($file, PATHINFO_FILENAME) === $filename) {
@@ -147,8 +147,8 @@ class YouTubeDownloader
      */
     public function cleanupTempDirectory(string $tempDir): void
     {
-        if (Storage::disk('public')->exists($tempDir)) {
-            Storage::disk('public')->deleteDirectory($tempDir);
+        if (Storage::disk('media')->exists($tempDir)) {
+            Storage::disk('media')->deleteDirectory($tempDir);
         }
     }
 }

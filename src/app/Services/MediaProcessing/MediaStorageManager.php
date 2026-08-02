@@ -12,13 +12,13 @@ class MediaStorageManager
     public function storeFile(string $content, string $extension, ?string $sourceUrl = null): array
     {
         $tempPath = 'temp-hash-'.uniqid().'.'.$extension;
-        Storage::disk('public')->put($tempPath, $content);
+        Storage::disk('media')->put($tempPath, $content);
 
-        $fullPath = Storage::disk('public')->path($tempPath);
+        $fullPath = Storage::disk('media')->path($tempPath);
         $fileHash = hash_file('sha256', $fullPath);
 
         $finalPath = 'media/'.$fileHash.'.'.$extension;
-        Storage::disk('public')->move($tempPath, $finalPath);
+        Storage::disk('media')->move($tempPath, $finalPath);
 
         return [
             'file_path' => $finalPath,
@@ -34,13 +34,13 @@ class MediaStorageManager
      */
     public function moveTempFile(string $tempPath, ?string $sourceUrl = null): array
     {
-        $fullPath = Storage::disk('public')->path($tempPath);
+        $fullPath = Storage::disk('media')->path($tempPath);
         $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
         $fileHash = hash_file('sha256', $fullPath);
         $filesize = filesize($fullPath);
 
         $finalPath = 'media/'.$fileHash.'.'.$extension;
-        Storage::disk('public')->move($tempPath, $finalPath);
+        Storage::disk('media')->move($tempPath, $finalPath);
 
         return [
             'file_path' => $finalPath,
@@ -55,7 +55,7 @@ class MediaStorageManager
      */
     public function cleanupTempFile(string $tempPath): void
     {
-        Storage::disk('public')->delete($tempPath);
+        Storage::disk('media')->delete($tempPath);
     }
 
     /**
@@ -63,7 +63,7 @@ class MediaStorageManager
      */
     public function getFileSize(string $filePath): int
     {
-        $fullPath = Storage::disk('public')->path($filePath);
+        $fullPath = Storage::disk('media')->path($filePath);
 
         if (! file_exists($fullPath)) {
             return 0;
@@ -77,6 +77,6 @@ class MediaStorageManager
      */
     public function fileExists(string $filePath): bool
     {
-        return Storage::disk('public')->exists($filePath);
+        return Storage::disk('media')->exists($filePath);
     }
 }

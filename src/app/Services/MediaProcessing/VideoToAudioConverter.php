@@ -17,11 +17,11 @@ class VideoToAudioConverter
      */
     public function convert(string $videoPath): string
     {
-        $absoluteInput = Storage::disk('public')->path($videoPath);
+        $absoluteInput = Storage::disk('media')->path($videoPath);
         $outputDir = dirname($videoPath);
         $outputName = pathinfo($videoPath, PATHINFO_FILENAME).'.mp3';
         $outputPath = $outputDir.'/'.$outputName;
-        $absoluteOutput = Storage::disk('public')->path($outputPath);
+        $absoluteOutput = Storage::disk('media')->path($outputPath);
 
         $command = [
             'ffmpeg',
@@ -52,7 +52,7 @@ class VideoToAudioConverter
 
         Log::info('Video to audio conversion completed', [
             'output' => $outputPath,
-            'size' => Storage::disk('public')->size($outputPath),
+            'size' => Storage::disk('media')->size($outputPath),
         ]);
 
         return $outputPath;

@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property array<int, array<string, mixed>>|null $transcript
@@ -59,11 +58,6 @@ class MediaFile extends Model
     public function chapters(): HasMany
     {
         return $this->hasMany(Chapter::class)->orderBy('start_time');
-    }
-
-    public function getPublicUrlAttribute(): string
-    {
-        return Storage::disk('public')->url($this->file_path);
     }
 
     public function getRssUrlAttribute(): string

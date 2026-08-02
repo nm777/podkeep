@@ -16,7 +16,7 @@ class DuplicateDetectionService
     {
         // Try to use hash_file with storage path first (most efficient)
         try {
-            $fullPath = Storage::disk('public')->path($filePath);
+            $fullPath = Storage::disk('media')->path($filePath);
             if (file_exists($fullPath)) {
                 return hash_file('sha256', $fullPath);
             }

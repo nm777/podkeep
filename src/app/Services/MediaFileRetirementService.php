@@ -32,7 +32,7 @@ class MediaFileRetirementService
         }
 
         if ($result['delete_storage']) {
-            Storage::disk('public')->delete($result['file_path']);
+            Storage::disk('media')->delete($result['file_path']);
         }
 
         return true;
