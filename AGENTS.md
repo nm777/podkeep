@@ -15,8 +15,16 @@ Auto-generated from all feature plans. Last updated: 2026-07-12
 
 ## Project Structure
 
+## Paths
+
+- The repository root is the current workspace.
+- The Laravel application root is `./src`.
+- Resolve application files as `./src/app/...`, `./src/routes/...`, and `./src/tests/...`.
+- Never expand `src/...` relative to `~` or any parent directory.
+- Before reading application files, verify the workspace root contains both `AGENTS.md` and `src/composer.json`.
+
 ```text
-src/                          # Laravel application root
+./src/                        # Laravel application root
 ├── app/
 │   ├── Console/Commands/
 │   ├── Enums/
