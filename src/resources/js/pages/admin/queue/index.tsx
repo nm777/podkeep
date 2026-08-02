@@ -1,7 +1,13 @@
 import AdminLayout from '@/layouts/admin-layout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, usePoll } from '@inertiajs/react';
 import { Copy } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
+
+interface JobMedia {
+    id: number;
+    title: string | null;
+    url: string;
+}
 
 interface QueueJob {
     id: number;
@@ -9,6 +15,7 @@ interface QueueJob {
     queue: string;
     attempts: number;
     created_at: string;
+    media: JobMedia | null;
 }
 
 interface ExecutingJob extends QueueJob {
@@ -22,6 +29,7 @@ interface FailedJob {
     queue: string;
     failed_at: string;
     exception: string;
+    media: JobMedia | null;
 }
 
 interface CompletedJob {
@@ -44,6 +52,7 @@ interface UnifiedJob {
     exception?: string;
     uuid?: string;
     jobId?: number;
+    media?: JobMedia | null;
 }
 
 const STATUS_STYLE: Record<JobStatus, string> = {
@@ -82,6 +91,16 @@ function toMs(value: string | number): number {
     return new Date(str).getTime();
 }
 
+function JobMediaLink({ media }: { media?: JobMedia | null }) {
+    if (!media) return null;
+
+    return (
+        <a href={media.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline hover:text-foreground">
+            {media.title ?? `Media file #${media.id}`} (media #{media.id})
+        </a>
+    );
+}
+
 export default function QueueIndex({
     pending,
     executing,
@@ -93,13 +112,7 @@ export default function QueueIndex({
     failed: FailedJob[];
     recentlyCompleted: CompletedJob[];
 }) {
-    useEffect(() => {
-        const interval = setInterval(() => {
-            router.reload({ only: ['pending', 'executing', 'failed', 'recentlyCompleted'] });
-        }, 10000);
-
-        return () => clearInterval(interval);
-    }, []);
+    usePoll(10000, { only: ['pending', 'executing', 'failed', 'recentlyCompleted'] });
 
     const jobs: UnifiedJob[] = useMemo(() => {
         const unified: UnifiedJob[] = [
@@ -111,6 +124,7 @@ export default function QueueIndex({
                 timestamp: toMs(j.created_at),
                 timestampLabel: formatDate(j.created_at),
                 jobId: j.id,
+                media: j.media,
             })),
             ...executing.map((j) => ({
                 key: `e-${j.id}`,
@@ -121,6 +135,7 @@ export default function QueueIndex({
                 timestampLabel: formatDate(j.reserved_at),
                 attempts: j.attempts,
                 jobId: j.id,
+                media: j.media,
             })),
             ...failed.map((j) => ({
                 key: `f-${j.id}`,
@@ -131,6 +146,7 @@ export default function QueueIndex({
                 timestampLabel: formatDate(j.failed_at),
                 exception: j.exception,
                 uuid: j.uuid,
+                media: j.media,
             })),
             ...recentlyCompleted.map((j) => ({
                 key: `c-${j.id}`,
@@ -203,6 +219,7 @@ export default function QueueIndex({
                                     {job.attempts !== undefined && <span>attempts: {job.attempts}</span>}
                                     <span>{job.timestampLabel}</span>
                                 </div>
+                                <JobMediaLink media={job.media} />
                                 {job.exception && (
                                     <details className="mt-1">
                                         <summary className="flex cursor-pointer list-none items-center gap-2 text-xs text-muted-foreground [&::-webkit-details-marker]:hidden">

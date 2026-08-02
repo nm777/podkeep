@@ -50,7 +50,10 @@ class MediaFile extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function libraryItems()
+    /**
+     * @return HasMany<LibraryItem, $this>
+     */
+    public function libraryItems(): HasMany
     {
         return $this->hasMany(LibraryItem::class);
     }

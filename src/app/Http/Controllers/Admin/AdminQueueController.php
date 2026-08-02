@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\MediaFile;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -18,39 +20,47 @@ class AdminQueueController extends Controller
             ->whereNull('reserved_at')
             ->orderBy('id', 'desc')
             ->limit(50)
-            ->get()
-            ->map(fn ($job) => [
-                'id' => $job->id,
-                'type' => $this->parseJobType($job->payload),
-                'queue' => $job->queue,
-                'attempts' => $job->attempts,
-                'created_at' => $job->created_at,
-            ]);
+            ->get();
 
         // Executing: reserved_at IS NOT NULL
         $executing = DB::table('jobs')
             ->whereNotNull('reserved_at')
             ->orderBy('reserved_at', 'desc')
             ->limit(50)
-            ->get()
-            ->map(fn ($job) => [
+            ->get();
+
+        // Failed jobs (paginated)
+        $failed = DB::table('failed_jobs')
+            ->orderBy('failed_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        $mediaFiles = $this->mediaFilesFor($pending->concat($executing)->concat($failed));
+
+        $pending = $pending->map(fn ($job) => [
                 'id' => $job->id,
                 'type' => $this->parseJobType($job->payload),
+                'media' => $this->mediaFileDetails($job->payload, $mediaFiles),
+                'queue' => $job->queue,
+                'attempts' => $job->attempts,
+                'created_at' => $job->created_at,
+            ]);
+
+        $executing = $executing->map(fn ($job) => [
+                'id' => $job->id,
+                'type' => $this->parseJobType($job->payload),
+                'media' => $this->mediaFileDetails($job->payload, $mediaFiles),
                 'queue' => $job->queue,
                 'attempts' => $job->attempts,
                 'reserved_at' => $job->reserved_at,
                 'created_at' => $job->created_at,
             ]);
 
-        // Failed jobs (paginated)
-        $failed = DB::table('failed_jobs')
-            ->orderBy('failed_at', 'desc')
-            ->limit(20)
-            ->get()
-            ->map(fn ($job) => [
+        $failed = $failed->map(fn ($job) => [
                 'id' => $job->id,
                 'uuid' => $job->uuid,
                 'type' => $this->parseJobType($job->payload),
+                'media' => $this->mediaFileDetails($job->payload, $mediaFiles),
                 'queue' => $job->queue,
                 'failed_at' => $job->failed_at,
                 'exception' => Str::limit($job->exception, 500),
@@ -84,6 +94,55 @@ class AdminQueueController extends Controller
         $decoded = json_decode($payload, true);
 
         return $decoded['displayName'] ?? 'Unknown';
+    }
+
+    /**
+     * @param  Collection<int, \stdClass>  $jobs
+     * @return Collection<int, MediaFile>
+     */
+    private function mediaFilesFor(Collection $jobs): Collection
+    {
+        $mediaFileIds = $jobs->map(fn (object $job) => $this->parseMediaFileId($job->payload))
+            ->filter()
+            ->unique();
+
+        return MediaFile::query()
+            ->select(['id', 'file_path'])
+            ->with('libraryItems:id,media_file_id,title')
+            ->whereKey($mediaFileIds)
+            ->get()
+            ->keyBy('id');
+    }
+
+    /**
+     * @param  Collection<int, MediaFile>  $mediaFiles
+     * @return array{id: int, title: string|null, url: string}|null
+     */
+    private function mediaFileDetails(string $payload, Collection $mediaFiles): ?array
+    {
+        $mediaFile = $mediaFiles->get($this->parseMediaFileId($payload));
+
+        if (! $mediaFile instanceof MediaFile) {
+            return null;
+        }
+
+        return [
+            'id' => $mediaFile->id,
+            'title' => $mediaFile->libraryItems->first()?->title,
+            'url' => route('files.show', ['file_path' => $mediaFile->file_path]),
+        ];
+    }
+
+    private function parseMediaFileId(string $payload): ?int
+    {
+        $decoded = json_decode($payload, true);
+        $command = $decoded['data']['command'] ?? null;
+
+        if (! is_string($command) || ! preg_match('/s:5:"class";s:\d+:"App\\\\Models\\\\MediaFile";s:2:"id";i:(\d+);/', $command, $matches)) {
+            return null;
+        }
+
+        return (int) $matches[1];
     }
 
     public function cancel(int $id): RedirectResponse

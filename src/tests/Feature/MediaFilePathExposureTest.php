@@ -55,3 +55,14 @@ it('stores media outside the public storage symlink and serves it through files'
 
     $this->get('/storage/'.$mediaFile->file_path)->assertClientError();
 });
+
+it('allows an admin to access any media file', function () {
+    Storage::fake('media');
+
+    $mediaFile = MediaFile::factory()->create(['file_path' => 'media/private.mp3']);
+    Storage::disk('media')->put($mediaFile->file_path, 'audio');
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->get('/files/'.$mediaFile->file_path)
+        ->assertSuccessful();
+});

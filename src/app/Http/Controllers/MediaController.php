@@ -53,7 +53,7 @@ class MediaController extends Controller
         }
 
         // Ensure users can only access their own files or files linked to their library.
-        if (! Auth::check() || ($mediaFile->user_id !== Auth::id()
+        if (! Auth::check() || (! Auth::user()->isAdmin() && $mediaFile->user_id !== Auth::id()
             && ! $mediaFile->libraryItems()->where('user_id', Auth::id())->exists())) {
             abort(403);
         }

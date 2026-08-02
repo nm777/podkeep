@@ -1,5 +1,8 @@
 <?php
 
+use App\Jobs\SegmentTranscriptIntoChapters;
+use App\Models\LibraryItem;
+use App\Models\MediaFile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -79,6 +82,35 @@ it('does not expose the raw job payload', function () {
     $this->actingAs($admin)
         ->get('/admin/queue')
         ->assertInertia(fn ($page) => $page->missing('pending.0.payload'));
+});
+
+it('identifies the media file for a queued job', function () {
+    $admin = User::factory()->admin()->create();
+    $mediaFile = MediaFile::factory()->create();
+    $libraryItem = LibraryItem::factory()->create([
+        'media_file_id' => $mediaFile->id,
+        'title' => "God's Smuggler",
+    ]);
+
+    DB::table('jobs')->insert([
+        'queue' => 'chapters',
+        'payload' => json_encode([
+            'displayName' => SegmentTranscriptIntoChapters::class,
+            'data' => ['command' => serialize(new SegmentTranscriptIntoChapters($mediaFile))],
+        ]),
+        'attempts' => 0,
+        'reserved_at' => null,
+        'available_at' => now()->addSeconds(60)->timestamp,
+        'created_at' => now()->timestamp,
+    ]);
+
+    $this->actingAs($admin)
+        ->get('/admin/queue')
+        ->assertInertia(fn ($page) => $page
+            ->where('pending.0.media.id', $mediaFile->id)
+            ->where('pending.0.media.title', $libraryItem->title)
+            ->where('pending.0.media.url', route('files.show', ['file_path' => $mediaFile->file_path]))
+        );
 });
 
 it('allows an admin to cancel a pending job', function () {
