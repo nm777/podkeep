@@ -12,14 +12,20 @@ export function getAbsoluteRssUrl(feed: Feed): string {
     return window.location.origin + getFullRssUrl(feed);
 }
 
+export function getApplePodcastsUrlForRssUrl(rssUrl: string): string {
+    return `podcast://${rssUrl.replace('https://', '').replace('http://', '')}`;
+}
+
+export function getGooglePodcastsUrlForRssUrl(rssUrl: string): string {
+    return `https://podcasts.google.com/subscribe?url=${encodeURIComponent(rssUrl)}`;
+}
+
 export function getApplePodcastsUrl(feed: Feed): string {
-    const fullUrl = getAbsoluteRssUrl(feed);
-    return `podcast://${fullUrl.replace('https://', '').replace('http://', '')}`;
+    return getApplePodcastsUrlForRssUrl(getAbsoluteRssUrl(feed));
 }
 
 export function getGooglePodcastsUrl(feed: Feed): string {
-    const fullUrl = getAbsoluteRssUrl(feed);
-    return `https://podcasts.google.com/subscribe?url=${encodeURIComponent(fullUrl)}`;
+    return getGooglePodcastsUrlForRssUrl(getAbsoluteRssUrl(feed));
 }
 
 export function getShareUrl(feed: Feed): string {

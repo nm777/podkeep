@@ -108,15 +108,23 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
     };
 
     const addLibraryItem = (libraryItemId: number) => {
-        const count = data.items.length;
-        setData('items', [
+        const items = [
             ...data.items,
             {
                 id: Date.now(),
                 library_item_id: libraryItemId,
-                sequence: data.feed_type === 'append' ? 0 : count,
+                sequence: 0,
             },
-        ]);
+        ];
+        const count = items.length;
+
+        setData(
+            'items',
+            items.map((item, i) => ({
+                ...item,
+                sequence: data.feed_type === 'append' ? count - 1 - i : i,
+            })),
+        );
     };
 
     const removeItem = (index: number) => {

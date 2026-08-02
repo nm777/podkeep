@@ -1,6 +1,8 @@
 import ShareEpisodeList from '@/components/share-episode-list';
 import SharePlayer from '@/components/share-player';
+import { getApplePodcastsUrlForRssUrl, getGooglePodcastsUrlForRssUrl } from '@/lib/subscribe-urls';
 import { type ShareEpisode, type SharePageProps } from '@/types';
+import { FileAudio, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 
 function CopyRssButton({ rssUrl }: { rssUrl: string }) {
@@ -24,12 +26,33 @@ function CopyRssButton({ rssUrl }: { rssUrl: string }) {
     );
 }
 
-function FeedHeader({ feed }: { feed: SharePageProps['feed'] }) {
+function FeedHeader({ feed, rssUrl }: { feed: SharePageProps['feed']; rssUrl: string }) {
     return (
         <div className="mb-8">
             {feed.cover_image_url && <img src={feed.cover_image_url} alt={feed.title} className="mb-4 h-32 w-32 rounded-lg object-cover" />}
             <h1 className="text-2xl font-bold">{feed.title}</h1>
             {feed.description && <p className="mt-2 text-muted-foreground">{feed.description}</p>}
+            <div className="mt-4 flex flex-wrap gap-2">
+                <CopyRssButton rssUrl={rssUrl} />
+                <a
+                    href={getApplePodcastsUrlForRssUrl(rssUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+                >
+                    <FileAudio className="h-4 w-4" />
+                    Apple Podcasts
+                </a>
+                <a
+                    href={getGooglePodcastsUrlForRssUrl(rssUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+                >
+                    <Smartphone className="h-4 w-4" />
+                    Google Podcasts
+                </a>
+            </div>
         </div>
     );
 }
@@ -47,7 +70,7 @@ export default function ShareShow({ feed, episodes, rssUrl }: SharePageProps & {
             </header>
 
             <main className="mx-auto w-full max-w-3xl px-4 py-8">
-                <FeedHeader feed={feed} />
+                <FeedHeader feed={feed} rssUrl={rssUrl} />
 
                 <div className="mb-6">
                     <SharePlayer key={activeEpisode?.id} episode={activeEpisode} />
@@ -55,7 +78,6 @@ export default function ShareShow({ feed, episodes, rssUrl }: SharePageProps & {
 
                 <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-lg font-semibold">Episodes</h2>
-                    <CopyRssButton rssUrl={rssUrl} />
                 </div>
 
                 <ShareEpisodeList episodes={episodes} activeEpisodeId={activeEpisode?.id} onSelect={setActiveEpisode} />
