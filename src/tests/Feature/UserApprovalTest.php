@@ -113,6 +113,23 @@ test('rejected user cannot login', function () {
     ]);
 
     $response->assertRedirect('/login');
+    $response->assertSessionHas('status', 'Your registration has been rejected. Reason: Test rejection');
+    $response->assertSessionHas('status_type', 'error');
+    $this->assertGuest();
+});
+
+test('rejected user receives rejection status when accessing an approved route', function () {
+    $rejectedUser = User::factory()->create([
+        'email_verified_at' => now(),
+        'approval_status' => 'rejected',
+        'rejection_reason' => 'Test rejection',
+    ]);
+
+    $response = $this->actingAs($rejectedUser)->get('/feeds');
+
+    $response->assertRedirect('/login');
+    $response->assertSessionHas('status', 'Your registration has been rejected. Reason: Test rejection');
+    $response->assertSessionHas('status_type', 'error');
     $this->assertGuest();
 });
 
