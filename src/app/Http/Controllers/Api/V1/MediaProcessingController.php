@@ -47,10 +47,6 @@ class MediaProcessingController extends Controller
     {
         $item = Auth::user()->libraryItems()->findOrFail($id);
 
-        if ($item->isProcessing()) {
-            return response()->json(['message' => 'This media file is already being processed.'], 422);
-        }
-
         if (! $item->mediaFile) {
             return response()->json(['message' => 'No media file associated with this library item.'], 422);
         }
@@ -63,12 +59,21 @@ class MediaProcessingController extends Controller
             return response()->json(['message' => 'Cannot redownload a media file owned by another user.'], 422);
         }
 
-        $item->update([
-            'processing_status' => ProcessingStatusType::PROCESSING,
-            'processing_started_at' => now(),
-            'processing_completed_at' => null,
-            'processing_error' => null,
-        ]);
+        $claimed = $item->newQuery()
+            ->whereKey($item->id)
+            ->where('processing_status', '!=', ProcessingStatusType::PROCESSING)
+            ->update([
+                'processing_status' => ProcessingStatusType::PROCESSING,
+                'processing_started_at' => now(),
+                'processing_completed_at' => null,
+                'processing_error' => null,
+            ]);
+
+        if ($claimed === 0) {
+            return response()->json(['message' => 'This media file is already being processed.'], 422);
+        }
+
+        $item->refresh();
 
         if ($item->source_type === 'youtube') {
             dispatch(new ProcessYouTubeAudio($item, $item->source_url));

@@ -11,6 +11,7 @@ use App\Services\MediaFileRetirementService;
 use App\Services\MediaProcessing\MediaValidator;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -87,15 +88,33 @@ class YouTubeFileProcessor
             'filesize' => $fileSize,
         ]);
 
-        $mediaFile = MediaFile::create([
-            'user_id' => $libraryItem->user_id,
-            'file_path' => $finalPath,
-            'file_hash' => $fileHash,
-            'mime_type' => $mimeType,
-            'filesize' => $fileSize,
-            'duration' => $duration,
-            'source_url' => $youtubeUrl,
-        ]);
+        try {
+            $mediaFile = MediaFile::create([
+                'user_id' => $libraryItem->user_id,
+                'file_path' => $finalPath,
+                'file_hash' => $fileHash,
+                'mime_type' => $mimeType,
+                'filesize' => $fileSize,
+                'duration' => $duration,
+                'source_url' => $youtubeUrl,
+            ]);
+        } catch (QueryException $e) {
+            $mediaFile = MediaFile::findByHash($fileHash);
+
+            if (! $mediaFile) {
+                throw $e;
+            }
+
+            if ($mediaFile->file_path !== $finalPath) {
+                Storage::disk('media')->delete($finalPath);
+            }
+
+            return [
+                'is_duplicate' => true,
+                'media_file' => $mediaFile,
+                'message' => 'File already exists in system. Linked to existing media file.',
+            ];
+        }
 
         // Honor the add-time opt-in for automatic chapter generation.
         if ($libraryItem->auto_generate_chapters && $mediaFile->duration) {

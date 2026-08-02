@@ -26,7 +26,7 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     Http::fake([
         'https://example.com/audio.mp3' => Http::response('RIFFfake audio content', 200),
@@ -60,7 +60,7 @@ it('dispatches redownload job to queue', function () {
     $fileContent = 'RIFFfake audio content';
     $fileHash = hash('sha256', $fileContent);
 
-    Storage::disk('public')->put('media/'.$fileHash.'.mp3', $fileContent);
+    Storage::disk('media')->put('media/'.$fileHash.'.mp3', $fileContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -109,6 +109,28 @@ it('rejects redownloading an item already being processed', function () {
     Queue::assertNotPushed(RedownloadMediaFile::class);
 });
 
+it('atomically claims an item before dispatching a redownload job', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'source_url' => 'https://example.com/audio.mp3',
+    ]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+        'source_type' => 'url',
+    ]);
+
+    actingAs($user)->post("/library/{$libraryItem->id}/redownload")->assertRedirect();
+    actingAs($user)->post("/library/{$libraryItem->id}/redownload")
+        ->assertRedirect()
+        ->assertSessionHas('error', 'This media file is already being processed.');
+
+    Queue::assertPushed(RedownloadMediaFile::class, 1);
+});
+
 it('prevents overlapping redownload jobs for the same media file', function () {
     $mediaFile = MediaFile::factory()->create();
     $libraryItem = LibraryItem::factory()->create(['media_file_id' => $mediaFile->id]);
@@ -122,13 +144,32 @@ it('prevents overlapping redownload jobs for the same media file', function () {
         ->and($middleware[0]->releaseAfter)->toBeNull();
 });
 
+it('does not redispatch already claimed missing media', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'source_url' => 'https://example.com/audio.mp3',
+    ]);
+    LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+        'processing_status' => ProcessingStatusType::PROCESSING,
+    ]);
+
+    $this->artisan('media:redownload-missing')->assertExitCode(0);
+
+    Queue::assertNotPushed(RedownloadMediaFile::class);
+});
+
 it('allows user to redownload their own media file', function () {
     $user = User::factory()->create();
 
     $fileContent = 'RIFFfake audio content';
     $fileHash = hash('sha256', $fileContent);
 
-    Storage::disk('public')->put('media/'.$fileHash.'.mp3', $fileContent);
+    Storage::disk('media')->put('media/'.$fileHash.'.mp3', $fileContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -160,7 +201,7 @@ it('updates media file when content has changed', function () {
     $oldContent = 'RIFFfake audio content';
     $oldHash = hash('sha256', $oldContent);
 
-    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+    Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -199,8 +240,8 @@ it('updates media file when content has changed', function () {
     expect($mediaFile->chapter_generation_error)->toBeNull();
     expect($mediaFile->chapters)->toHaveCount(0);
 
-    Storage::disk('public')->assertMissing('media/'.$oldHash.'.mp3');
-    Storage::disk('public')->assertExists('media/'.$newHash.'.mp3');
+    Storage::disk('media')->assertMissing('media/'.$oldHash.'.mp3');
+    Storage::disk('media')->assertExists('media/'.$newHash.'.mp3');
 });
 
 it('prevents an old transcription job from checkpointing after an in-place redownload', function () {
@@ -208,7 +249,7 @@ it('prevents an old transcription job from checkpointing after an in-place redow
     $oldContent = 'RIFFfake audio content';
     $oldHash = hash('sha256', $oldContent);
 
-    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+    Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -255,7 +296,7 @@ it('evicts cached RSS when an in-place redownload changes the enclosure path', f
     $oldHash = hash('sha256', $oldContent);
     $newHash = hash('sha256', 'RIFFnew audio content');
 
-    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+    Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -286,8 +327,8 @@ it('relinks a sole-reference redownload to an existing media hash', function () 
     $existingContent = 'RIFFnew audio content';
     $existingHash = hash('sha256', $existingContent);
 
-    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
-    Storage::disk('public')->put('media/'.$existingHash.'.mp3', $existingContent);
+    Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
+    Storage::disk('media')->put('media/'.$existingHash.'.mp3', $existingContent);
 
     $oldMediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -316,8 +357,8 @@ it('relinks a sole-reference redownload to an existing media hash', function () 
         ->and($existingMediaFile->fresh()->transcript)->toBe([['start' => 0, 'end' => 5, 'text' => 'preserved']])
         ->and(Cache::has("rss.{$feed->id}"))->toBeFalse();
     $this->assertModelMissing($oldMediaFile);
-    Storage::disk('public')->assertMissing('media/'.$oldHash.'.mp3');
-    Storage::disk('public')->assertExists('media/'.$existingHash.'.mp3');
+    Storage::disk('media')->assertMissing('media/'.$oldHash.'.mp3');
+    Storage::disk('media')->assertExists('media/'.$existingHash.'.mp3');
 });
 
 it('relinks only the requested item when redownloading shared media with changed content', function () {
@@ -327,7 +368,7 @@ it('relinks only the requested item when redownloading shared media with changed
     $oldHash = hash('sha256', $oldContent);
     $newHash = hash('sha256', 'RIFFnew audio content');
 
-    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+    Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $owner->id,
@@ -362,8 +403,8 @@ it('relinks only the requested item when redownloading shared media with changed
     ]);
     expect($requestedItem->fresh()->mediaFile->file_hash)->toBe($newHash);
 
-    Storage::disk('public')->assertExists('media/'.$oldHash.'.mp3');
-    Storage::disk('public')->assertExists('media/'.$newHash.'.mp3');
+    Storage::disk('media')->assertExists('media/'.$oldHash.'.mp3');
+    Storage::disk('media')->assertExists('media/'.$newHash.'.mp3');
 });
 
 it('removes a newly moved file when redownload persistence fails', function () {
@@ -373,7 +414,7 @@ it('removes a newly moved file when redownload persistence fails', function () {
     $newContent = 'RIFFnew audio content';
     $newHash = hash('sha256', $newContent);
 
-    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+    Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -391,8 +432,8 @@ it('removes a newly moved file when redownload persistence fails', function () {
     expect(fn () => app(MediaRedownloader::class)->redownload($libraryItem))
         ->toThrow(RuntimeException::class, 'Database unavailable');
 
-    Storage::disk('public')->assertExists('media/'.$oldHash.'.mp3');
-    Storage::disk('public')->assertMissing('media/'.$newHash.'.mp3');
+    Storage::disk('media')->assertExists('media/'.$oldHash.'.mp3');
+    Storage::disk('media')->assertMissing('media/'.$newHash.'.mp3');
     expect($mediaFile->fresh()->only(['file_path', 'file_hash']))->toBe([
         'file_path' => 'media/'.$oldHash.'.mp3',
         'file_hash' => $oldHash,
@@ -404,7 +445,7 @@ it('removes the downloaded temp file when redownload validation fails', function
     $oldContent = 'RIFFfake audio content';
     $oldHash = hash('sha256', $oldContent);
 
-    Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+    Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -431,8 +472,8 @@ it('removes the downloaded temp file when redownload validation fails', function
         $validator,
     )->redownload($libraryItem))->toThrow(RuntimeException::class, 'Invalid media');
 
-    Storage::disk('public')->assertDirectoryEmpty('temp-downloads');
-    Storage::disk('public')->assertExists('media/'.$oldHash.'.mp3');
+    Storage::disk('media')->assertDirectoryEmpty('temp-downloads');
+    Storage::disk('media')->assertExists('media/'.$oldHash.'.mp3');
     expect($mediaFile->fresh()->only(['file_path', 'file_hash']))->toBe([
         'file_path' => 'media/'.$oldHash.'.mp3',
         'file_hash' => $oldHash,
@@ -458,7 +499,7 @@ it('restores missing media file when redownloading', function () {
         'source_type' => 'url',
     ]);
 
-    Storage::disk('public')->assertMissing('media/'.$fileHash.'.mp3');
+    Storage::disk('media')->assertMissing('media/'.$fileHash.'.mp3');
 
     actingAs($user)
         ->post("/library/{$libraryItem->id}/redownload")
@@ -466,8 +507,8 @@ it('restores missing media file when redownloading', function () {
 
     $this->artisan('queue:work --once')->assertExitCode(0);
 
-    Storage::disk('public')->assertExists('media/'.$fileHash.'.mp3');
-    $storedContent = Storage::disk('public')->get('media/'.$fileHash.'.mp3');
+    Storage::disk('media')->assertExists('media/'.$fileHash.'.mp3');
+    $storedContent = Storage::disk('media')->get('media/'.$fileHash.'.mp3');
     expect($storedContent)->toBe($fileContent);
 });
 
@@ -520,7 +561,7 @@ it('returns error when media file has no source url', function () {
     $fileContent = 'RIFFfake audio content';
     $fileHash = hash('sha256', $fileContent);
 
-    Storage::disk('public')->put('media/'.$fileHash.'.mp3', $fileContent);
+    Storage::disk('media')->put('media/'.$fileHash.'.mp3', $fileContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -561,7 +602,7 @@ it('returns error when source url returns 404', function () {
     $fileContent = 'RIFFfake audio content';
     $fileHash = hash('sha256', $fileContent);
 
-    Storage::disk('public')->put('media/'.$fileHash.'.mp3', $fileContent);
+    Storage::disk('media')->put('media/'.$fileHash.'.mp3', $fileContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -591,7 +632,11 @@ it('returns error when source url returns 404', function () {
 it('rethrows unexpected redownload errors and records a safe terminal failure', function () {
     $user = User::factory()->create();
     $mediaFile = MediaFile::factory()->create(['user_id' => $user->id, 'source_url' => 'https://example.com/audio.mp3']);
-    $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id, 'media_file_id' => $mediaFile->id]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
+        'processing_status' => ProcessingStatusType::PROCESSING,
+    ]);
     $redownloader = new class extends MediaRedownloader
     {
         public int $calls = 0;
@@ -617,6 +662,16 @@ it('rethrows unexpected redownload errors and records a safe terminal failure', 
         'processing_status' => ProcessingStatusType::FAILED,
         'processing_error' => 'Media redownload failed.',
     ]);
+});
+
+it('does not let a stale redownload failure overwrite a completed item', function () {
+    $libraryItem = LibraryItem::factory()->create([
+        'processing_status' => ProcessingStatusType::COMPLETED,
+    ]);
+
+    (new RedownloadMediaFile($libraryItem))->failed(new RuntimeException('Stale failure'));
+
+    expect($libraryItem->fresh()->processing_status)->toBe(ProcessingStatusType::COMPLETED);
 });
 
 it('logs a generic error when redownload exception contains credentials', function () {
@@ -715,5 +770,5 @@ it('handles redownload when content is html redirect page', function () {
 
     $this->artisan('queue:work --once')->assertExitCode(0);
 
-    Storage::disk('public')->assertExists('media/'.$fileHash.'.mp3');
+    Storage::disk('media')->assertExists('media/'.$fileHash.'.mp3');
 });

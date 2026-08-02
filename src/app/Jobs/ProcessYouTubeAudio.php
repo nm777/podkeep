@@ -9,6 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +27,24 @@ class ProcessYouTubeAudio implements ShouldQueue
     public function getLibraryItemId(): int
     {
         return $this->libraryItem->id;
+    }
+
+    /**
+     * @return array<int, WithoutOverlapping>
+     */
+    public function middleware(): array
+    {
+        $middleware = [(new WithoutOverlapping('library-item-'.$this->libraryItem->id))
+            ->expireAfter(720)
+            ->dontRelease()];
+
+        if ($this->libraryItem->media_file_id) {
+            $middleware[] = (new WithoutOverlapping('media-file-'.$this->libraryItem->media_file_id))
+                ->expireAfter(720)
+                ->dontRelease();
+        }
+
+        return $middleware;
     }
 
     /**
@@ -54,10 +73,12 @@ class ProcessYouTubeAudio implements ShouldQueue
 
     public function failed(?\Throwable $exception): void
     {
-        $this->libraryItem->update([
-            'processing_status' => ProcessingStatusType::FAILED,
-            'processing_completed_at' => now(),
-            'processing_error' => 'YouTube processing failed.',
-        ]);
+        LibraryItem::whereKey($this->libraryItem->id)
+            ->where('processing_status', '!=', ProcessingStatusType::COMPLETED)
+            ->update([
+                'processing_status' => ProcessingStatusType::FAILED,
+                'processing_completed_at' => now(),
+                'processing_error' => 'YouTube processing failed.',
+            ]);
     }
 }

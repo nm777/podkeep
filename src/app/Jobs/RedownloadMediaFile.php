@@ -78,11 +78,13 @@ class RedownloadMediaFile implements ShouldQueue
 
     private function failRedownload(): void
     {
-        $this->libraryItem->update([
-            'processing_status' => ProcessingStatusType::FAILED,
-            'processing_completed_at' => now(),
-            'processing_error' => 'Media redownload failed.',
-        ]);
+        LibraryItem::whereKey($this->libraryItem->id)
+            ->where('processing_status', '!=', ProcessingStatusType::COMPLETED)
+            ->update([
+                'processing_status' => ProcessingStatusType::FAILED,
+                'processing_completed_at' => now(),
+                'processing_error' => 'Media redownload failed.',
+            ]);
 
         Log::error('Media redownload job failed', [
             'library_item_id' => $this->libraryItem->id,

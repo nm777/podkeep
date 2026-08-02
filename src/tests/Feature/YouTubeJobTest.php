@@ -2,6 +2,7 @@
 
 use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
+use App\Models\MediaFile;
 use App\Models\User;
 use App\Enums\ProcessingStatusType;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
@@ -11,6 +12,7 @@ use App\Services\YouTube\YouTubeMetadataExtractor;
 use App\Services\YouTube\YouTubeProcessingService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 
 it('rethrows unexpected YouTube errors and records a safe terminal failure', function () {
     Storage::fake('public');
@@ -20,6 +22,7 @@ it('rethrows unexpected YouTube errors and records a safe terminal failure', fun
         'user_id' => $user->id,
         'source_type' => 'youtube',
         'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        'processing_status' => ProcessingStatusType::PROCESSING,
     ]);
 
     $sensitiveUrl = 'https://user:secret@example.test/watch?v=dQw4w9WgXcQ&token=secret';
@@ -67,6 +70,29 @@ it('does not log sensitive YouTube processing data', function () {
     ] as $sensitiveField) {
         $this->assertStringNotContainsString($sensitiveField, $logContexts);
     }
+});
+
+it('prevents overlapping YouTube jobs for the same item and media file', function () {
+    $mediaFile = MediaFile::factory()->create();
+    $libraryItem = LibraryItem::factory()->create(['media_file_id' => $mediaFile->id]);
+
+    $middleware = (new ProcessYouTubeAudio($libraryItem, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'))->middleware();
+
+    expect($middleware)->toHaveCount(2)
+        ->and($middleware[0])->toBeInstanceOf(WithoutOverlapping::class)
+        ->and($middleware[0]->key)->toBe('library-item-'.$libraryItem->id)
+        ->and($middleware[1]->key)->toBe('media-file-'.$mediaFile->id);
+});
+
+it('does not let a stale YouTube failure overwrite a completed item', function () {
+    $libraryItem = LibraryItem::factory()->create([
+        'processing_status' => ProcessingStatusType::COMPLETED,
+    ]);
+
+    (new ProcessYouTubeAudio($libraryItem, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
+        ->failed(new Exception('Stale failure'));
+
+    expect($libraryItem->fresh()->processing_status)->toBe(ProcessingStatusType::COMPLETED);
 });
 
 it('marks library item as failed when video ID extraction fails instead of deleting', function () {

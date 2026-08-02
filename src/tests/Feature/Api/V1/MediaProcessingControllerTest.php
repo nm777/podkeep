@@ -173,6 +173,32 @@ describe('redownload', function () {
         Queue::assertNotPushed(RedownloadMediaFile::class);
     });
 
+    it('atomically claims an item before dispatching an API redownload job', function () {
+        Queue::fake();
+
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+        $mediaFile = MediaFile::factory()->create([
+            'user_id' => $user->id,
+            'source_url' => 'https://example.com/episode.mp3',
+        ]);
+        $item = LibraryItem::factory()->create([
+            'user_id' => $user->id,
+            'media_file_id' => $mediaFile->id,
+            'source_type' => 'url',
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/library/'.$item->id.'/redownload')
+            ->assertOk();
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/library/'.$item->id.'/redownload')
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'This media file is already being processed.');
+
+        Queue::assertPushed(RedownloadMediaFile::class, 1);
+    });
+
     it('prevents redownload without source url', function () {
         $user = User::factory()->create();
         $token = $user->createToken('test')->plainTextToken;

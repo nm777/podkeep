@@ -94,10 +94,6 @@ class LibraryController extends Controller
 
         Gate::authorize('update', $libraryItem);
 
-        if ($libraryItem->isProcessing()) {
-            return back()->with('error', 'This media file is already being processed.');
-        }
-
         if (! $libraryItem->mediaFile) {
             return back()->with('error', 'No media file associated with this library item.');
         }
@@ -110,12 +106,20 @@ class LibraryController extends Controller
             return back()->with('error', 'Cannot redownload a media file owned by another user.');
         }
 
-        $libraryItem->update([
-            'processing_status' => ProcessingStatusType::PROCESSING,
-            'processing_started_at' => now(),
-            'processing_completed_at' => null,
-            'processing_error' => null,
-        ]);
+        $claimed = LibraryItem::whereKey($libraryItem->id)
+            ->where('processing_status', '!=', ProcessingStatusType::PROCESSING)
+            ->update([
+                'processing_status' => ProcessingStatusType::PROCESSING,
+                'processing_started_at' => now(),
+                'processing_completed_at' => null,
+                'processing_error' => null,
+            ]);
+
+        if ($claimed === 0) {
+            return back()->with('error', 'This media file is already being processed.');
+        }
+
+        $libraryItem->refresh();
 
         if ($libraryItem->source_type === 'youtube') {
             dispatch(new ProcessYouTubeAudio($libraryItem, $libraryItem->source_url));

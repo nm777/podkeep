@@ -86,13 +86,22 @@ class RedownloadMissingMedia extends Command
         $this->newLine();
         $this->info("Dispatching {$recoverable->count()} redownload job(s)...");
 
+        $dispatched = 0;
         foreach ($recoverable as $item) {
-            $item->update([
-                'processing_status' => ProcessingStatusType::PROCESSING,
-                'processing_started_at' => now(),
-                'processing_completed_at' => null,
-                'processing_error' => null,
-            ]);
+            $claimed = LibraryItem::whereKey($item->id)
+                ->where('processing_status', '!=', ProcessingStatusType::PROCESSING)
+                ->update([
+                    'processing_status' => ProcessingStatusType::PROCESSING,
+                    'processing_started_at' => now(),
+                    'processing_completed_at' => null,
+                    'processing_error' => null,
+                ]);
+
+            if ($claimed === 0) {
+                continue;
+            }
+
+            $item->refresh();
 
             if ($item->source_type === 'youtube') {
                 ProcessYouTubeAudio::dispatch($item, $item->source_url);
@@ -101,9 +110,10 @@ class RedownloadMissingMedia extends Command
             }
 
             $this->line("  - Item #{$item->id} [{$item->source_type}]: {$item->title}");
+            $dispatched++;
         }
 
-        $this->info("Dispatched {$recoverable->count()} redownload job(s). Check the queue worker and logs for results.");
+        $this->info("Dispatched {$dispatched} redownload job(s). Check the queue worker and logs for results.");
 
         return Command::SUCCESS;
     }
