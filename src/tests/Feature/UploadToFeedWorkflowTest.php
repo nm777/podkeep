@@ -12,14 +12,14 @@ use Illuminate\Support\Facades\Storage;
 use function Pest\Laravel\actingAs;
 
 test('complete workflow: upload file → process → add to feed → generate rss', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
 
     $audioContent = str_repeat('fake audio content for testing', 100);
     $filePath = 'media/test-audio.mp3';
-    Storage::disk('public')->put($filePath, $audioContent);
+    Storage::disk('media')->put($filePath, $audioContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -68,14 +68,14 @@ test('complete workflow: upload file → process → add to feed → generate rs
 });
 
 test('workflow: upload → add to multiple feeds', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
 
     $audioContent = str_repeat('audio', 1000);
     $filePath = 'media/audio.mp3';
-    Storage::disk('public')->put($filePath, $audioContent);
+    Storage::disk('media')->put($filePath, $audioContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -121,14 +121,14 @@ test('workflow: upload → add to multiple feeds', function () {
 });
 
 test('workflow: upload with duplicate detection marks item', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
 
     $audioContent = 'audio content hash';
     $filePath = 'media/audio.mp3';
-    Storage::disk('public')->put($filePath, $audioContent);
+    Storage::disk('media')->put($filePath, $audioContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,

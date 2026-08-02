@@ -80,7 +80,7 @@ describe('retry processing', function () {
 
 describe('redownload', function () {
     it('clears annotations when changed content is redownloaded', function () {
-        Storage::fake('public');
+        Storage::fake('media');
         Http::fake([
             'https://example.com/new-episode.mp3' => Http::response('RIFFnew audio content', 200),
         ]);
@@ -89,7 +89,7 @@ describe('redownload', function () {
         $token = $user->createToken('test')->plainTextToken;
         $oldContent = 'RIFFold audio content';
         $oldHash = hash('sha256', $oldContent);
-        Storage::disk('public')->put('media/'.$oldHash.'.mp3', $oldContent);
+        Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
 
         $mediaFile = MediaFile::factory()->create([
             'user_id' => $user->id,

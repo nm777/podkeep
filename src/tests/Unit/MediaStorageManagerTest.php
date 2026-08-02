@@ -9,7 +9,7 @@ uses(TestCase::class);
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('media');
 });
 
 test('stores file with hash-based naming', function () {
@@ -23,7 +23,7 @@ test('stores file with hash-based naming', function () {
     expect($result['file_path'])->toBe('media/'.$expectedHash.'.'.$extension);
     expect($result['file_hash'])->toBe($expectedHash);
     expect($result['filesize'])->toBe(strlen($content));
-    Storage::disk('public')->assertExists($result['file_path']);
+    Storage::disk('media')->assertExists($result['file_path']);
 });
 
 test('stores file with source url', function () {
@@ -33,24 +33,24 @@ test('stores file with source url', function () {
     $result = $manager->storeFile('test content', 'mp3', $sourceUrl);
 
     expect($result['source_url'])->toBe($sourceUrl);
-    Storage::disk('public')->assertExists($result['file_path']);
+    Storage::disk('media')->assertExists($result['file_path']);
 });
 
 test('cleans up temp file', function () {
     $manager = app(MediaStorageManager::class);
     $tempPath = 'temp-uploads/test-file.mp3';
-    Storage::disk('public')->put($tempPath, 'test content');
+    Storage::disk('media')->put($tempPath, 'test content');
 
     $manager->cleanupTempFile($tempPath);
 
-    Storage::disk('public')->assertMissing($tempPath);
+    Storage::disk('media')->assertMissing($tempPath);
 });
 
 test('gets file size from storage', function () {
     $manager = app(MediaStorageManager::class);
     $content = 'test content for size check';
     $filePath = 'media/test-file.mp3';
-    Storage::disk('public')->put($filePath, $content);
+    Storage::disk('media')->put($filePath, $content);
 
     $size = $manager->getFileSize($filePath);
 
@@ -68,7 +68,7 @@ test('returns 0 for non-existent file size', function () {
 test('checks if file exists', function () {
     $manager = app(MediaStorageManager::class);
     $filePath = 'media/test-file.mp3';
-    Storage::disk('public')->put($filePath, 'test content');
+    Storage::disk('media')->put($filePath, 'test content');
 
     $exists = $manager->fileExists($filePath);
 

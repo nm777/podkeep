@@ -15,7 +15,7 @@ use Tests\TestCase;
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('media');
 });
 
 test('cleans converted and source temporary files without deleting moved media', function () {
@@ -25,8 +25,8 @@ test('cleans converted and source temporary files without deleting moved media',
     $hash = hash('sha256', $content);
     $finalPath = 'media/'.$hash.'.mp3';
 
-    Storage::disk('public')->put($sourcePath, hex2bin('000000186674797069736f6d0000020069736f6d69736f32617663316d703431'));
-    Storage::disk('public')->put($convertedPath, $content);
+    Storage::disk('media')->put($sourcePath, hex2bin('000000186674797069736f6d0000020069736f6d69736f32617663316d703431'));
+    Storage::disk('media')->put($convertedPath, $content);
 
     $service = mediaProcessingService($sourcePath, $convertedPath, $hash, $content);
     $libraryItem = LibraryItem::factory()->create(['user_id' => User::factory()]);
@@ -34,16 +34,16 @@ test('cleans converted and source temporary files without deleting moved media',
     $result = $service->processFromUrl($libraryItem, 'https://example.com/video.mp4', 'audio');
 
     expect($result['media_file'])->not->toBeNull();
-    Storage::disk('public')->assertMissing([$sourcePath, $convertedPath]);
-    Storage::disk('public')->assertExists($finalPath);
+    Storage::disk('media')->assertMissing([$sourcePath, $convertedPath]);
+    Storage::disk('media')->assertExists($finalPath);
 });
 
 test('cleans converted and source temporary files when processing fails', function () {
     $sourcePath = 'temp-downloads/video.mp4';
     $convertedPath = 'temp-downloads/video.mp3';
 
-    Storage::disk('public')->put($sourcePath, hex2bin('000000186674797069736f6d0000020069736f6d69736f32617663316d703431'));
-    Storage::disk('public')->put($convertedPath, 'converted audio');
+    Storage::disk('media')->put($sourcePath, hex2bin('000000186674797069736f6d0000020069736f6d69736f32617663316d703431'));
+    Storage::disk('media')->put($convertedPath, 'converted audio');
 
     $service = mediaProcessingService($sourcePath, $convertedPath, null, null, true);
     $libraryItem = LibraryItem::factory()->create(['user_id' => User::factory()]);
@@ -51,7 +51,7 @@ test('cleans converted and source temporary files when processing fails', functi
     $result = $service->processFromUrl($libraryItem, 'https://example.com/video.mp4', 'audio');
 
     expect($result['error'])->toBe('media_processing_failed');
-    Storage::disk('public')->assertMissing([$sourcePath, $convertedPath]);
+    Storage::disk('media')->assertMissing([$sourcePath, $convertedPath]);
 });
 
 test('does not persist or return exception text', function () {
@@ -59,8 +59,8 @@ test('does not persist or return exception text', function () {
     $convertedPath = 'temp-downloads/video.mp3';
     $sensitiveError = 'Invalid audio from https://user:secret@example.com/audio.mp3?token=secret';
 
-    Storage::disk('public')->put($sourcePath, hex2bin('000000186674797069736f6d0000020069736f6d69736f32617663316d703431'));
-    Storage::disk('public')->put($convertedPath, 'converted audio');
+    Storage::disk('media')->put($sourcePath, hex2bin('000000186674797069736f6d0000020069736f6d69736f32617663316d703431'));
+    Storage::disk('media')->put($convertedPath, 'converted audio');
 
     $service = mediaProcessingService($sourcePath, $convertedPath, null, null, true, $sensitiveError);
     $libraryItem = LibraryItem::factory()->create(['user_id' => User::factory()]);
@@ -146,7 +146,7 @@ function mediaProcessingService(
             }
 
             $finalPath = 'media/'.$hash.'.mp3';
-            Storage::disk('public')->move($tempPath, $finalPath);
+            Storage::disk('media')->move($tempPath, $finalPath);
 
             return [
                 'file_path' => $finalPath,

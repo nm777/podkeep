@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     Queue::fake();
-    Storage::fake('public');
+    Storage::fake('media');
 });
 
 describe('UnifiedDuplicateProcessor Integration', function () {
@@ -49,6 +49,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             $libraryItem = LibraryItem::factory()->create([
                 'user_id' => $this->user->id,
                 'source_url' => 'https://example.com/existing-audio.mp3',
+                'is_duplicate' => true,
             ]);
 
             $result = $this->mediaProcessingService->processFromUrl($libraryItem, 'https://example.com/existing-audio.mp3');
@@ -68,7 +69,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
                 'file_path' => 'media/existing-file-dup.mp3',
             ]);
 
-            Storage::disk('public')->put('media/existing-file-dup.mp3', $fileContent);
+            Storage::disk('media')->put('media/existing-file-dup.mp3', $fileContent);
 
             // Create existing library item that links to media file
             $existingLibraryItem = LibraryItem::factory()->create([
@@ -81,7 +82,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             ]);
 
             $filePath = 'temp-uploads/test-file.mp3';
-            Storage::disk('public')->put($filePath, $fileContent);
+            Storage::disk('media')->put($filePath, $fileContent);
 
             $result = $this->mediaProcessingService->processFromFile($libraryItem, $filePath);
 
@@ -97,9 +98,9 @@ describe('UnifiedDuplicateProcessor Integration', function () {
 
             // Mock downloader to return fake content
             $fakeContent = 'ID3'.str_repeat("\0", 100).'fake audio data';
-            Storage::fake('public');
+            Storage::fake('media');
             $tempPath = 'temp-downloads/test-audio.mp3';
-            Storage::disk('public')->put($tempPath, $fakeContent);
+            Storage::disk('media')->put($tempPath, $fakeContent);
             $mockDownloader = $this->mock(MediaDownloader::class, function ($mock) use ($tempPath) {
                 $mock->shouldReceive('downloadFromUrl')
                     ->with('https://example.com/new-audio.mp3')
@@ -129,7 +130,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
 
             $fileContent = 'unique file content';
             $filePath = 'temp-uploads/unique-file.mp3';
-            Storage::disk('public')->put($filePath, $fileContent);
+            Storage::disk('media')->put($filePath, $fileContent);
 
             $result = $this->mediaProcessingService->processFromFile($libraryItem, $filePath);
 
@@ -184,7 +185,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             ]);
 
             $filePath = 'temp-uploads/shared-file.mp3';
-            Storage::disk('public')->put($filePath, $fileContent);
+            Storage::disk('media')->put($filePath, $fileContent);
 
             $result = $this->processor->processFileDuplicate($libraryItem, $filePath);
 
@@ -211,6 +212,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             $libraryItem = LibraryItem::factory()->create([
                 'user_id' => $this->user->id,
                 'source_url' => 'https://example.com/duplicate-audio.mp3',
+                'is_duplicate' => true,
             ]);
 
             $result = $this->processor->processUrlDuplicate($libraryItem, 'https://example.com/duplicate-audio.mp3');
@@ -262,6 +264,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             $libraryItem = LibraryItem::factory()->create([
                 'user_id' => $this->user->id,
                 'source_url' => 'https://example.com/cleanup-test.mp3',
+                'is_duplicate' => true,
             ]);
 
             $this->processor->processUrlDuplicate($libraryItem, 'https://example.com/cleanup-test.mp3');

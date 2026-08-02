@@ -9,7 +9,7 @@ use Tests\TestCase;
 uses(TestCase::class);
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('media');
 });
 
 test('downloads media file successfully', function () {
@@ -20,7 +20,7 @@ test('downloads media file successfully', function () {
 
     $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect(Storage::disk('public')->get($path))->toBe($content);
+    expect(Storage::disk('media')->get($path))->toBe($content);
 });
 
 test('pins a download to its validated address', function () {
@@ -91,7 +91,7 @@ test('handles javascript redirect', function () {
 
     $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect(Storage::disk('public')->get($path))->toBe($audioContent);
+    expect(Storage::disk('media')->get($path))->toBe($audioContent);
 });
 
 test('handles HTTP redirect without retaining the redirect sink', function () {
@@ -106,8 +106,8 @@ test('handles HTTP redirect without retaining the redirect sink', function () {
 
     $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect(Storage::disk('public')->get($path))->toBe($audioContent)
-        ->and(Storage::disk('public')->allFiles('temp-downloads'))->toBe([$path]);
+    expect(Storage::disk('media')->get($path))->toBe($audioContent)
+        ->and(Storage::disk('media')->allFiles('temp-downloads'))->toBe([$path]);
 });
 
 test('converts relative redirect url to absolute', function () {
@@ -122,7 +122,7 @@ test('converts relative redirect url to absolute', function () {
 
     $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect(Storage::disk('public')->get($path))->toBe($audioContent);
+    expect(Storage::disk('media')->get($path))->toBe($audioContent);
 });
 
 test('validates mp3 with id3 tag', function () {
@@ -133,7 +133,7 @@ test('validates mp3 with id3 tag', function () {
 
     $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect(Storage::disk('public')->get($path))->toBe($content);
+    expect(Storage::disk('media')->get($path))->toBe($content);
 });
 
 test('throws exception for invalid media content', function () {
@@ -154,7 +154,7 @@ test('rejects a declared download larger than the configured limit', function ()
     expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
         ->toThrow(RuntimeException::class, 'Download exceeds the maximum allowed file size');
 
-    expect(Storage::disk('public')->allFiles('temp-downloads'))->toBeEmpty();
+    expect(Storage::disk('media')->allFiles('temp-downloads'))->toBeEmpty();
 });
 
 test('rejects a streamed download that exceeds the configured limit', function () {
@@ -166,7 +166,7 @@ test('rejects a streamed download that exceeds the configured limit', function (
     expect(fn () => (new MediaDownloader)->downloadFromUrl($url))
         ->toThrow(RuntimeException::class, 'Download exceeds the maximum allowed file size');
 
-    expect(Storage::disk('public')->allFiles('temp-downloads'))->toBeEmpty();
+    expect(Storage::disk('media')->allFiles('temp-downloads'))->toBeEmpty();
 });
 
 test('downloads media at the configured limit', function () {
@@ -178,5 +178,5 @@ test('downloads media at the configured limit', function () {
 
     $path = (new MediaDownloader)->downloadFromUrl($url);
 
-    expect(Storage::disk('public')->get($path))->toBe($content);
+    expect(Storage::disk('media')->get($path))->toBe($content);
 });

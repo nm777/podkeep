@@ -108,7 +108,7 @@ describe('feed_type field storage', function () {
 
 describe('RSS feed ordering', function () {
     it('outputs items by sequence ascending for chronological feeds', function () {
-        Storage::fake('public');
+        Storage::fake('media');
 
         $user = User::factory()->create();
         $feed = Feed::factory()->create([
@@ -132,7 +132,7 @@ describe('RSS feed ordering', function () {
     });
 
     it('outputs append feed items newest-first by created_at', function () {
-        Storage::fake('public');
+        Storage::fake('media');
 
         $user = User::factory()->create();
         $feed = Feed::factory()->create([

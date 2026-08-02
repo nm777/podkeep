@@ -29,7 +29,7 @@ it('has a named route for library.store', function () {
 });
 
 it('can post to library store endpoint', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -71,7 +71,7 @@ it('shows only authenticated user library items', function () {
 });
 
 it('can upload a media file', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -190,7 +190,7 @@ it('processes new source_url field correctly', function () {
 });
 
 it('detects duplicate file uploads by hash', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -212,14 +212,14 @@ it('detects duplicate file uploads by hash', function () {
     ]);
 
     // Create actual file in storage so duplicate detection works
-    Storage::disk('public')->put($mediaFile->file_path, 'test audio content');
+    Storage::disk('media')->put($mediaFile->file_path, 'test audio content');
 
     // Create a fake file with the same content and manually store it
     $file = UploadedFile::fake()->createWithContent('duplicate-audio.mp3', 'test audio content');
     $tempPath = $file->store('temp-uploads');
 
     // Manually put the file content in storage since UploadedFile::fake() doesn't work with store()
-    Storage::disk('public')->put($tempPath, 'test audio content');
+    Storage::disk('media')->put($tempPath, 'test audio content');
 
     $response = $this->actingAs($user)->post('/library', [
         'title' => 'Duplicate File',
@@ -244,7 +244,7 @@ it('detects duplicate file uploads by hash', function () {
 });
 
 it('processes non-duplicate file uploads normally', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -280,7 +280,7 @@ it('processes non-duplicate file uploads normally', function () {
 });
 
 it('MediaFile model can find duplicates by hash', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     // Create a media file with known hash
     $knownHash = hash('sha256', 'test content');
@@ -299,13 +299,13 @@ it('MediaFile model can find duplicates by hash', function () {
 });
 
 it('MediaFile model can check file duplicates', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     // Create a fake file
     $content = 'test audio content';
     $tempPath = 'temp/test-file.mp3';
-    Storage::disk('public')->put($tempPath, $content);
-    $fullPath = Storage::disk('public')->path($tempPath);
+    Storage::disk('media')->put($tempPath, $content);
+    $fullPath = Storage::disk('media')->path($tempPath);
 
     // Create media file with same hash
     $mediaFile = MediaFile::factory()->create([
@@ -325,11 +325,11 @@ it('MediaFile model can check file duplicates', function () {
     expect($nonDuplicate)->toBeNull();
 
     // Clean up
-    Storage::disk('public')->delete($tempPath);
+    Storage::disk('media')->delete($tempPath);
 });
 
 it('marks duplicate library items and schedules cleanup', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -341,7 +341,7 @@ it('marks duplicate library items and schedules cleanup', function () {
         'file_path' => 'media/existing-file.mp3',
     ]);
 
-    Storage::disk('public')->put('media/existing-file.mp3', 'duplicate content');
+    Storage::disk('media')->put('media/existing-file.mp3', 'duplicate content');
 
     // Create existing library item that references the media file
     LibraryItem::factory()->create([
@@ -361,7 +361,7 @@ it('marks duplicate library items and schedules cleanup', function () {
 
     // Create temp file with same content
     $tempPath = 'temp/duplicate-upload.mp3';
-    Storage::disk('public')->put($tempPath, 'duplicate content');
+    Storage::disk('media')->put($tempPath, 'duplicate content');
 
     // Process the file
     $job = new ProcessMediaFile($libraryItem, null, $tempPath);

@@ -7,18 +7,18 @@ use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    Storage::disk('public')->deleteDirectory('media');
-    Storage::disk('public')->makeDirectory('media');
+    Storage::disk('media')->deleteDirectory('media');
+    Storage::disk('media')->makeDirectory('media');
 });
 
 afterEach(function () {
-    Storage::disk('public')->deleteDirectory('media');
+    Storage::disk('media')->deleteDirectory('media');
 });
 
 it('deletes orphaned media files and their storage files', function () {
     $user = User::factory()->create();
 
-    Storage::disk('public')->put('media/orphan-test.mp3', 'fake audio content');
+    Storage::disk('media')->put('media/orphan-test.mp3', 'fake audio content');
 
     $orphan = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -38,14 +38,14 @@ it('deletes orphaned media files and their storage files', function () {
 
     expect(MediaFile::find($orphan->id))->toBeNull();
     expect(MediaFile::find($kept->id))->not->toBeNull();
-    expect(Storage::disk('public')->exists('media/orphan-test.mp3'))->toBeFalse();
+    expect(Storage::disk('media')->exists('media/orphan-test.mp3'))->toBeFalse();
 });
 
 it('handles more than 100 orphaned files without memory issues', function () {
     $user = User::factory()->create();
 
     for ($i = 0; $i < 110; $i++) {
-        Storage::disk('public')->put("media/orphan-{$i}.mp3", "content {$i}");
+        Storage::disk('media')->put("media/orphan-{$i}.mp3", "content {$i}");
 
         MediaFile::factory()->create([
             'user_id' => $user->id,

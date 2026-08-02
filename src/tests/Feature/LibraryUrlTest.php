@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 it('can add media file from URL', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -57,7 +57,7 @@ it('validates URL requirements', function () {
 });
 
 it('processes media file from URL correctly', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -87,7 +87,7 @@ it('processes media file from URL correctly', function () {
 });
 
 it('handles URL download failures gracefully', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -112,7 +112,7 @@ it('handles URL download failures gracefully', function () {
 });
 
 it('handles JavaScript redirect pages correctly', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -145,7 +145,7 @@ it('handles JavaScript redirect pages correctly', function () {
 });
 
 it('fails when JavaScript redirect cannot be resolved', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -172,7 +172,7 @@ it('fails when JavaScript redirect cannot be resolved', function () {
 });
 
 it('handles JavaScript redirect with URL substring replacement pattern', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -208,7 +208,7 @@ it('handles JavaScript redirect with URL substring replacement pattern', functio
 });
 
 it('reuses existing media file when same URL is provided', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -244,7 +244,7 @@ it('reuses existing media file when same URL is provided', function () {
 });
 
 it('does not reuse files when URLs are different', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -273,7 +273,7 @@ it('does not reuse files when URLs are different', function () {
 });
 
 it('stores source URL when downloading new file', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -377,7 +377,7 @@ it('accepts URL with query parameters after file extension', function () {
 });
 
 it('multiple users can reuse same file from same URL', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user1 = User::factory()->create();

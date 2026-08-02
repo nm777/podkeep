@@ -100,7 +100,7 @@ it('rejects other authenticated user from private feed without token', function 
 });
 
 it('serves media file to owner viewing private feed share page', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $feed = Feed::factory()->create([
         'user_id' => $this->user->id,
@@ -110,7 +110,7 @@ it('serves media file to owner viewing private feed share page', function () {
 
     $audioContent = str_repeat('fake audio data ', 500);
     $filePath = 'media/private-audio.mp3';
-    Storage::disk('public')->put($filePath, $audioContent);
+    Storage::disk('media')->put($filePath, $audioContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $this->user->id,

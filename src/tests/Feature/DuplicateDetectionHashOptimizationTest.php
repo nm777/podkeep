@@ -8,19 +8,19 @@ use App\Services\DuplicateDetectionService;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    Storage::disk('public')->deleteDirectory('media');
-    Storage::disk('public')->makeDirectory('media');
+    Storage::disk('media')->deleteDirectory('media');
+    Storage::disk('media')->makeDirectory('media');
 
     $this->user = User::factory()->create();
     $this->filePath = 'media/test-hash-optimization.mp3';
 
     $content = fake()->regexify('[a-z]{1000}');
-    Storage::disk('public')->put($this->filePath, $content);
-    $this->expectedHash = hash_file('sha256', Storage::disk('public')->path($this->filePath));
+    Storage::disk('media')->put($this->filePath, $content);
+    $this->expectedHash = hash_file('sha256', Storage::disk('media')->path($this->filePath));
 });
 
 afterEach(function () {
-    Storage::disk('public')->deleteDirectory('media');
+    Storage::disk('media')->deleteDirectory('media');
 });
 
 it('analyzeFileUpload returns the computed hash in its result array', function () {

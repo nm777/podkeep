@@ -71,7 +71,7 @@ test('user can delete their account', function () {
 });
 
 test('deleting an account retires its unshared media', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     $user = User::factory()->create();
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -82,7 +82,7 @@ test('deleting an account retires its unshared media', function () {
         'user_id' => $user->id,
         'media_file_id' => $mediaFile->id,
     ]);
-    Storage::disk('public')->put($mediaFile->file_path, 'audio');
+    Storage::disk('media')->put($mediaFile->file_path, 'audio');
 
     $this->actingAs($user)
         ->delete('/settings/profile', ['password' => 'password'])
@@ -90,11 +90,11 @@ test('deleting an account retires its unshared media', function () {
         ->assertRedirect('/');
 
     expect(MediaFile::find($mediaFile->id))->toBeNull();
-    Storage::disk('public')->assertMissing($mediaFile->file_path);
+    Storage::disk('media')->assertMissing($mediaFile->file_path);
 });
 
 test('deleting an account retains media shared with another user', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     $owner = User::factory()->create();
     $linkedUser = User::factory()->create();
     $mediaFile = MediaFile::factory()->create([
@@ -109,7 +109,7 @@ test('deleting an account retains media shared with another user', function () {
         'user_id' => $linkedUser->id,
         'media_file_id' => $mediaFile->id,
     ]);
-    Storage::disk('public')->put($mediaFile->file_path, 'audio');
+    Storage::disk('media')->put($mediaFile->file_path, 'audio');
 
     $this->actingAs($owner)
         ->delete('/settings/profile', ['password' => 'password'])
@@ -118,7 +118,7 @@ test('deleting an account retains media shared with another user', function () {
 
     expect(MediaFile::find($mediaFile->id))->not->toBeNull();
     expect($linkedItem->refresh()->media_file_id)->toBe($mediaFile->id);
-    Storage::disk('public')->assertExists($mediaFile->file_path);
+    Storage::disk('media')->assertExists($mediaFile->file_path);
 });
 
 test('correct password must be provided to delete account', function () {

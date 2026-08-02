@@ -16,7 +16,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Queue::fake();
-    Storage::fake('public');
+    Storage::fake('media');
 });
 
 describe('UnifiedDuplicateProcessor', function () {
@@ -54,6 +54,7 @@ describe('UnifiedDuplicateProcessor', function () {
             $newLibraryItem = LibraryItem::factory()->create([
                 'user_id' => $this->user->id,
                 'source_url' => 'https://example.com/existing-audio.mp3',
+                'is_duplicate' => true,
             ]);
 
             $result = $this->processor->processUrlDuplicate($newLibraryItem, 'https://example.com/existing-audio.mp3');
@@ -130,7 +131,7 @@ describe('UnifiedDuplicateProcessor', function () {
 
             $fileContent = 'unique file content';
             $filePath = 'temp-uploads/test-unique.mp3';
-            Storage::disk('public')->put($filePath, $fileContent);
+            Storage::disk('media')->put($filePath, $fileContent);
 
             $result = $this->processor->processFileDuplicate($libraryItem, $filePath);
 
@@ -160,7 +161,7 @@ describe('UnifiedDuplicateProcessor', function () {
             ]);
 
             $filePath = 'temp-uploads/test-duplicate.mp3';
-            Storage::disk('public')->put($filePath, $fileContent);
+            Storage::disk('media')->put($filePath, $fileContent);
 
             $result = $this->processor->processFileDuplicate($newLibraryItem, $filePath);
 
@@ -199,7 +200,7 @@ describe('UnifiedDuplicateProcessor', function () {
             ]);
 
             $filePath = 'temp-uploads/test-shared.mp3';
-            Storage::disk('public')->put($filePath, $fileContent);
+            Storage::disk('media')->put($filePath, $fileContent);
 
             $result = $this->processor->processFileDuplicate($libraryItem, $filePath);
 
@@ -237,7 +238,7 @@ describe('UnifiedDuplicateProcessor', function () {
             ]);
 
             $filePath = 'temp-uploads/test-with-url.mp3';
-            Storage::disk('public')->put($filePath, $fileContent);
+            Storage::disk('media')->put($filePath, $fileContent);
 
             $result = $this->processor->processFileDuplicate($libraryItem, $filePath);
 

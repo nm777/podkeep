@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('media');
 });
 
 describe('Small file media validation', function () {
@@ -51,6 +51,6 @@ describe('Small file media validation', function () {
         $path = $downloader->downloadFromUrl('https://example.com/valid.mp3');
 
         expect($path)->toBeString();
-        expect(Storage::disk('public')->exists($path))->toBeTrue();
+        expect(Storage::disk('media')->exists($path))->toBeTrue();
     });
 });

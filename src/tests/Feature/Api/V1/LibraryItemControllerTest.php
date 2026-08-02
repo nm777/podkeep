@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\URL;
 
 describe('media upload', function () {
     it('uploads a media file successfully', function () {
-        Storage::fake('public');
+        Storage::fake('media');
         Queue::fake();
 
         $user = User::factory()->create();
@@ -46,7 +46,7 @@ describe('media upload', function () {
     });
 
     it('uploads a webm video with automatic chapter generation', function () {
-        Storage::fake('public');
+        Storage::fake('media');
         Queue::fake();
 
         $user = User::factory()->create();
@@ -74,7 +74,7 @@ describe('media upload', function () {
     });
 
     it('validates title is required', function () {
-        Storage::fake('public');
+        Storage::fake('media');
         Queue::fake();
 
         $user = User::factory()->create();
@@ -92,7 +92,7 @@ describe('media upload', function () {
     });
 
     it('rejects unsupported file types', function () {
-        Storage::fake('public');
+        Storage::fake('media');
         Queue::fake();
 
         $user = User::factory()->create();
@@ -236,7 +236,7 @@ describe('library listing', function () {
     });
 
     it('returns a signed files URL that serves media without authentication', function () {
-        Storage::fake('public');
+        Storage::fake('media');
 
         $user = User::factory()->create();
         $token = $user->createToken('test')->plainTextToken;
@@ -244,7 +244,7 @@ describe('library listing', function () {
             'user_id' => $user->id,
             'file_path' => 'media/api-audio.mp3',
         ]);
-        Storage::disk('public')->put($mediaFile->file_path, 'fake audio content');
+        Storage::disk('media')->put($mediaFile->file_path, 'fake audio content');
         $item = LibraryItem::factory()->create([
             'user_id' => $user->id,
             'media_file_id' => $mediaFile->id,
@@ -263,10 +263,10 @@ describe('library listing', function () {
     });
 
     it('rejects tampered and expired signed media URLs', function () {
-        Storage::fake('public');
+        Storage::fake('media');
 
         $mediaFile = MediaFile::factory()->create(['file_path' => 'media/signed-audio.mp3']);
-        Storage::disk('public')->put($mediaFile->file_path, 'fake audio content');
+        Storage::disk('media')->put($mediaFile->file_path, 'fake audio content');
 
         $url = URL::temporarySignedRoute('files.show', now()->addHour(), ['file_path' => $mediaFile->file_path]);
         $expiredUrl = URL::temporarySignedRoute('files.show', now()->subSecond(), ['file_path' => $mediaFile->file_path]);
@@ -343,7 +343,7 @@ describe('library update', function () {
 
 describe('library delete', function () {
     it('deletes a library item', function () {
-        Storage::fake('public');
+        Storage::fake('media');
 
         $user = User::factory()->create();
         $token = $user->createToken('test')->plainTextToken;
@@ -359,12 +359,12 @@ describe('library delete', function () {
     });
 
     it('deletes the staged upload when deleting a pending library item', function () {
-        Storage::fake('public');
+        Storage::fake('media');
 
         $user = User::factory()->create();
         $token = $user->createToken('test')->plainTextToken;
         $tempPath = 'temp-uploads/pending-api-upload.mp3';
-        Storage::disk('public')->put($tempPath, 'fake content');
+        Storage::disk('media')->put($tempPath, 'fake content');
         $item = LibraryItem::factory()->create([
             'user_id' => $user->id,
             'media_file_id' => null,
@@ -376,7 +376,7 @@ describe('library delete', function () {
             ->deleteJson('/api/v1/library/'.$item->id)
             ->assertNoContent();
 
-        Storage::disk('public')->assertMissing($tempPath);
+        Storage::disk('media')->assertMissing($tempPath);
     });
 
     it('prevents deleting another users item', function () {

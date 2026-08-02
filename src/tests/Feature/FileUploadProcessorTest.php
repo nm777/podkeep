@@ -43,7 +43,7 @@ describe('FileUploadProcessor', function () {
     });
 
     it('only dispatches the feed job for the final uploaded item', function () {
-        Storage::fake('public');
+        Storage::fake('media');
         Queue::fake();
 
         $user = User::factory()->create();

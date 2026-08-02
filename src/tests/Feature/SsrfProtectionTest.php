@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 
 describe('SSRF protection in MediaDownloader', function () {
     beforeEach(function () {
-        Storage::fake('public');
+        Storage::fake('media');
     });
 
     $blockedUrls = [
@@ -45,7 +45,7 @@ describe('SSRF protection in MediaDownloader', function () {
         $path = $downloader->downloadFromUrl('https://example.com/audio.mp3');
 
         expect($path)->not->toBeEmpty();
-        expect(Storage::disk('public')->exists($path))->toBeTrue();
+        expect(Storage::disk('media')->exists($path))->toBeTrue();
     });
 
     it('blocks HTTP redirects to private URLs', function () {

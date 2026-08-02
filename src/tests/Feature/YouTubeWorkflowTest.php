@@ -12,14 +12,14 @@ use Illuminate\Support\Facades\Storage;
 use function Pest\Laravel\actingAs;
 
 test('complete workflow: youtube url → extract audio → add to feed → rss', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
 
     $audioContent = 'youtube audio content';
     $filePath = 'media/youtube-audio.mp3';
-    Storage::disk('public')->put($filePath, $audioContent);
+    Storage::disk('media')->put($filePath, $audioContent);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -69,14 +69,14 @@ test('complete workflow: youtube url → extract audio → add to feed → rss',
 });
 
 test('workflow: youtube url reuses existing media file', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
 
     $existingAudio = 'existing youtube audio';
     $filePath = 'media/youtube-audio.mp3';
-    Storage::disk('public')->put($filePath, $existingAudio);
+    Storage::disk('media')->put($filePath, $existingAudio);
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -101,7 +101,7 @@ test('workflow: youtube url reuses existing media file', function () {
 });
 
 test('workflow: youtube feed with multiple items', function () {
-    Storage::fake('public');
+    Storage::fake('media');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -110,7 +110,7 @@ test('workflow: youtube feed with multiple items', function () {
     for ($i = 1; $i <= 3; $i++) {
         $audioContent = "youtube audio content $i";
         $filePath = "media/youtube-audio-$i.mp3";
-        Storage::disk('public')->put($filePath, $audioContent);
+        Storage::disk('media')->put($filePath, $audioContent);
 
         $mediaFile = MediaFile::factory()->create([
             'user_id' => $user->id,

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 
 it('rethrows unexpected YouTube errors and records a safe terminal failure', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -96,7 +96,7 @@ it('does not let a stale YouTube failure overwrite a completed item', function (
 });
 
 it('marks library item as failed when video ID extraction fails instead of deleting', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -122,7 +122,7 @@ it('marks library item as failed when video ID extraction fails instead of delet
 });
 
 it('marks library item as failed when download fails instead of deleting', function () {
-    Storage::fake('public');
+    Storage::fake('media');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([

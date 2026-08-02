@@ -12,13 +12,13 @@ uses(TestCase::class);
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('media');
 });
 
 test('calculates file hash from existing file', function () {
     $filePath = 'media/test-audio.mp3';
     $content = 'test audio content';
-    Storage::disk('public')->put($filePath, $content);
+    Storage::disk('media')->put($filePath, $content);
 
     $hash = DuplicateDetectionService::calculateFileHash($filePath);
 
@@ -33,7 +33,7 @@ test('returns null for non-existent file', function () {
 
 test('finds global duplicate by hash', function () {
     $filePath = 'media/test-audio.mp3';
-    Storage::disk('public')->put($filePath, 'test content');
+    Storage::disk('media')->put($filePath, 'test content');
 
     $mediaFile = MediaFile::factory()->create([
         'file_hash' => hash('sha256', 'test content'),
@@ -49,7 +49,7 @@ test('finds global duplicate by hash', function () {
 
 test('returns null when no global duplicate exists', function () {
     $filePath = 'media/unique-audio.mp3';
-    Storage::disk('public')->put($filePath, 'unique content');
+    Storage::disk('media')->put($filePath, 'unique content');
 
     $duplicate = DuplicateDetectionService::findGlobalDuplicate($filePath);
 
@@ -59,7 +59,7 @@ test('returns null when no global duplicate exists', function () {
 test('finds user duplicate by hash', function () {
     $user = User::factory()->create();
     $filePath = 'media/test-audio.mp3';
-    Storage::disk('public')->put($filePath, 'test content');
+    Storage::disk('media')->put($filePath, 'test content');
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -116,7 +116,7 @@ test('finds global url duplicate', function () {
 test('analyzes file upload with user duplicate', function () {
     $user = User::factory()->create();
     $filePath = 'media/test-audio.mp3';
-    Storage::disk('public')->put($filePath, 'test content');
+    Storage::disk('media')->put($filePath, 'test content');
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
@@ -140,7 +140,7 @@ test('analyzes file upload with global duplicate only', function () {
     $user1 = User::factory()->create();
     $user2 = User::factory()->create();
     $filePath = 'media/test-audio.mp3';
-    Storage::disk('public')->put($filePath, 'test content');
+    Storage::disk('media')->put($filePath, 'test content');
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user1->id,
@@ -162,7 +162,7 @@ test('analyzes file upload with global duplicate only', function () {
 test('analyzes file upload with no duplicates', function () {
     $user = User::factory()->create();
     $filePath = 'media/unique-audio.mp3';
-    Storage::disk('public')->put($filePath, 'unique content');
+    Storage::disk('media')->put($filePath, 'unique content');
 
     $result = DuplicateDetectionService::analyzeFileUpload($filePath, $user->id);
 

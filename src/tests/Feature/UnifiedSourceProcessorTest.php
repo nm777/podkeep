@@ -12,7 +12,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('media');
 });
 
 describe('UnifiedSourceProcessor', function () {

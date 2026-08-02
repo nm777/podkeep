@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 describe('media_file_id persistence', function () {
     beforeEach(function () {
-        Storage::fake('public');
+        Storage::fake('media');
         Queue::fake();
         $this->user = User::factory()->create();
     });
@@ -50,7 +50,7 @@ describe('media_file_id persistence', function () {
     it('persists media_file_id after processing a file upload', function () {
         $content = 'ID3'.str_repeat("\x00", 100);
         $tempPath = 'temp-uploads/test-upload.mp3';
-        Storage::disk('public')->put($tempPath, $content);
+        Storage::disk('media')->put($tempPath, $content);
 
         $libraryItem = LibraryItem::factory()->create([
             'user_id' => $this->user->id,
@@ -78,7 +78,7 @@ describe('media_file_id persistence', function () {
             'file_path' => 'media/existing-user-dup.mp3',
         ]);
 
-        Storage::disk('public')->put('media/existing-user-dup.mp3', $content);
+        Storage::disk('media')->put('media/existing-user-dup.mp3', $content);
 
         LibraryItem::factory()->create([
             'user_id' => $this->user->id,
@@ -86,7 +86,7 @@ describe('media_file_id persistence', function () {
         ]);
 
         $tempPath = 'temp-uploads/dup-upload.mp3';
-        Storage::disk('public')->put($tempPath, $content);
+        Storage::disk('media')->put($tempPath, $content);
 
         $libraryItem = LibraryItem::factory()->create([
             'user_id' => $this->user->id,
@@ -116,7 +116,7 @@ describe('media_file_id persistence', function () {
             'file_path' => 'media/existing-global-dup.mp3',
         ]);
 
-        Storage::disk('public')->put('media/existing-global-dup.mp3', $content);
+        Storage::disk('media')->put('media/existing-global-dup.mp3', $content);
 
         LibraryItem::factory()->create([
             'user_id' => $otherUser->id,
@@ -124,7 +124,7 @@ describe('media_file_id persistence', function () {
         ]);
 
         $tempPath = 'temp-uploads/global-dup.mp3';
-        Storage::disk('public')->put($tempPath, $content);
+        Storage::disk('media')->put($tempPath, $content);
 
         $libraryItem = LibraryItem::factory()->create([
             'user_id' => $this->user->id,
@@ -148,7 +148,7 @@ describe('media_file_id persistence', function () {
         $tempPath = 'temp-uploads/race.mp3';
         $winningPath = 'media/'.$hash.'.'.$winningExtension;
         $losingPath = 'media/'.$hash.'.'.$losingExtension;
-        Storage::disk('public')->put($tempPath, $content);
+        Storage::disk('media')->put($tempPath, $content);
 
         $owner = User::factory()->create();
         $libraryItem = LibraryItem::factory()->create([
@@ -166,8 +166,8 @@ describe('media_file_id persistence', function () {
             ->once()
             ->with($tempPath, null)
             ->andReturnUsing(function () use ($content, $hash, $losingPath, $owner, $tempPath, $winningPath): array {
-                Storage::disk('public')->delete($tempPath);
-                Storage::disk('public')->put($winningPath, $content);
+                Storage::disk('media')->delete($tempPath);
+                Storage::disk('media')->put($winningPath, $content);
                 MediaFile::factory()->create([
                     'user_id' => $owner->id,
                     'file_path' => $winningPath,
@@ -175,7 +175,7 @@ describe('media_file_id persistence', function () {
                     'mime_type' => 'audio/mpeg',
                     'filesize' => strlen($content),
                 ]);
-                Storage::disk('public')->put($losingPath, $content);
+                Storage::disk('media')->put($losingPath, $content);
 
                 return [
                     'file_path' => $losingPath,
@@ -193,9 +193,9 @@ describe('media_file_id persistence', function () {
         expect($result['media_file']->file_path)->toBe($winningPath);
         expect($libraryItem->processing_status)->toBe(\App\Enums\ProcessingStatusType::COMPLETED);
         expect($libraryItem->media_file_id)->toBe($result['media_file']->id);
-        Storage::disk('public')->assertExists($winningPath);
+        Storage::disk('media')->assertExists($winningPath);
         if ($losingPath !== $winningPath) {
-            Storage::disk('public')->assertMissing($losingPath);
+            Storage::disk('media')->assertMissing($losingPath);
         }
     })->with([
         'shared path' => ['mp3', 'mp3'],

@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 describe('UnifiedSourceProcessor Edge Cases', function () {
     beforeEach(function () {
         $this->user = User::factory()->create();
-        Storage::fake('public');
+        Storage::fake('media');
         Queue::fake();
     });
 
