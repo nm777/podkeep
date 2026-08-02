@@ -1,4 +1,4 @@
-FROM php:8.4-fpm-alpine AS base
+FROM php:8.4-fpm-alpine@sha256:5992f8b7433fe7fa96dfbf67746c86d6c41bc91e686eac38fe531c72a02e40e4 AS base
 
 WORKDIR /var/www/html
 
@@ -65,7 +65,7 @@ RUN apk add --no-cache \
     npm \
     pkgconfig
 
-FROM node:24-alpine AS frontend
+FROM node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS frontend
 
 WORKDIR /app
 COPY src/package*.json ./
@@ -75,7 +75,7 @@ RUN npm run build
 
 # ---- whisper.cpp + model (content-aware chapter generation) ----
 # Built in its own stage so only the binary + model land in the app image.
-FROM alpine:3.20 AS whisper
+FROM alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc AS whisper
 
 ARG WHISPER_COMMIT=8a9ad7844d6e2a10cddf4b92de4089d7ac2b14a9
 ARG WHISPER_MODEL_REVISION=5359861c739e955e79d9a303bcbc70fb988958b1
@@ -123,7 +123,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction \
 
 RUN apk add --no-cache su-exec
 
-FROM nginx:1.31-alpine AS web
+FROM nginx:1.31-alpine@sha256:4a73073bd557c65b759505da037898b61f1be6cbcc3c2c3aeac22d2a470c1752 AS web
 
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=app /var/www/html/public /var/www/html/public
