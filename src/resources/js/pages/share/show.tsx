@@ -2,6 +2,7 @@ import ShareEpisodeList from '@/components/share-episode-list';
 import SharePlayer from '@/components/share-player';
 import { getApplePodcastsUrlForRssUrl, getGooglePodcastsUrlForRssUrl } from '@/lib/subscribe-urls';
 import { type ShareEpisode, type SharePageProps } from '@/types';
+import { Head } from '@inertiajs/react';
 import { FileAudio, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 
@@ -63,6 +64,7 @@ export default function ShareShow({ feed, episodes, rssUrl }: SharePageProps & {
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
+            <Head title={feed.title} />
             <header className="border-b">
                 <div className="mx-auto flex max-w-3xl items-center px-4 py-4">
                     <span className="text-lg font-semibold">PodKeep</span>

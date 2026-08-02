@@ -51,6 +51,24 @@ it('shows share page for public feed', function () {
     );
 });
 
+it('includes social metadata for a shared feed', function () {
+    $feed = Feed::factory()->create([
+        'user_id' => $this->user->id,
+        'title' => 'Sunday Sermons',
+        'description' => 'Weekly messages from Grace Church.',
+        'cover_image_url' => 'https://images.example.com/sunday-sermons.jpg',
+        'is_public' => true,
+    ]);
+
+    $this->get("/share/{$feed->user_guid}/{$feed->slug}")
+        ->assertSuccessful()
+        ->assertSee('<meta property="og:site_name" content="PodKeep">', false)
+        ->assertSee('<meta property="og:title" content="Sunday Sermons">', false)
+        ->assertSee('<meta property="og:description" content="Weekly messages from Grace Church.">', false)
+        ->assertSee('<meta property="og:image" content="https://images.example.com/sunday-sermons.jpg">', false)
+        ->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
+});
+
 it('returns 404 for non-existent feed', function () {
     $response = $this->get('/share/00000000-0000-0000-0000-000000000000/nonexistent');
 
