@@ -52,6 +52,11 @@ class UrlSourceProcessor
         }
 
         $libraryItem = $this->libraryItemFactory->createFromValidated($validated, $sourceType, $sourceUrl, $userId);
+
+        if (! $libraryItem->wasRecentlyCreated) {
+            return [$libraryItem, $this->strategy->getProcessingMessage()];
+        }
+
         $this->strategy->processNewSource($libraryItem, $sourceUrl);
 
         return [$libraryItem, $this->strategy->getProcessingMessage()];

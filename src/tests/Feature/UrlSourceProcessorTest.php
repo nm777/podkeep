@@ -10,6 +10,7 @@ use App\Services\SourceProcessors\LibraryItemFactory;
 use App\Services\SourceProcessors\SourceStrategyInterface;
 use App\Services\SourceProcessors\UrlSourceProcessor;
 use App\Services\SourceProcessors\UrlStrategy;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 
 describe('UrlSourceProcessor', function () {
@@ -26,6 +27,22 @@ describe('UrlSourceProcessor', function () {
         $processor = new UrlSourceProcessor($libraryItemFactory, $strategy, $duplicateProcessor);
 
         expect($processor)->toBeInstanceOf(UrlSourceProcessor::class);
+    });
+
+    it('allows a failed URL item to be replaced but only one active item', function () {
+        $attributes = [
+            'user_id' => $this->user->id,
+            'title' => 'Test',
+            'source_type' => 'url',
+            'source_url' => 'https://example.com/test.mp3',
+            'processing_status' => 'failed',
+        ];
+
+        LibraryItem::create($attributes);
+        LibraryItem::create([...$attributes, 'processing_status' => 'pending']);
+
+        expect(fn () => LibraryItem::create([...$attributes, 'processing_status' => 'pending']))
+            ->toThrow(QueryException::class);
     });
 
     it('delegates duplicate detection to UnifiedDuplicateProcessor', function () {

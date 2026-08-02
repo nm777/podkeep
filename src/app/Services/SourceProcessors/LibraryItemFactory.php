@@ -5,6 +5,7 @@ namespace App\Services\SourceProcessors;
 use App\Enums\ProcessingStatusType;
 use App\Jobs\AddLibraryItemToFeedsJob;
 use App\Models\LibraryItem;
+use Illuminate\Database\QueryException;
 
 class LibraryItemFactory
 {
@@ -13,7 +14,7 @@ class LibraryItemFactory
      */
     public function createFromValidated(array $validated, string $sourceType, ?string $sourceUrl = null, ?int $userId = null): LibraryItem
     {
-        $libraryItem = LibraryItem::create([
+        $attributes = [
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'published_at' => $validated['published_at'] ?? null,
@@ -23,7 +24,29 @@ class LibraryItemFactory
             'auto_generate_chapters' => $validated['auto_generate_chapters'] ?? false,
             'source_url' => $sourceUrl,
             'processing_status' => ProcessingStatusType::PENDING,
-        ]);
+        ];
+
+        if ($sourceUrl) {
+            $libraryItem = LibraryItem::findActiveBySourceUrlForUser($sourceUrl, $attributes['user_id']);
+
+            if ($libraryItem) {
+                return $libraryItem;
+            }
+
+            try {
+                $libraryItem = LibraryItem::create($attributes);
+            } catch (QueryException $exception) {
+                $libraryItem = LibraryItem::findActiveBySourceUrlForUser($sourceUrl, $attributes['user_id']);
+
+                if (! $libraryItem) {
+                    throw $exception;
+                }
+
+                return $libraryItem;
+            }
+        } else {
+            $libraryItem = LibraryItem::create($attributes);
+        }
 
         $this->dispatchFeedJob($libraryItem, $validated);
 

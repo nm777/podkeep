@@ -101,6 +101,19 @@ class LibraryItem extends Model
     }
 
     /**
+     * Find a non-failed, non-duplicate item for a user's URL.
+     */
+    public static function findActiveBySourceUrlForUser(string $sourceUrl, int $userId): ?self
+    {
+        $query = static::where('source_url', $sourceUrl)
+            ->where('user_id', $userId)
+            ->where('is_duplicate', false)
+            ->where('processing_status', '!=', ProcessingStatusType::FAILED);
+
+        return $query->first();
+    }
+
+    /**
      * Find a library item by media file hash for a specific user.
      */
     public static function findByHashForUser(string $fileHash, int $userId): ?static
