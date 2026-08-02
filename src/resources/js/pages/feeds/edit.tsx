@@ -89,7 +89,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             return libItem?.title.toLowerCase().includes(debouncedItemSearch.toLowerCase()) ?? false;
         });
 
-    const { handleDragStart, handleDragOver, handleDrop } = useFeedItemReorder(data.items, (items) => {
+    const { handleDragStart, handleDragOver, handleDrop, handleTouchEnd } = useFeedItemReorder(data.items, (items) => {
         const count = items.length;
         setData(
             'items',
@@ -245,12 +245,19 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                                         <div
                                             key={item.library_item_id}
                                             draggable
+                                            data-feed-item-index={index}
                                             onDragStart={() => handleDragStart(index)}
                                             onDragOver={handleDragOver}
                                             onDrop={(e) => handleDrop(e, index)}
                                             className="flex cursor-move items-center gap-3 px-4 py-3 hover:bg-muted/50"
                                         >
-                                            <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                            <span
+                                                className="-m-2 touch-none p-2 select-none"
+                                                onTouchStart={() => handleDragStart(index)}
+                                                onTouchEnd={handleTouchEnd}
+                                            >
+                                                <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                            </span>
                                             <LibraryItemInfo item={libraryItem} />
                                             {data.feed_type === 'append' && (
                                                 <input

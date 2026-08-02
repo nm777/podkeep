@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useRef } from 'react';
 
 export function useFeedItemReorder<T extends { sequence: number }>(items: T[], onReorder: (items: T[]) => void) {
-    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const draggedIndex = useRef<number | null>(null);
 
     const handleDragStart = (index: number) => {
-        setDraggedIndex(index);
+        draggedIndex.current = index;
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -13,16 +13,32 @@ export function useFeedItemReorder<T extends { sequence: number }>(items: T[], o
 
     const handleDrop = (e: React.DragEvent, dropIndex: number) => {
         e.preventDefault();
-        if (draggedIndex === null) return;
+        reorder(dropIndex);
+    };
 
-        const draggedItem = items[draggedIndex];
+    const reorder = (dropIndex: number) => {
+        if (draggedIndex.current === null) return;
+
+        const draggedItem = items[draggedIndex.current];
         const newItems = [...items];
-        newItems.splice(draggedIndex, 1);
+        newItems.splice(draggedIndex.current, 1);
         newItems.splice(dropIndex, 0, draggedItem);
 
         onReorder(newItems.map((item, i) => ({ ...item, sequence: i })));
-        setDraggedIndex(null);
+        draggedIndex.current = null;
     };
 
-    return { handleDragStart, handleDragOver, handleDrop };
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest<HTMLElement>('[data-feed-item-index]');
+        const dropIndex = Number(target?.dataset.feedItemIndex);
+
+        if (Number.isInteger(dropIndex)) {
+            reorder(dropIndex);
+        } else {
+            draggedIndex.current = null;
+        }
+    };
+
+    return { handleDragStart, handleDragOver, handleDrop, handleTouchEnd };
 }
