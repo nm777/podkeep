@@ -73,6 +73,7 @@ class MediaRedownloader
                     ]);
 
                     $libraryItem->updateQuietly(['media_file_id' => $replacement->id]);
+                    MediaFile::syncPublicStatusForUser($libraryItem->user_id);
 
                     return $replacement;
                 }

@@ -18,12 +18,22 @@ class LibraryItem extends Model
 
     protected static function booted(): void
     {
+        static::created(function (LibraryItem $libraryItem): void {
+            if ($libraryItem->media_file_id) {
+                MediaFile::syncPublicStatusForUser($libraryItem->user_id);
+            }
+        });
+
         static::updated(function (LibraryItem $libraryItem): void {
             if (! $libraryItem->wasChanged(['media_file_id', 'title', 'description'])) {
                 return;
             }
 
             $libraryItem->forgetRssCache();
+
+            if ($libraryItem->wasChanged('media_file_id')) {
+                MediaFile::syncPublicStatusForUser($libraryItem->user_id);
+            }
         });
 
         static::deleting(function (LibraryItem $libraryItem): void {

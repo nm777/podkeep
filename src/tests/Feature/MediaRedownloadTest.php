@@ -407,6 +407,44 @@ it('relinks only the requested item when redownloading shared media with changed
     Storage::disk('media')->assertExists('media/'.$newHash.'.mp3');
 });
 
+it('revokes public access to replaced owner media while publishing its replacement', function () {
+    $owner = User::factory()->create();
+    $linkedUser = User::factory()->create();
+    $oldContent = 'RIFFfake audio content';
+    $oldHash = hash('sha256', $oldContent);
+    $newHash = hash('sha256', 'RIFFnew audio content');
+
+    Storage::disk('media')->put('media/'.$oldHash.'.mp3', $oldContent);
+
+    $oldMediaFile = MediaFile::factory()->create([
+        'user_id' => $owner->id,
+        'file_path' => 'media/'.$oldHash.'.mp3',
+        'file_hash' => $oldHash,
+        'source_url' => 'https://example.com/new-audio.mp3',
+    ]);
+    $ownerItem = LibraryItem::factory()->create([
+        'user_id' => $owner->id,
+        'media_file_id' => $oldMediaFile->id,
+    ]);
+    LibraryItem::factory()->create([
+        'user_id' => $linkedUser->id,
+        'media_file_id' => $oldMediaFile->id,
+    ]);
+    $feed = Feed::factory()->create(['user_id' => $owner->id, 'is_public' => true]);
+    FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $ownerItem->id]);
+    MediaFile::syncPublicStatusForUser($owner->id);
+
+    app(MediaRedownloader::class)->redownload($ownerItem);
+
+    $replacement = $ownerItem->fresh()->mediaFile;
+
+    expect($replacement->file_hash)->toBe($newHash)
+        ->and($replacement->is_public)->toBeTrue()
+        ->and($oldMediaFile->fresh()->is_public)->toBeFalse();
+    $this->get("/files/{$oldMediaFile->file_path}")->assertForbidden();
+    $this->get("/files/{$replacement->file_path}")->assertSuccessful();
+});
+
 it('rechecks references after a concurrent duplicate link before redownloading', function () {
     $owner = User::factory()->create();
     $otherUser = User::factory()->create();

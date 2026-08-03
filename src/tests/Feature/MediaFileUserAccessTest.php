@@ -1,10 +1,11 @@
 <?php
 
+use App\Enums\ProcessingStatusType;
 use App\Models\Feed;
+use App\Models\FeedItem;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
-use App\ProcessingStatusType;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -110,6 +111,30 @@ it('serves media publicly after its owner adds it to a public feed', function ()
     $feed = Feed::factory()->create(['user_id' => $owner->id, 'is_public' => true]);
 
     actingAs($owner)->post("/library/{$libraryItem->id}/feeds", ['feed_id' => $feed->id])->assertRedirect();
+
+    expect($mediaFile->refresh()->is_public)->toBeTrue();
+    $this->get("/files/{$mediaFile->file_path}")->assertSuccessful();
+});
+
+it('serves media publicly after associating it with an owner item already in a public feed', function () {
+    Storage::fake('media');
+
+    $owner = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $owner->id,
+        'file_path' => 'media/owner-pending-public.mp3',
+    ]);
+    Storage::disk('media')->put($mediaFile->file_path, 'public audio content');
+
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $owner->id,
+        'media_file_id' => null,
+        'processing_status' => ProcessingStatusType::PENDING,
+    ]);
+    $feed = Feed::factory()->create(['user_id' => $owner->id, 'is_public' => true]);
+    FeedItem::factory()->create(['feed_id' => $feed->id, 'library_item_id' => $libraryItem->id]);
+
+    $libraryItem->linkMediaFile($mediaFile);
 
     expect($mediaFile->refresh()->is_public)->toBeTrue();
     $this->get("/files/{$mediaFile->file_path}")->assertSuccessful();
