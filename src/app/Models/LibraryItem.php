@@ -33,6 +33,10 @@ class LibraryItem extends Model
                 Storage::disk('media')->delete($libraryItem->temp_file_path);
             }
         });
+
+        static::deleted(function (LibraryItem $libraryItem): void {
+            MediaFile::syncPublicStatusForUser($libraryItem->user_id);
+        });
     }
 
     public function forgetRssCache(): void

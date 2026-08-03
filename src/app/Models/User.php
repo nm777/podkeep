@@ -18,6 +18,8 @@ class User extends Authenticatable implements MustVerifyEmail
     protected static function booted(): void
     {
         static::deleting(function (User $user): void {
+            MediaFile::where('user_id', $user->id)->update(['is_public' => false]);
+
             MediaFile::where('user_id', $user->id)->each(function (MediaFile $mediaFile) use ($user): void {
                 $survivingUserId = $mediaFile->libraryItems()
                     ->where('user_id', '!=', $user->id)
