@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { type ReactNode } from 'react';
 
 interface AdminLayoutProps {
@@ -12,13 +12,13 @@ const tabs = [
 ];
 
 export default ({ children }: AdminLayoutProps) => {
-    const pathname = window.location.pathname;
+    const { url } = usePage();
 
     return (
         <AppLayout>
             <div className="flex items-center gap-1 border-b">
                 {tabs.map((tab) => {
-                    const active = pathname.startsWith(tab.path);
+                    const active = url.startsWith(tab.path);
                     return (
                         <Link
                             key={tab.path}
