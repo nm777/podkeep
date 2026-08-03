@@ -22,19 +22,8 @@ class MediaController extends Controller
         // Check if this is for an RSS feed (public or private with token)
         $feedToken = $request->query('feed_token');
 
-        // For feeds without token (public feeds)
-        if (! $feedToken) {
-            $hasPublicFeed = Feed::where('is_public', true)
-                ->whereHas('items', function ($query) use ($mediaFile) {
-                    $query->whereHas('libraryItem', function ($query) use ($mediaFile) {
-                        $query->where('media_file_id', $mediaFile->id);
-                    });
-                })
-                ->exists();
-
-            if ($hasPublicFeed) {
-                return $this->serveMediaFile($file_path, $mediaFile);
-            }
+        if (! $feedToken && $mediaFile->is_public) {
+            return $this->serveMediaFile($file_path, $mediaFile);
         }
 
         // For feeds with token (private feeds)

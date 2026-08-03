@@ -23,6 +23,7 @@ class MediaFile extends Model
 
     protected $fillable = [
         'user_id',
+        'is_public',
         'file_path',
         'file_hash',
         'mime_type',
@@ -37,9 +38,14 @@ class MediaFile extends Model
         'chapter_generation_error',
     ];
 
+    protected $attributes = [
+        'is_public' => false,
+    ];
+
     protected function casts(): array
     {
         return [
+            'is_public' => 'boolean',
             'transcript' => 'array',
             'chapter_proposal' => 'array',
         ];
@@ -76,5 +82,19 @@ class MediaFile extends Model
     public static function findByHash(string $fileHash): ?static
     {
         return static::where('file_hash', $fileHash)->first();
+    }
+
+    public static function syncPublicStatusForUser(int $userId): void
+    {
+        static::where('user_id', $userId)->update(['is_public' => false]);
+
+        static::where('user_id', $userId)
+            ->whereHas('libraryItems', function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->whereHas('feedItems.feed', function ($query) use ($userId) {
+                        $query->where('user_id', $userId)->where('is_public', true);
+                    });
+            })
+            ->update(['is_public' => true]);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Feed;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
@@ -66,6 +67,52 @@ it('allows users to access media files linked to their library items', function 
     actingAs($unrelatedUser)
         ->get("/files/{$mediaFile->file_path}")
         ->assertForbidden();
+});
+
+it('does not make a media file public when a linked user adds it to a public feed', function () {
+    Storage::fake('media');
+
+    $owner = User::factory()->create();
+    $linkedUser = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $owner->id,
+        'file_path' => 'media/owner-private.mp3',
+    ]);
+    Storage::disk('media')->put($mediaFile->file_path, 'private audio content');
+
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $linkedUser->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+    $feed = Feed::factory()->create(['user_id' => $linkedUser->id, 'is_public' => true]);
+    actingAs($linkedUser)->post("/library/{$libraryItem->id}/feeds", ['feed_id' => $feed->id])->assertRedirect();
+
+    expect($mediaFile->refresh()->is_public)->toBeFalse();
+    $this->actingAs(User::factory()->create())
+        ->get("/files/{$mediaFile->file_path}")
+        ->assertForbidden();
+});
+
+it('serves media publicly after its owner adds it to a public feed', function () {
+    Storage::fake('media');
+
+    $owner = User::factory()->create();
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $owner->id,
+        'file_path' => 'media/owner-public.mp3',
+    ]);
+    Storage::disk('media')->put($mediaFile->file_path, 'public audio content');
+
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $owner->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+    $feed = Feed::factory()->create(['user_id' => $owner->id, 'is_public' => true]);
+
+    actingAs($owner)->post("/library/{$libraryItem->id}/feeds", ['feed_id' => $feed->id])->assertRedirect();
+
+    expect($mediaFile->refresh()->is_public)->toBeTrue();
+    $this->get("/files/{$mediaFile->file_path}")->assertSuccessful();
 });
 
 it('allows duplicate files for different users but links to existing media without duplicate flag', function () {

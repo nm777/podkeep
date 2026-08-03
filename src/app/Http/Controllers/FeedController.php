@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\FeedRequest;
 use App\Models\Feed;
+use App\Models\MediaFile;
 use App\Services\FeedItemOrderingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -112,6 +113,10 @@ class FeedController extends Controller
             }
         });
 
+        if (! isset($validated['items'])) {
+            MediaFile::syncPublicStatusForUser($feed->user_id);
+        }
+
         if (isset($validated['display_dates'])) {
             foreach ($validated['display_dates'] as $libraryItemId => $date) {
                 $feed->items()
@@ -133,10 +138,14 @@ class FeedController extends Controller
     {
         Gate::authorize('delete', $feed);
 
+        $userId = $feed->user_id;
+
         // Clear RSS cache before deleting
         Cache::forget("rss.{$feed->id}");
 
         $feed->delete();
+
+        MediaFile::syncPublicStatusForUser($userId);
 
         if (request()->expectsJson()) {
             return response()->json(null, 204);

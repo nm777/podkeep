@@ -18,6 +18,7 @@ test('enclosure URL from RSS feed is accessible and returns media file', functio
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
+        'is_public' => true,
         'file_path' => $filePath,
         'filesize' => strlen($audioContent),
         'mime_type' => 'audio/mpeg',
@@ -63,6 +64,7 @@ test('enclosure URL from RSS feed returns 404 when file missing from disk', func
 
     $mediaFile = MediaFile::factory()->create([
         'user_id' => $user->id,
+        'is_public' => true,
         'file_path' => 'media/missing-file.mp3',
         'filesize' => 1000,
         'mime_type' => 'audio/mpeg',
@@ -204,6 +206,7 @@ test('multiple items in RSS feed all have accessible enclosure URLs', function (
 
         $mediaFile = MediaFile::factory()->create([
             'user_id' => $user->id,
+            'is_public' => true,
             'file_path' => $fileData['path'],
             'filesize' => strlen($fileData['content']),
             'mime_type' => 'audio/mpeg',

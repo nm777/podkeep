@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreFeedRequest;
 use App\Http\Requests\Api\V1\UpdateFeedRequest;
 use App\Http\Resources\FeedResource;
+use App\Models\MediaFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -73,6 +74,7 @@ class FeedController extends Controller
         $validated = $request->validated();
 
         $feed->update($validated);
+        MediaFile::syncPublicStatusForUser($feed->user_id);
 
         Cache::forget("rss.{$feed->id}");
 
@@ -87,8 +89,10 @@ class FeedController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $feed = Auth::user()->feeds()->findOrFail($id);
+        $userId = $feed->user_id;
 
         $feed->delete();
+        MediaFile::syncPublicStatusForUser($userId);
 
         return response()->json(null, 204);
     }

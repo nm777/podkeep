@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Feed;
 use App\Models\FeedItem;
 use App\Models\LibraryItem;
+use App\Models\MediaFile;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -28,10 +29,14 @@ class FeedItemOrderingService
                 ]);
             }
 
-            return $feed->items()->create([
+            $feedItem = $feed->items()->create([
                 'library_item_id' => $libraryItemId,
                 'sequence' => $nextSequence,
             ]);
+
+            MediaFile::syncPublicStatusForUser($feed->user_id);
+
+            return $feedItem;
         });
     }
 
@@ -51,6 +56,8 @@ class FeedItemOrderingService
             foreach ($feedItems as $sequence => $feedItem) {
                 $feedItem->update(['sequence' => $sequence]);
             }
+
+            MediaFile::syncPublicStatusForUser($feed->user_id);
         });
     }
 
@@ -121,6 +128,8 @@ class FeedItemOrderingService
             if ($libraryItemIds === []) {
                 $feed->items()->delete();
 
+                MediaFile::syncPublicStatusForUser($feed->user_id);
+
                 return;
             }
 
@@ -131,6 +140,8 @@ class FeedItemOrderingService
                 ['feed_id', 'library_item_id'],
                 ['sequence'],
             );
+
+            MediaFile::syncPublicStatusForUser($feed->user_id);
         });
     }
 }
