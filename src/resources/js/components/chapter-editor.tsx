@@ -14,6 +14,14 @@ function formatHms(totalSeconds: number): string {
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+function parseHms(value: string): number | null {
+    const parts = /^(\d+):([0-5]\d):([0-5]\d)$/.exec(value.trim());
+
+    if (!parts) return null;
+
+    return Number(parts[1]) * 3600 + Number(parts[2]) * 60 + Number(parts[3]);
+}
+
 interface ChapterEditorProps {
     libraryItem: LibraryItem;
 }
@@ -30,24 +38,25 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     const progress = duration > 0 ? Math.min(100, Math.round((transcribedSeconds / duration) * 100)) : 0;
     const segmenting = isGenerating && progress >= 100;
 
-    const initialChapters = (mediaFile?.chapters ?? []).map((c) => ({ start_time: c.start_time, title: c.title }));
+    const initialChapters = (mediaFile?.chapters ?? []).map((c) => ({ start_time: formatHms(c.start_time), title: c.title }));
 
-    const { data, setData, put, processing, errors, recentlySuccessful } = useForm<{
+    const { data, setData, put, processing, errors, recentlySuccessful, transform, setError, clearErrors } = useForm<{
         chapters: { start_time: number | string; title: string }[];
     }>({ chapters: initialChapters });
 
     const update = (index: number, field: 'start_time' | 'title', value: string) => {
+        clearErrors('chapters');
         setData(
             'chapters',
             data.chapters.map((chapter, i) =>
-                i === index ? { ...chapter, [field]: field === 'start_time' ? (value === '' ? '' : Number(value)) : value } : chapter,
+                i === index ? { ...chapter, [field]: value } : chapter,
             ),
         );
     };
 
     const addChapter = () => {
         if (data.chapters.length >= MAX_CHAPTERS) return;
-        setData('chapters', [...data.chapters, { start_time: 0, title: '' }]);
+        setData('chapters', [...data.chapters, { start_time: '0:00:00', title: '' }]);
     };
 
     const removeChapter = (index: number) => {
@@ -58,6 +67,17 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     };
 
     const save = () => {
+        const chapters = data.chapters.map((chapter) => ({ ...chapter, start_time: parseHms(String(chapter.start_time)) }));
+
+        if (chapters.some((chapter) => chapter.start_time === null)) {
+            setError('chapters', 'Use H:MM:SS, for example 1:05:43.');
+
+            return;
+        }
+
+        transform(() => ({
+            chapters: chapters.map(({ start_time, ...chapter }) => ({ ...chapter, start_time: start_time ?? 0 })),
+        }));
         put(route('library.chapters.sync', libraryItem.id), {
             preserveScroll: true,
         });
@@ -136,20 +156,19 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
                 <div className="space-y-2">
                     {[...data.chapters]
                         .map((chapter, originalIndex) => ({ chapter, originalIndex }))
-                        .sort((a, b) => Number(a.chapter.start_time) - Number(b.chapter.start_time))
+                        .sort((a, b) => (parseHms(String(a.chapter.start_time)) ?? Infinity) - (parseHms(String(b.chapter.start_time)) ?? Infinity))
                         .map(({ chapter, originalIndex }) => (
                             <div key={originalIndex} className="flex items-center gap-2">
                                 <div className="flex w-24 flex-col">
                                     <Input
-                                        type="number"
-                                        min={0}
-                                        max={duration ? duration - 1 : undefined}
+                                        type="text"
                                         value={chapter.start_time}
                                         onChange={(e) => update(originalIndex, 'start_time', e.target.value)}
                                         className="h-8"
-                                        title="Start time in seconds"
+                                        placeholder="0:00:00"
+                                        aria-label="Chapter start time"
+                                        title="Start time in H:MM:SS"
                                     />
-                                    <span className="mt-0.5 text-xs text-muted-foreground">{formatHms(Number(chapter.start_time) || 0)}</span>
                                 </div>
                                 <Input
                                     value={chapter.title}
@@ -184,4 +203,3 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
         </div>
     );
 }
-
