@@ -9,6 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 
 class ProcessMediaFile implements ShouldQueue
@@ -25,6 +26,16 @@ class ProcessMediaFile implements ShouldQueue
         private ?string $sourceUrl = null,
         private ?string $filePath = null
     ) {}
+
+    /**
+     * @return array<int, WithoutOverlapping>
+     */
+    public function middleware(): array
+    {
+        return [(new WithoutOverlapping('library-item-'.$this->libraryItem->id))
+            ->expireAfter(720)
+            ->dontRelease()];
+    }
 
     /**
      * Execute the job.

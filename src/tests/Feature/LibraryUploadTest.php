@@ -10,6 +10,7 @@ use App\ProcessingStatusType;
 use App\Services\DuplicateDetectionService;
 use App\Services\MediaProcessing\MediaProcessingService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -95,6 +96,18 @@ it('can upload a media file', function () {
     ]);
 
     Queue::assertPushed(ProcessMediaFile::class);
+});
+
+it('prevents overlapping media processing jobs for the same library item', function () {
+    $libraryItem = LibraryItem::factory()->create();
+
+    $middleware = (new ProcessMediaFile($libraryItem))->middleware();
+
+    expect($middleware)->toHaveCount(1)
+        ->and($middleware[0])->toBeInstanceOf(WithoutOverlapping::class)
+        ->and($middleware[0]->key)->toBe('library-item-'.$libraryItem->id)
+        ->and($middleware[0]->expiresAfter)->toBe(720)
+        ->and($middleware[0]->releaseAfter)->toBeNull();
 });
 
 it('validates file upload requirements', function () {
