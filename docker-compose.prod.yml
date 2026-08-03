@@ -6,6 +6,8 @@ services:
     image: podkeep-app:latest
     hostname: podkeep-app
     restart: unless-stopped
+    deploy:
+      replicas: 1
     environment:
       - PHP_FPM_LISTEN=0.0.0.0:9000
       - RUN_MIGRATIONS=1
@@ -58,6 +60,8 @@ services:
     image: podkeep-app:latest
     hostname: podkeep-worker
     restart: unless-stopped
+    deploy:
+      replicas: 1
     working_dir: /var/www/html
     command: php artisan queue:work --sleep=3 --tries=3 --timeout=720
     volumes:
@@ -85,6 +89,8 @@ services:
   chapters:
     image: podkeep-app:latest
     restart: unless-stopped
+    deploy:
+      replicas: 1
     working_dir: /var/www/html
     command: php -d memory_limit=512M artisan queue:work chapters --queue=chapters --sleep=5 --tries=3 --timeout=43200
     volumes:
@@ -107,6 +113,8 @@ services:
     image: podkeep-app:latest
     hostname: podkeep-scheduler
     restart: unless-stopped
+    deploy:
+      replicas: 1
     working_dir: /var/www/html
     volumes:
       - podcast-storage:/var/www/html/storage

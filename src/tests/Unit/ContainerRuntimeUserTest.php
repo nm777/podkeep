@@ -28,6 +28,23 @@ test('Laravel production services mount their persistent runtime files', functio
     }
 });
 
+test('SQLite production services have bounded writers and wait for transient locks', function () {
+    $repositoryRoot = getenv('PODKEEP_REPOSITORY_ROOT') ?: dirname(__DIR__, 3);
+    $compose = file_get_contents($repositoryRoot.'/docker-compose.prod.yml');
+    $databaseConfig = file_get_contents($repositoryRoot.'/src/config/database.php');
+    $fpmConfig = file_get_contents($repositoryRoot.'/custom-www.conf');
+
+    foreach (['app', 'worker', 'chapters', 'scheduler'] as $service) {
+        Assert::assertMatchesRegularExpression(
+            '/^  '.$service.":\n(?:(?:    |  ).*\n)*?    deploy:\n      replicas: 1$/m",
+            $compose,
+        );
+    }
+
+    Assert::assertStringContainsString("pm = static\npm.max_children = 1", $fpmConfig);
+    Assert::assertStringContainsString("'busy_timeout' => (int) env('SQLITE_BUSY_TIMEOUT', 30000)", $databaseConfig);
+});
+
 test('development Compose runs a dedicated chapters worker', function () {
     $repositoryRoot = getenv('PODKEEP_REPOSITORY_ROOT') ?: dirname(__DIR__, 3);
     $compose = file_get_contents($repositoryRoot.'/docker-compose.yml');
