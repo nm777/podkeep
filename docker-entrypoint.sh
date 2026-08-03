@@ -25,13 +25,13 @@ else
     echo "Skipping migrations (RUN_MIGRATIONS is not set; only the app service migrates)."
 fi
 
-echo "Clearing caches..."
-su-exec www-data php artisan view:clear
-su-exec www-data php artisan config:clear
-su-exec www-data php artisan cache:clear
-
 # PHP-FPM starts as root and drops to www-data through its pool configuration.
 if [ "$1" = "php-fpm" ]; then
+    echo "Clearing caches..."
+    su-exec www-data php artisan view:clear
+    su-exec www-data php artisan config:clear
+    su-exec www-data php artisan cache:clear
+
     exec "$@"
 fi
 

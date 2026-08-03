@@ -7,7 +7,10 @@ test('non PHP-FPM container commands run as www-data after setup', function () {
     $entrypoint = file_get_contents($repositoryRoot.'/docker-entrypoint.sh');
     $compose = file_get_contents($repositoryRoot.'/docker-compose.prod.yml');
 
-    Assert::assertStringContainsString('if [ "$1" = "php-fpm" ]; then', $entrypoint);
+    Assert::assertMatchesRegularExpression(
+        '/if \[ "\$1" = "php-fpm" \]; then\n    echo "Clearing caches\.\.\."\n    su-exec www-data php artisan view:clear\n    su-exec www-data php artisan config:clear\n    su-exec www-data php artisan cache:clear\n\n    exec "\$@"\nfi/',
+        $entrypoint,
+    );
     Assert::assertStringContainsString('exec su-exec www-data "$@"', $entrypoint);
     Assert::assertStringContainsString('command: php artisan schedule:work', $compose);
     Assert::assertStringNotContainsString('entrypoint: ["sh", "-c"]', $compose);
