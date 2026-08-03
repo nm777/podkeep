@@ -64,7 +64,7 @@ it('invalidates queued generation so it cannot overwrite manually synced chapter
     expect($mediaFile->fresh()->chapters->pluck('title')->all())->toBe(['Manual Chapter']);
 });
 
-it('enforces the 20-chapter maximum', function () {
+it('allows more than 20 manual chapters', function () {
     $user = User::factory()->create();
     $mediaFile = MediaFile::factory()->create(['user_id' => $user->id, 'duration' => 100000]);
     $libraryItem = LibraryItem::factory()->create(['user_id' => $user->id, 'media_file_id' => $mediaFile->id]);
@@ -73,7 +73,8 @@ it('enforces the 20-chapter maximum', function () {
         'chapters' => collect(range(0, 20))->map(fn ($i) => ['start_time' => $i * 100, 'title' => "Chapter {$i}"])->all(),
     ]);
 
-    $response->assertSessionHasErrors(['chapters']);
+    $response->assertSessionHasNoErrors();
+    expect(Chapter::where('media_file_id', $mediaFile->id)->count())->toBe(21);
 });
 
 it('allows a start time of 0', function () {

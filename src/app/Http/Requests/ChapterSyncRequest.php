@@ -20,7 +20,7 @@ class ChapterSyncRequest extends FormRequest
         $duration = $this->route('library_item')?->mediaFile?->duration;
 
         return [
-            'chapters' => ['nullable', 'array', 'max:20', function (string $attribute, mixed $value, \Closure $fail) {
+            'chapters' => ['nullable', 'array', function (string $attribute, mixed $value, \Closure $fail) {
                 $starts = is_array($value) ? array_column($value, 'start_time') : [];
                 if (count($starts) !== count(array_unique($starts))) {
                     $fail('Each chapter must have a unique start time.');

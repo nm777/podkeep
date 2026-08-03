@@ -5,8 +5,6 @@ import { type LibraryItem } from '@/types';
 import { router, useForm } from '@inertiajs/react';
 import { Plus, Trash2, WandSparkles } from 'lucide-react';
 
-const MAX_CHAPTERS = 20;
-
 function formatHms(totalSeconds: number): string {
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
@@ -55,7 +53,6 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     };
 
     const addChapter = () => {
-        if (data.chapters.length >= MAX_CHAPTERS) return;
         setData('chapters', [...data.chapters, { start_time: '0:00:00', title: '' }]);
     };
 
@@ -98,8 +95,8 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     return (
         <div className="space-y-3" onKeyDown={handleKeyDown}>
             <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Chapters ({data.chapters.length}/{MAX_CHAPTERS})</Label>
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={addChapter} disabled={data.chapters.length >= MAX_CHAPTERS || isGenerating}>
+                <Label className="text-sm font-medium">Chapters ({data.chapters.length})</Label>
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={addChapter} disabled={isGenerating}>
                     <Plus className="mr-1 h-3 w-3" />
                     Add
                 </Button>
