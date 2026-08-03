@@ -15,13 +15,13 @@ use App\Services\MediaProcessing\MediaRedownloader;
 use App\Services\MediaProcessing\MediaStorageManager;
 use App\Services\MediaProcessing\MediaValidator;
 use App\Services\Transcription\WhisperClient;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
 
 use function Pest\Laravel\actingAs;
 

@@ -31,7 +31,7 @@ it('marks a claimed pending item as processing so a later recovery does not redi
     $item = LibraryItem::factory()->create([
         'source_url' => 'https://example.com/stale.mp3',
         'processing_status' => ProcessingStatusType::PENDING,
-        'processing_started_at' => $now->copy()->subMinutes(10),
+        'processing_started_at' => $now->copy()->subMinutes(6),
     ]);
 
     try {

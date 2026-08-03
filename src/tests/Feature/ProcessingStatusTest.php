@@ -1,9 +1,10 @@
 <?php
 
+use App\Enums\ProcessingStatusType;
 use App\Jobs\ProcessMediaFile;
 use App\Models\LibraryItem;
+use App\Models\MediaFile;
 use App\Models\User;
-use App\Enums\ProcessingStatusType;
 use App\Services\MediaProcessing\MediaProcessingService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -100,7 +101,7 @@ it('rethrows unexpected media processing errors and records a safe terminal fail
 
         public function __construct() {}
 
-        /** @return array{success?: true, is_duplicate: bool, media_file: \App\Models\MediaFile|null, message?: string, error?: 'media_processing_failed'} */
+        /** @return array{success?: true, is_duplicate: bool, media_file: MediaFile|null, message?: string, error?: 'media_processing_failed'} */
         public function processFromUrl(LibraryItem $libraryItem, string $sourceUrl, ?string $mediaType = null): array
         {
             $this->calls++;

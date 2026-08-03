@@ -2,7 +2,6 @@
 
 namespace App\Services\Transcription;
 
-use App\Models\MediaFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 

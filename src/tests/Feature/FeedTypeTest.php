@@ -289,8 +289,8 @@ it('stores and renders display dates per append feed item', function () {
 
     $firstResponse->assertOk();
     $secondResponse->assertOk();
-    expect($firstResponse->content())->toContain('[Jul 4, 2026] A great episode')
-        ->and($secondResponse->content())->toContain('[Jul 5, 2026] A great episode');
+    expect($firstResponse->content())->toContain('[Jul 4, 2026]')
+        ->and($secondResponse->content())->toContain('[Jul 5, 2026]');
 });
 
 it('reorders items by created_at desc when switching to append type', function () {

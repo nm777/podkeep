@@ -154,7 +154,7 @@ describe('media_file_id persistence', function () {
         $libraryItem = LibraryItem::factory()->create([
             'user_id' => $this->user->id,
             'source_type' => 'upload',
-            'processing_status' => \App\Enums\ProcessingStatusType::PENDING,
+            'processing_status' => App\Enums\ProcessingStatusType::PENDING,
         ]);
 
         $storageManager = $this->mock(MediaStorageManager::class);
@@ -191,7 +191,7 @@ describe('media_file_id persistence', function () {
 
         expect($result['is_duplicate'])->toBeFalse();
         expect($result['media_file']->file_path)->toBe($winningPath);
-        expect($libraryItem->processing_status)->toBe(\App\Enums\ProcessingStatusType::COMPLETED);
+        expect($libraryItem->processing_status)->toBe(App\Enums\ProcessingStatusType::COMPLETED);
         expect($libraryItem->media_file_id)->toBe($result['media_file']->id);
         Storage::disk('media')->assertExists($winningPath);
         if ($losingPath !== $winningPath) {

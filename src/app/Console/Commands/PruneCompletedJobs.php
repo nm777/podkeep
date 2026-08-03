@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class PruneCompletedJobs extends Command
 {
     protected $signature = 'queue:prune-completed';
+
     protected $description = 'Delete completed_job_log entries older than the retention window.';
 
     public function handle(): int

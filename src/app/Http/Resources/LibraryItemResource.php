@@ -2,11 +2,12 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\MediaType;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @property-read \App\Enums\MediaType|null $media_type
+ * @property-read MediaType|null $media_type
  * @property-read bool $auto_generate_chapters
  */
 class LibraryItemResource extends JsonResource

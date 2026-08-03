@@ -36,6 +36,7 @@ class ProbeMediaDurations extends Command
             if (! file_exists($path)) {
                 $missing++;
                 $bar->advance();
+
                 continue;
             }
 

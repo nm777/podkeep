@@ -2,13 +2,13 @@
 
 namespace App\Providers;
 
+use App\Listeners\LogCompletedJob;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use App\Listeners\LogCompletedJob;
 
 class AppServiceProvider extends ServiceProvider
 {

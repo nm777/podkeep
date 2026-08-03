@@ -38,33 +38,33 @@ class AdminQueueController extends Controller
         $mediaFiles = $this->mediaFilesFor($pending->concat($executing)->concat($failed));
 
         $pending = $pending->map(fn ($job) => [
-                'id' => $job->id,
-                'type' => $this->parseJobType($job->payload),
-                'media' => $this->mediaFileDetails($job->payload, $mediaFiles),
-                'queue' => $job->queue,
-                'attempts' => $job->attempts,
-                'created_at' => $job->created_at,
-            ]);
+            'id' => $job->id,
+            'type' => $this->parseJobType($job->payload),
+            'media' => $this->mediaFileDetails($job->payload, $mediaFiles),
+            'queue' => $job->queue,
+            'attempts' => $job->attempts,
+            'created_at' => $job->created_at,
+        ]);
 
         $executing = $executing->map(fn ($job) => [
-                'id' => $job->id,
-                'type' => $this->parseJobType($job->payload),
-                'media' => $this->mediaFileDetails($job->payload, $mediaFiles),
-                'queue' => $job->queue,
-                'attempts' => $job->attempts,
-                'reserved_at' => $job->reserved_at,
-                'created_at' => $job->created_at,
-            ]);
+            'id' => $job->id,
+            'type' => $this->parseJobType($job->payload),
+            'media' => $this->mediaFileDetails($job->payload, $mediaFiles),
+            'queue' => $job->queue,
+            'attempts' => $job->attempts,
+            'reserved_at' => $job->reserved_at,
+            'created_at' => $job->created_at,
+        ]);
 
         $failed = $failed->map(fn ($job) => [
-                'id' => $job->id,
-                'uuid' => $job->uuid,
-                'type' => $this->parseJobType($job->payload),
-                'media' => $this->mediaFileDetails($job->payload, $mediaFiles),
-                'queue' => $job->queue,
-                'failed_at' => $job->failed_at,
-                'exception' => Str::limit($job->exception, 500),
-            ]);
+            'id' => $job->id,
+            'uuid' => $job->uuid,
+            'type' => $this->parseJobType($job->payload),
+            'media' => $this->mediaFileDetails($job->payload, $mediaFiles),
+            'queue' => $job->queue,
+            'failed_at' => $job->failed_at,
+            'exception' => Str::limit($job->exception, 500),
+        ]);
 
         $recentlyCompleted = DB::table('completed_job_log')
             ->orderBy('completed_at', 'desc')
