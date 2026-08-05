@@ -151,39 +151,36 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
                 <p className="py-4 text-center text-sm text-muted-foreground">No chapters yet.</p>
             ) : (
                 <div className="space-y-2">
-                    {[...data.chapters]
-                        .map((chapter, originalIndex) => ({ chapter, originalIndex }))
-                        .sort((a, b) => (parseHms(String(a.chapter.start_time)) ?? Infinity) - (parseHms(String(b.chapter.start_time)) ?? Infinity))
-                        .map(({ chapter, originalIndex }) => (
-                            <div key={originalIndex} className="flex items-center gap-2">
-                                <div className="flex w-24 flex-col">
-                                    <Input
-                                        type="text"
-                                        value={chapter.start_time}
-                                        onChange={(e) => update(originalIndex, 'start_time', e.target.value)}
-                                        className="h-8"
-                                        placeholder="0:00:00"
-                                        aria-label="Chapter start time"
-                                        title="Start time in H:MM:SS"
-                                    />
-                                </div>
+                    {data.chapters.map((chapter, originalIndex) => (
+                        <div key={originalIndex} className="flex items-center gap-2">
+                            <div className="flex w-24 flex-col">
                                 <Input
-                                    value={chapter.title}
-                                    onChange={(e) => update(originalIndex, 'title', e.target.value)}
-                                    placeholder="Chapter title"
-                                    className="h-8 flex-1"
+                                    type="text"
+                                    value={chapter.start_time}
+                                    onChange={(e) => update(originalIndex, 'start_time', e.target.value)}
+                                    className="h-8"
+                                    placeholder="0:00:00"
+                                    aria-label="Chapter start time"
+                                    title="Start time in H:MM:SS"
                                 />
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeChapter(originalIndex)}
-                                    className="shrink-0 text-destructive hover:text-destructive"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
                             </div>
-                        ))}
+                            <Input
+                                value={chapter.title}
+                                onChange={(e) => update(originalIndex, 'title', e.target.value)}
+                                placeholder="Chapter title"
+                                className="h-8 flex-1"
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeChapter(originalIndex)}
+                                className="shrink-0 text-destructive hover:text-destructive"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
                 </div>
             )}
 
