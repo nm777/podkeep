@@ -78,6 +78,8 @@ class MediaProcessingService
                 throw new \InvalidArgumentException('Temp file not found or inaccessible');
             }
 
+            $this->videoToAudioConverter->ensureMp3SeekIndex($filePath);
+
             // Check for duplicates
             $duplicateResult = $this->duplicateProcessor->processFileDuplicate($libraryItem, $filePath);
             if ($duplicateResult['media_file']) {

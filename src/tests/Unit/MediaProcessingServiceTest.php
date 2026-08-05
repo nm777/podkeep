@@ -79,6 +79,23 @@ test('does not persist or return exception text', function () {
     ], $result);
 });
 
+test('adds a seek index to MP3 files before processing', function () {
+    $sourcePath = 'temp-downloads/audio.mp3';
+    $content = 'audio';
+    $indexedPath = null;
+
+    Storage::disk('media')->put($sourcePath, $content);
+
+    $service = mediaProcessingService($sourcePath, $sourcePath, hash('sha256', $content), $content, onEnsureMp3SeekIndex: function (string $path) use (&$indexedPath): void {
+        $indexedPath = $path;
+    });
+    $libraryItem = LibraryItem::factory()->create(['user_id' => User::factory()]);
+
+    $service->processFromUrl($libraryItem, 'https://example.com/audio.mp3');
+
+    expect($indexedPath)->toBe($sourcePath);
+});
+
 function mediaProcessingService(
     string $sourcePath,
     string $convertedPath,
@@ -86,6 +103,7 @@ function mediaProcessingService(
     ?string $content,
     bool $validationFails = false,
     string $validationError = 'Invalid audio',
+    ?Closure $onEnsureMp3SeekIndex = null,
 ): MediaProcessingService {
     $downloader = new class($sourcePath) extends MediaDownloader
     {
@@ -112,9 +130,18 @@ function mediaProcessingService(
         }
     };
 
-    $converter = new class($convertedPath) extends VideoToAudioConverter
+    $converter = new class($convertedPath, $onEnsureMp3SeekIndex) extends VideoToAudioConverter
     {
-        public function __construct(private string $convertedPath) {}
+        public function __construct(private string $convertedPath, private ?Closure $onEnsureMp3SeekIndex) {}
+
+        public function ensureMp3SeekIndex(string $audioPath): bool
+        {
+            if ($this->onEnsureMp3SeekIndex) {
+                ($this->onEnsureMp3SeekIndex)($audioPath);
+            }
+
+            return false;
+        }
 
         public function convert(string $videoPath): string
         {
