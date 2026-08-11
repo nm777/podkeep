@@ -1,4 +1,4 @@
-import { type FeedItemForm, resequence } from '@/components/feed-item-utils';
+import { type FeedItemForm, resequence, sortFeedItems } from '@/components/feed-item-utils';
 import FeedLibraryItemInfo from '@/components/feed-library-item-info';
 import SearchInput from '@/components/search-input';
 import { Button } from '@/components/ui/button';
@@ -50,20 +50,7 @@ export default function FeedExistingItemsTab({
     };
 
     const sortItems = (property: 'title' | 'date', direction: 'asc' | 'desc') => {
-        const sorted = [...items].sort((a, b) => {
-            const aValue =
-                property === 'title'
-                    ? (getLibraryItem(a.library_item_id)?.title ?? '')
-                    : (getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '');
-            const bValue =
-                property === 'title'
-                    ? (getLibraryItem(b.library_item_id)?.title ?? '')
-                    : (getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '');
-
-            return direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-        });
-
-        onItemsChange(resequence(sorted, true));
+        onItemsChange(resequence(sortFeedItems(items, userLibraryItems, property, direction), true));
     };
 
     return (

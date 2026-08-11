@@ -29,7 +29,14 @@ interface ChapterGenerationControlsProps {
     mediaFile: LibraryItem['media_file'];
 }
 
-function ChapterGenerationControls({ libraryItemId, mediaFile }: ChapterGenerationControlsProps) {
+type Chapter = { start_time: number | string; title: string };
+
+interface ChapterGenerationStatusProps {
+    mediaFile: LibraryItem['media_file'];
+    onGenerate: () => void;
+}
+
+function ChapterGenerationStatus({ mediaFile, onGenerate }: ChapterGenerationStatusProps) {
     const status = mediaFile?.chapter_generation_status ?? null;
     const duration = mediaFile?.duration ?? 0;
     const transcribedSeconds = mediaFile?.transcript?.length ? Math.max(...mediaFile.transcript.map((s) => s.end)) : 0;
@@ -37,13 +44,9 @@ function ChapterGenerationControls({ libraryItemId, mediaFile }: ChapterGenerati
     const generationError = mediaFile?.chapter_generation_error;
     const generation = getGenerationPresentation(status, progress);
 
-    const generate = () => {
-        router.post(route('library.chapters.generate', libraryItemId), {}, { preserveScroll: true });
-    };
-
     return (
         <>
-            <Button type="button" variant="outline" size="sm" className="w-full" onClick={generate} disabled={generation.isGenerating}>
+            <Button type="button" variant="outline" size="sm" className="w-full" onClick={onGenerate} disabled={generation.isGenerating}>
                 <WandSparkles className="mr-2 h-4 w-4" />
                 {generation.label}
             </Button>
@@ -54,7 +57,7 @@ function ChapterGenerationControls({ libraryItemId, mediaFile }: ChapterGenerati
                     {generation.canRetry && (
                         <p className="text-xs text-muted-foreground">
                             Looks stalled?{' '}
-                            <button type="button" className="underline hover:text-foreground" onClick={generate}>
+                            <button type="button" className="underline hover:text-foreground" onClick={onGenerate}>
                                 Retry from the last checkpoint
                             </button>
                             .
@@ -65,7 +68,7 @@ function ChapterGenerationControls({ libraryItemId, mediaFile }: ChapterGenerati
             {status === 'failed' && (
                 <p className="text-center text-xs text-destructive">
                     {generationError || 'Generation failed.'}{' '}
-                    <button type="button" className="underline" onClick={generate}>
+                    <button type="button" className="underline" onClick={onGenerate}>
                         Retry
                     </button>{' '}
                     or add chapters manually.
@@ -73,6 +76,14 @@ function ChapterGenerationControls({ libraryItemId, mediaFile }: ChapterGenerati
             )}
         </>
     );
+}
+
+function ChapterGenerationControls({ libraryItemId, mediaFile }: ChapterGenerationControlsProps) {
+    const generate = () => {
+        router.post(route('library.chapters.generate', libraryItemId), {}, { preserveScroll: true });
+    };
+
+    return <ChapterGenerationStatus mediaFile={mediaFile} onGenerate={generate} />;
 }
 
 function getGenerationPresentation(status: NonNullable<LibraryItem['media_file']>['chapter_generation_status'], progress: number) {
@@ -106,6 +117,53 @@ function getGenerationPresentation(status: NonNullable<LibraryItem['media_file']
     };
 }
 
+interface ChapterRowsProps {
+    chapters: Chapter[];
+    onUpdate: (index: number, field: 'start_time' | 'title', value: string) => void;
+    onRemove: (index: number) => void;
+}
+
+function ChapterRows({ chapters, onUpdate, onRemove }: ChapterRowsProps) {
+    if (chapters.length === 0) {
+        return <p className="py-4 text-center text-sm text-muted-foreground">No chapters yet.</p>;
+    }
+
+    return (
+        <div className="space-y-2">
+            {chapters.map((chapter, originalIndex) => (
+                <div key={originalIndex} className="flex items-center gap-2">
+                    <div className="flex w-24 flex-col">
+                        <Input
+                            type="text"
+                            value={chapter.start_time}
+                            onChange={(e) => onUpdate(originalIndex, 'start_time', e.target.value)}
+                            className="h-8"
+                            placeholder="0:00:00"
+                            aria-label="Chapter start time"
+                            title="Start time in H:MM:SS"
+                        />
+                    </div>
+                    <Input
+                        value={chapter.title}
+                        onChange={(e) => onUpdate(originalIndex, 'title', e.target.value)}
+                        placeholder="Chapter title"
+                        className="h-8 flex-1"
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemove(originalIndex)}
+                        className="shrink-0 text-destructive hover:text-destructive"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     const mediaFile = libraryItem.media_file;
     const status = mediaFile?.chapter_generation_status ?? null;
@@ -113,9 +171,9 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
 
     const initialChapters = (mediaFile?.chapters ?? []).map((c) => ({ start_time: formatHms(c.start_time), title: c.title }));
 
-    const { data, setData, put, processing, errors, recentlySuccessful, transform, setError, clearErrors } = useForm<{
-        chapters: { start_time: number | string; title: string }[];
-    }>({ chapters: initialChapters });
+    const { data, setData, put, processing, errors, recentlySuccessful, transform, setError, clearErrors } = useForm<{ chapters: Chapter[] }>({
+        chapters: initialChapters,
+    });
 
     const update = (index: number, field: 'start_time' | 'title', value: string) => {
         clearErrors('chapters');
@@ -173,42 +231,7 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
 
             <ChapterGenerationControls libraryItemId={libraryItem.id} mediaFile={mediaFile} />
 
-            {data.chapters.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">No chapters yet.</p>
-            ) : (
-                <div className="space-y-2">
-                    {data.chapters.map((chapter, originalIndex) => (
-                        <div key={originalIndex} className="flex items-center gap-2">
-                            <div className="flex w-24 flex-col">
-                                <Input
-                                    type="text"
-                                    value={chapter.start_time}
-                                    onChange={(e) => update(originalIndex, 'start_time', e.target.value)}
-                                    className="h-8"
-                                    placeholder="0:00:00"
-                                    aria-label="Chapter start time"
-                                    title="Start time in H:MM:SS"
-                                />
-                            </div>
-                            <Input
-                                value={chapter.title}
-                                onChange={(e) => update(originalIndex, 'title', e.target.value)}
-                                placeholder="Chapter title"
-                                className="h-8 flex-1"
-                            />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeChapter(originalIndex)}
-                                className="shrink-0 text-destructive hover:text-destructive"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ))}
-                </div>
-            )}
+            <ChapterRows chapters={data.chapters} onUpdate={update} onRemove={removeChapter} />
 
             {(errors as Record<string, string>).chapters && <p className="text-sm text-destructive">{(errors as Record<string, string>).chapters}</p>}
 
