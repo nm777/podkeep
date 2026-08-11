@@ -17,11 +17,17 @@ type ProfileForm = {
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
-
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
-        name: auth.user.name,
-        email: auth.user.email,
+    const user = auth.user;
+    const form = useForm<Required<ProfileForm>>({
+        name: user?.name ?? '',
+        email: user?.email ?? '',
     });
+
+    if (!user) {
+        return null;
+    }
+
+    const { data, setData, patch, errors, processing, recentlySuccessful } = form;
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -68,7 +74,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         <InputError className="mt-2" message={errors.email} />
                     </div>
 
-                    {mustVerifyEmail && auth.user.email_verified_at === null && (
+                    {mustVerifyEmail && user.email_verified_at === null && (
                         <div>
                             <p className="-mt-4 text-sm text-muted-foreground">
                                 Your email address is unverified.{' '}

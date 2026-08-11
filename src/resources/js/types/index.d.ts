@@ -73,6 +73,8 @@ export interface FeedItem {
     sequence: number;
     display_date?: string;
     library_item: LibraryItem;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Feed {

@@ -14,7 +14,7 @@ import { useState } from 'react';
 function LibraryItemInfo({ item }: { item: LibraryItem }) {
     return (
         <div className="min-w-0 flex-1">
-            <p className="line-clamp-2 break-words text-sm font-medium">
+            <p className="line-clamp-2 text-sm font-medium break-words">
                 {item.title}
                 {item.media_file?.chapters?.length ? (
                     <Tooltip>
@@ -43,6 +43,18 @@ interface EditFeedProps {
     userLibraryItems: LibraryItem[];
 }
 
+type FeedItemForm = Pick<FeedItem, 'id' | 'library_item_id' | 'sequence'> & { created_at?: string; display_date?: string };
+
+interface FeedForm {
+    title: string;
+    description: string;
+    website_url: string;
+    is_public: boolean;
+    is_hidden_from_selector: boolean;
+    feed_type: 'static' | 'append';
+    items: FeedItemForm[];
+}
+
 export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
     return (
         <AppLayout>
@@ -55,7 +67,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 }
 
 function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
-    const { data, setData, put, processing, errors, isDirty } = useForm({
+    const { data, setData, put, processing, errors, isDirty, transform } = useForm<FeedForm>({
         title: feed.title,
         description: feed.description || '',
         website_url: feed.website_url || '',
@@ -102,9 +114,8 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/feeds/${feed.id}`, {
-            data: { ...data, display_dates: displayDates },
-        });
+        transform((data) => ({ ...data, display_dates: displayDates }));
+        put(`/feeds/${feed.id}`);
     };
 
     const addLibraryItem = (libraryItemId: number) => {
@@ -149,7 +160,10 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             return direction === 'asc' ? aTitle.localeCompare(bTitle) : bTitle.localeCompare(aTitle);
         });
         const count = sorted.length;
-        setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+        setData(
+            'items',
+            sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
+        );
     };
 
     const sortByDate = (direction: 'asc' | 'desc') => {
@@ -159,16 +173,16 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             return direction === 'asc' ? (aDate || '').localeCompare(bDate || '') : (bDate || '').localeCompare(aDate || '');
         });
         const count = sorted.length;
-        setData('items', sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })));
+        setData(
+            'items',
+            sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
+        );
     };
 
     return (
         <div className="space-y-6">
             <div>
-                <Link
-                    href={route('dashboard')}
-                    className="mb-1 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
+                <Link href={route('dashboard')} className="mb-1 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
                     <ArrowLeft className="h-4 w-4" />
                     Back
                 </Link>
