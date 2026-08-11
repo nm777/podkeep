@@ -55,6 +55,10 @@ interface FeedForm {
     items: FeedItemForm[];
 }
 
+function resequence(items: FeedItemForm[], descending: boolean) {
+    return items.map((item, index) => ({ ...item, sequence: descending ? items.length - 1 - index : index }));
+}
+
 export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
     return (
         <AppLayout>
@@ -102,14 +106,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
         });
 
     const { handleDragStart, handleDragOver, handleDrop, handleTouchEnd } = useFeedItemReorder(data.items, (items) => {
-        const count = items.length;
-        setData(
-            'items',
-            items.map((item, i) => ({
-                ...item,
-                sequence: data.feed_type === 'append' ? count - 1 - i : i,
-            })),
-        );
+        setData('items', resequence(items, data.feed_type === 'append'));
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -127,24 +124,12 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                 sequence: 0,
             },
         ];
-        const count = items.length;
-
-        setData(
-            'items',
-            items.map((item, i) => ({
-                ...item,
-                sequence: data.feed_type === 'append' ? count - 1 - i : i,
-            })),
-        );
+        setData('items', resequence(items, data.feed_type === 'append'));
     };
 
     const removeItem = (index: number) => {
         const filtered = data.items.filter((_, i) => i !== index);
-        const count = filtered.length;
-        setData(
-            'items',
-            filtered.map((item, i) => ({ ...item, sequence: data.feed_type === 'append' ? count - 1 - i : i })),
-        );
+        setData('items', resequence(filtered, data.feed_type === 'append'));
     };
 
     const availableLibraryItems = userLibraryItems.filter((item) => !data.items.some((feedItem) => feedItem.library_item_id === item.id));
@@ -159,11 +144,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             const bTitle = getLibraryItem(b.library_item_id)?.title ?? '';
             return direction === 'asc' ? aTitle.localeCompare(bTitle) : bTitle.localeCompare(aTitle);
         });
-        const count = sorted.length;
-        setData(
-            'items',
-            sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
-        );
+        setData('items', resequence(sorted, true));
     };
 
     const sortByDate = (direction: 'asc' | 'desc') => {
@@ -172,11 +153,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
             const bDate = getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '';
             return direction === 'asc' ? (aDate || '').localeCompare(bDate || '') : (bDate || '').localeCompare(aDate || '');
         });
-        const count = sorted.length;
-        setData(
-            'items',
-            sorted.map((item, i) => ({ ...item, sequence: count - 1 - i })),
-        );
+        setData('items', resequence(sorted, true));
     };
 
     return (

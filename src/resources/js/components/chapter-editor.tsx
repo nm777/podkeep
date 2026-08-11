@@ -24,17 +24,45 @@ interface ChapterEditorProps {
     libraryItem: LibraryItem;
 }
 
+function getGenerationPresentation(status: NonNullable<LibraryItem['media_file']>['chapter_generation_status'], progress: number) {
+    if (status === 'pending') {
+        return {
+            isGenerating: true,
+            canRetry: false,
+            label: 'Queued…',
+            message: 'Waiting in the queue — starts automatically when a worker is free. You can leave this page.',
+        };
+    }
+
+    if (status === 'processing' && progress >= 100) {
+        return { isGenerating: true, canRetry: false, label: 'Segmenting…', message: 'Segmenting via the language model — you can leave this page.' };
+    }
+
+    if (status === 'processing') {
+        return {
+            isGenerating: true,
+            canRetry: true,
+            label: `Transcribing… ${progress}%`,
+            message: 'You can leave this page; it keeps running even if you navigate away.',
+        };
+    }
+
+    return {
+        isGenerating: false,
+        canRetry: false,
+        label: status === 'completed' ? 'Regenerate from content' : status === 'failed' ? 'Retry generation' : 'Generate from content',
+        message: null,
+    };
+}
+
 export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     const mediaFile = libraryItem.media_file;
     const duration = mediaFile?.duration ?? 0;
     const status = mediaFile?.chapter_generation_status ?? null;
     const generationError = mediaFile?.chapter_generation_error;
-    const isGenerating = status === 'pending' || status === 'processing';
-    const isQueued = status === 'pending';
-
     const transcribedSeconds = mediaFile?.transcript?.length ? Math.max(...mediaFile.transcript.map((s) => s.end)) : 0;
     const progress = duration > 0 ? Math.min(100, Math.round((transcribedSeconds / duration) * 100)) : 0;
-    const segmenting = isGenerating && progress >= 100;
+    const generation = getGenerationPresentation(status, progress);
 
     const initialChapters = (mediaFile?.chapters ?? []).map((c) => ({ start_time: formatHms(c.start_time), title: c.title }));
 
@@ -46,9 +74,7 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
         clearErrors('chapters');
         setData(
             'chapters',
-            data.chapters.map((chapter, i) =>
-                i === index ? { ...chapter, [field]: value } : chapter,
-            ),
+            data.chapters.map((chapter, i) => (i === index ? { ...chapter, [field]: value } : chapter)),
         );
     };
 
@@ -96,37 +122,21 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
         <div className="space-y-3" onKeyDown={handleKeyDown}>
             <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Chapters ({data.chapters.length})</Label>
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={addChapter} disabled={isGenerating}>
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={addChapter} disabled={generation.isGenerating}>
                     <Plus className="mr-1 h-3 w-3" />
                     Add
                 </Button>
             </div>
 
-            <Button type="button" variant="outline" size="sm" className="w-full" onClick={generate} disabled={isGenerating}>
+            <Button type="button" variant="outline" size="sm" className="w-full" onClick={generate} disabled={generation.isGenerating}>
                 <WandSparkles className="mr-2 h-4 w-4" />
-                {isQueued
-                    ? 'Queued…'
-                    : segmenting
-                      ? 'Segmenting…'
-                      : isGenerating
-                        ? `Transcribing… ${progress}%`
-                        : status === 'completed'
-                          ? 'Regenerate from content'
-                          : status === 'failed'
-                            ? 'Retry generation'
-                            : 'Generate from content'}
+                {generation.label}
             </Button>
 
-            {isGenerating && (
+            {generation.isGenerating && (
                 <div className="space-y-1 text-center">
-                    <p className="text-xs text-muted-foreground">
-                        {isQueued
-                            ? 'Waiting in the queue — starts automatically when a worker is free. You can leave this page.'
-                            : segmenting
-                              ? 'Segmenting via the language model — you can leave this page.'
-                              : 'You can leave this page; it keeps running even if you navigate away.'}
-                    </p>
-                    {!isQueued && !segmenting && (
+                    <p className="text-xs text-muted-foreground">{generation.message}</p>
+                    {generation.canRetry && (
                         <p className="text-xs text-muted-foreground">
                             Looks stalled?{' '}
                             <button type="button" className="underline hover:text-foreground" onClick={generate}>
@@ -184,9 +194,7 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
                 </div>
             )}
 
-            {(errors as Record<string, string>).chapters && (
-                <p className="text-sm text-destructive">{(errors as Record<string, string>).chapters}</p>
-            )}
+            {(errors as Record<string, string>).chapters && <p className="text-sm text-destructive">{(errors as Record<string, string>).chapters}</p>}
 
             <div className="flex items-center justify-end gap-2">
                 {recentlySuccessful && <span className="text-xs text-muted-foreground">Saved</span>}
