@@ -1,49 +1,16 @@
 import FeedFormFields from '@/components/feed-form-fields';
-import SearchInput from '@/components/search-input';
+import FeedItemsManager, { type FeedItemForm } from '@/components/feed-items-manager';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { useFeedItemReorder } from '@/hooks/use-feed-item-reorder';
 import AppLayout from '@/layouts/app-layout';
-import { formatDuration, formatFileSize } from '@/lib/format';
 import { type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, GripVertical, ListMusic, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-
-function LibraryItemInfo({ item }: { item: LibraryItem }) {
-    return (
-        <div className="min-w-0 flex-1">
-            <p className="line-clamp-2 text-sm font-medium break-words">
-                {item.title}
-                {item.media_file?.chapters?.length ? (
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <ListMusic className="ml-1.5 inline h-3 w-3 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>Has chapters</TooltipContent>
-                    </Tooltip>
-                ) : null}
-            </p>
-            <p className="text-xs text-muted-foreground">
-                {item.media_file ? (
-                    <>
-                        {formatDuration(item.media_file.duration)} · {formatFileSize(item.media_file.filesize)}
-                    </>
-                ) : (
-                    'Processing...'
-                )}
-            </p>
-        </div>
-    );
-}
+import { ArrowLeft } from 'lucide-react';
+import { useRef } from 'react';
 
 interface EditFeedProps {
     feed: Feed;
     userLibraryItems: LibraryItem[];
 }
-
-type FeedItemForm = Pick<FeedItem, 'id' | 'library_item_id' | 'sequence'> & { created_at?: string; display_date?: string };
 
 interface FeedForm {
     title: string;
@@ -53,10 +20,6 @@ interface FeedForm {
     is_hidden_from_selector: boolean;
     feed_type: 'static' | 'append';
     items: FeedItemForm[];
-}
-
-function resequence(items: FeedItemForm[], descending: boolean) {
-    return items.map((item, index) => ({ ...item, sequence: descending ? items.length - 1 - index : index }));
 }
 
 export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
@@ -86,74 +49,11 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
         })),
     });
 
-    const [displayDates, setDisplayDates] = useState<Record<number, string>>({});
-    const [itemSearch, setItemSearch] = useState('');
-    const [addMediaSearch, setAddMediaSearch] = useState('');
-    const [activeTab, setActiveTab] = useState<'items' | 'add'>('items');
-    const debouncedItemSearch = useDebouncedValue(itemSearch);
-    const debouncedAddMediaSearch = useDebouncedValue(addMediaSearch);
-
-    const getLibraryItem = (libraryItemId: number) => {
-        return userLibraryItems.find((item) => item.id === libraryItemId);
-    };
-
-    const visibleItems = data.items
-        .map((item, originalIndex) => ({ item, originalIndex }))
-        .filter(({ item }) => {
-            if (!debouncedItemSearch) return true;
-            const libItem = getLibraryItem(item.library_item_id);
-            return libItem?.title.toLowerCase().includes(debouncedItemSearch.toLowerCase()) ?? false;
-        });
-
-    const { handleDragStart, handleDragOver, handleDrop, handleTouchEnd } = useFeedItemReorder(data.items, (items) => {
-        setData('items', resequence(items, data.feed_type === 'append'));
-    });
-
+    const displayDates = useRef<Record<number, string>>({});
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        transform((data) => ({ ...data, display_dates: displayDates }));
+        transform((data) => ({ ...data, display_dates: displayDates.current }));
         put(`/feeds/${feed.id}`);
-    };
-
-    const addLibraryItem = (libraryItemId: number) => {
-        const items = [
-            ...data.items,
-            {
-                id: Date.now(),
-                library_item_id: libraryItemId,
-                sequence: 0,
-            },
-        ];
-        setData('items', resequence(items, data.feed_type === 'append'));
-    };
-
-    const removeItem = (index: number) => {
-        const filtered = data.items.filter((_, i) => i !== index);
-        setData('items', resequence(filtered, data.feed_type === 'append'));
-    };
-
-    const availableLibraryItems = userLibraryItems.filter((item) => !data.items.some((feedItem) => feedItem.library_item_id === item.id));
-
-    const filteredAvailableItems = availableLibraryItems.filter(
-        (item) => !debouncedAddMediaSearch || item.title.toLowerCase().includes(debouncedAddMediaSearch.toLowerCase()),
-    );
-
-    const sortByTitle = (direction: 'asc' | 'desc') => {
-        const sorted = [...data.items].sort((a, b) => {
-            const aTitle = getLibraryItem(a.library_item_id)?.title ?? '';
-            const bTitle = getLibraryItem(b.library_item_id)?.title ?? '';
-            return direction === 'asc' ? aTitle.localeCompare(bTitle) : bTitle.localeCompare(aTitle);
-        });
-        setData('items', resequence(sorted, true));
-    };
-
-    const sortByDate = (direction: 'asc' | 'desc') => {
-        const sorted = [...data.items].sort((a, b) => {
-            const aDate = getLibraryItem(a.library_item_id)?.published_at ?? a.created_at ?? '';
-            const bDate = getLibraryItem(b.library_item_id)?.published_at ?? b.created_at ?? '';
-            return direction === 'asc' ? (aDate || '').localeCompare(bDate || '') : (bDate || '').localeCompare(aDate || '');
-        });
-        setData('items', resequence(sorted, true));
     };
 
     return (
@@ -180,134 +80,15 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
                 </div>
             </form>
 
-            <div className="space-y-3">
-                <div className="flex items-center gap-1 border-b">
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('items')}
-                        className={`px-4 py-2 text-sm font-medium transition-colors ${
-                            activeTab === 'items' ? 'border-b-2 border-foreground text-foreground' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        Feed Items ({data.items.length})
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('add')}
-                        className={`px-4 py-2 text-sm font-medium transition-colors ${
-                            activeTab === 'add' ? 'border-b-2 border-foreground text-foreground' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        Add Media ({availableLibraryItems.length})
-                    </button>
-                </div>
-
-                {activeTab === 'items' ? (
-                    <>
-                        {data.feed_type === 'static' && data.items.length > 1 && (
-                            <div className="flex flex-wrap gap-2">
-                                <span className="self-center text-xs text-muted-foreground">Quick sort:</span>
-                                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => sortByTitle('asc')}>
-                                    A→Z
-                                </Button>
-                                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => sortByTitle('desc')}>
-                                    Z→A
-                                </Button>
-                                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => sortByDate('asc')}>
-                                    Oldest First
-                                </Button>
-                                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => sortByDate('desc')}>
-                                    Newest First
-                                </Button>
-                            </div>
-                        )}
-
-                        {data.items.length > 0 && (
-                            <div className="mb-2">
-                                <SearchInput value={itemSearch} onChange={setItemSearch} placeholder="Search items..." />
-                            </div>
-                        )}
-
-                        {data.items.length === 0 ? (
-                            <p className="py-8 text-center text-sm text-muted-foreground">
-                                No items in this feed yet. Switch to the Add Media tab to add some.
-                            </p>
-                        ) : debouncedItemSearch && visibleItems.length === 0 ? (
-                            <p className="py-4 text-center text-sm text-muted-foreground">No items match your search.</p>
-                        ) : (
-                            <div className="divide-y rounded-lg border">
-                                {visibleItems.map(({ item, originalIndex: index }) => {
-                                    const libraryItem = getLibraryItem(item.library_item_id);
-                                    if (!libraryItem) return null;
-
-                                    return (
-                                        <div
-                                            key={item.library_item_id}
-                                            draggable
-                                            data-feed-item-index={index}
-                                            onDragStart={() => handleDragStart(index)}
-                                            onDragOver={handleDragOver}
-                                            onDrop={(e) => handleDrop(e, index)}
-                                            className="flex cursor-move items-center gap-3 px-4 py-3 hover:bg-muted/50"
-                                        >
-                                            <span
-                                                className="-m-2 touch-none p-2 select-none"
-                                                onTouchStart={() => handleDragStart(index)}
-                                                onTouchEnd={handleTouchEnd}
-                                            >
-                                                <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                            </span>
-                                            <LibraryItemInfo item={libraryItem} />
-                                            {data.feed_type === 'append' && (
-                                                <input
-                                                    type="date"
-                                                    value={displayDates[item.library_item_id] ?? item.display_date ?? ''}
-                                                    onChange={(e) => setDisplayDates((prev) => ({ ...prev, [item.library_item_id]: e.target.value }))}
-                                                    className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
-                                                    title="Display date (appears in RSS description)"
-                                                />
-                                            )}
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => removeItem(index)}
-                                                className="shrink-0 text-destructive hover:text-destructive"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        {availableLibraryItems.length > 0 && (
-                            <div className="mb-2">
-                                <SearchInput value={addMediaSearch} onChange={setAddMediaSearch} placeholder="Search library..." />
-                            </div>
-                        )}
-
-                        {availableLibraryItems.length === 0 ? (
-                            <p className="py-8 text-center text-sm text-muted-foreground">All library items are already in this feed.</p>
-                        ) : debouncedAddMediaSearch && filteredAvailableItems.length === 0 ? (
-                            <p className="py-4 text-center text-sm text-muted-foreground">No items match your search.</p>
-                        ) : (
-                            <div className="max-h-[60vh] divide-y overflow-y-auto rounded-lg border">
-                                {filteredAvailableItems.map((libraryItem) => (
-                                    <div key={libraryItem.id} className="flex items-center gap-2 px-4 py-3">
-                                        <LibraryItemInfo item={libraryItem} />
-                                        <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)} className="shrink-0">
-                                            <Plus className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
+            <FeedItemsManager
+                items={data.items}
+                feedType={data.feed_type}
+                userLibraryItems={userLibraryItems}
+                onItemsChange={(items) => setData('items', items)}
+                onDisplayDateChange={(libraryItemId, displayDate) => {
+                    displayDates.current[libraryItemId] = displayDate;
+                }}
+            />
         </div>
     );
 }

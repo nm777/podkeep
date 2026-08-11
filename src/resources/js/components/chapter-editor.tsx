@@ -24,6 +24,57 @@ interface ChapterEditorProps {
     libraryItem: LibraryItem;
 }
 
+interface ChapterGenerationControlsProps {
+    libraryItemId: number;
+    mediaFile: LibraryItem['media_file'];
+}
+
+function ChapterGenerationControls({ libraryItemId, mediaFile }: ChapterGenerationControlsProps) {
+    const status = mediaFile?.chapter_generation_status ?? null;
+    const duration = mediaFile?.duration ?? 0;
+    const transcribedSeconds = mediaFile?.transcript?.length ? Math.max(...mediaFile.transcript.map((s) => s.end)) : 0;
+    const progress = duration > 0 ? Math.min(100, Math.round((transcribedSeconds / duration) * 100)) : 0;
+    const generationError = mediaFile?.chapter_generation_error;
+    const generation = getGenerationPresentation(status, progress);
+
+    const generate = () => {
+        router.post(route('library.chapters.generate', libraryItemId), {}, { preserveScroll: true });
+    };
+
+    return (
+        <>
+            <Button type="button" variant="outline" size="sm" className="w-full" onClick={generate} disabled={generation.isGenerating}>
+                <WandSparkles className="mr-2 h-4 w-4" />
+                {generation.label}
+            </Button>
+
+            {generation.isGenerating && (
+                <div className="space-y-1 text-center">
+                    <p className="text-xs text-muted-foreground">{generation.message}</p>
+                    {generation.canRetry && (
+                        <p className="text-xs text-muted-foreground">
+                            Looks stalled?{' '}
+                            <button type="button" className="underline hover:text-foreground" onClick={generate}>
+                                Retry from the last checkpoint
+                            </button>
+                            .
+                        </p>
+                    )}
+                </div>
+            )}
+            {status === 'failed' && (
+                <p className="text-center text-xs text-destructive">
+                    {generationError || 'Generation failed.'}{' '}
+                    <button type="button" className="underline" onClick={generate}>
+                        Retry
+                    </button>{' '}
+                    or add chapters manually.
+                </p>
+            )}
+        </>
+    );
+}
+
 function getGenerationPresentation(status: NonNullable<LibraryItem['media_file']>['chapter_generation_status'], progress: number) {
     if (status === 'pending') {
         return {
@@ -57,12 +108,8 @@ function getGenerationPresentation(status: NonNullable<LibraryItem['media_file']
 
 export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
     const mediaFile = libraryItem.media_file;
-    const duration = mediaFile?.duration ?? 0;
     const status = mediaFile?.chapter_generation_status ?? null;
-    const generationError = mediaFile?.chapter_generation_error;
-    const transcribedSeconds = mediaFile?.transcript?.length ? Math.max(...mediaFile.transcript.map((s) => s.end)) : 0;
-    const progress = duration > 0 ? Math.min(100, Math.round((transcribedSeconds / duration) * 100)) : 0;
-    const generation = getGenerationPresentation(status, progress);
+    const isGenerating = status === 'pending' || status === 'processing';
 
     const initialChapters = (mediaFile?.chapters ?? []).map((c) => ({ start_time: formatHms(c.start_time), title: c.title }));
 
@@ -106,10 +153,6 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
         });
     };
 
-    const generate = () => {
-        router.post(route('library.chapters.generate', libraryItem.id), {}, { preserveScroll: true });
-    };
-
     // Prevent Enter from submitting the parent "Edit Media" form; save chapters instead.
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
@@ -122,40 +165,13 @@ export default function ChapterEditor({ libraryItem }: ChapterEditorProps) {
         <div className="space-y-3" onKeyDown={handleKeyDown}>
             <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Chapters ({data.chapters.length})</Label>
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={addChapter} disabled={generation.isGenerating}>
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={addChapter} disabled={isGenerating}>
                     <Plus className="mr-1 h-3 w-3" />
                     Add
                 </Button>
             </div>
 
-            <Button type="button" variant="outline" size="sm" className="w-full" onClick={generate} disabled={generation.isGenerating}>
-                <WandSparkles className="mr-2 h-4 w-4" />
-                {generation.label}
-            </Button>
-
-            {generation.isGenerating && (
-                <div className="space-y-1 text-center">
-                    <p className="text-xs text-muted-foreground">{generation.message}</p>
-                    {generation.canRetry && (
-                        <p className="text-xs text-muted-foreground">
-                            Looks stalled?{' '}
-                            <button type="button" className="underline hover:text-foreground" onClick={generate}>
-                                Retry from the last checkpoint
-                            </button>
-                            .
-                        </p>
-                    )}
-                </div>
-            )}
-            {status === 'failed' && (
-                <p className="text-center text-xs text-destructive">
-                    {generationError || 'Generation failed.'}{' '}
-                    <button type="button" className="underline" onClick={generate}>
-                        Retry
-                    </button>{' '}
-                    or add chapters manually.
-                </p>
-            )}
+            <ChapterGenerationControls libraryItemId={libraryItem.id} mediaFile={mediaFile} />
 
             {data.chapters.length === 0 ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">No chapters yet.</p>
