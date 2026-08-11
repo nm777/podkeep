@@ -1,10 +1,9 @@
+import FeedExistingItemRow from '@/components/feed-existing-item-row';
 import { type FeedItemForm, resequence, sortFeedItems } from '@/components/feed-item-utils';
-import FeedLibraryItemInfo from '@/components/feed-library-item-info';
 import SearchInput from '@/components/search-input';
 import { Button } from '@/components/ui/button';
 import { useFeedItemReorder } from '@/hooks/use-feed-item-reorder';
 import { type LibraryItem } from '@/types';
-import { GripVertical, Trash2 } from 'lucide-react';
 
 interface FeedExistingItemsTabProps {
     items: FeedItemForm[];
@@ -86,41 +85,20 @@ export default function FeedExistingItemsTab({
                         if (!libraryItem) return null;
 
                         return (
-                            <div
+                            <FeedExistingItemRow
                                 key={item.library_item_id}
-                                draggable
-                                data-feed-item-index={index}
+                                item={item}
+                                index={index}
+                                libraryItem={libraryItem}
+                                feedType={feedType}
+                                displayDate={displayDates[item.library_item_id] ?? item.display_date ?? ''}
                                 onDragStart={() => handleDragStart(index)}
                                 onDragOver={handleDragOver}
                                 onDrop={(event) => handleDrop(event, index)}
-                                className="flex cursor-move items-center gap-3 px-4 py-3 hover:bg-muted/50"
-                            >
-                                <span
-                                    className="-m-2 touch-none p-2 select-none"
-                                    onTouchStart={() => handleDragStart(index)}
-                                    onTouchEnd={handleTouchEnd}
-                                >
-                                    <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                </span>
-                                <FeedLibraryItemInfo item={libraryItem} />
-                                {feedType === 'append' && (
-                                    <input
-                                        type="date"
-                                        value={displayDates[item.library_item_id] ?? item.display_date ?? ''}
-                                        onChange={(event) => onDisplayDateChange(item.library_item_id, event.target.value)}
-                                        className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
-                                        title="Display date (appears in RSS description)"
-                                    />
-                                )}
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeItem(index)}
-                                    className="shrink-0 text-destructive hover:text-destructive"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
+                                onTouchEnd={handleTouchEnd}
+                                onDisplayDateChange={(displayDate) => onDisplayDateChange(item.library_item_id, displayDate)}
+                                onRemove={() => removeItem(index)}
+                            />
                         );
                     })}
                 </div>

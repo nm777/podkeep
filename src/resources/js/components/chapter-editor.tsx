@@ -36,6 +36,83 @@ interface ChapterGenerationStatusProps {
     onGenerate: () => void;
 }
 
+interface GenerationPresentation {
+    isGenerating: boolean;
+    canRetry: boolean;
+    label: (progress: number) => string;
+    message: string | null;
+}
+
+const generationPresentations: Record<string, (progress: number) => GenerationPresentation> = {
+    pending: () => ({
+        isGenerating: true,
+        canRetry: false,
+        label: () => 'Queued…',
+        message: 'Waiting in the queue — starts automatically when a worker is free. You can leave this page.',
+    }),
+    processing: (progress) =>
+        [
+            {
+                isGenerating: true,
+                canRetry: true,
+                label: (currentProgress: number) => `Transcribing… ${currentProgress}%`,
+                message: 'You can leave this page; it keeps running even if you navigate away.',
+            },
+            {
+                isGenerating: true,
+                canRetry: false,
+                label: () => 'Segmenting…',
+                message: 'Segmenting via the language model — you can leave this page.',
+            },
+        ][Math.trunc(progress / 100)],
+    completed: () => ({ isGenerating: false, canRetry: false, label: () => 'Regenerate from content', message: null }),
+    failed: () => ({ isGenerating: false, canRetry: false, label: () => 'Retry generation', message: null }),
+    idle: () => ({ isGenerating: false, canRetry: false, label: () => 'Generate from content', message: null }),
+};
+
+function GenerationRetry({ canRetry, onGenerate }: Pick<GenerationPresentation, 'canRetry'> & Pick<ChapterGenerationStatusProps, 'onGenerate'>) {
+    if (!canRetry) return null;
+
+    return (
+        <p className="text-xs text-muted-foreground">
+            Looks stalled?{' '}
+            <button type="button" className="underline hover:text-foreground" onClick={onGenerate}>
+                Retry from the last checkpoint
+            </button>
+            .
+        </p>
+    );
+}
+
+function GenerationNotice({ generation, onGenerate }: Pick<ChapterGenerationStatusProps, 'onGenerate'> & { generation: GenerationPresentation }) {
+    if (!generation.isGenerating) return null;
+
+    return (
+        <div className="space-y-1 text-center">
+            <p className="text-xs text-muted-foreground">{generation.message}</p>
+            <GenerationRetry canRetry={generation.canRetry} onGenerate={onGenerate} />
+        </div>
+    );
+}
+
+function GenerationFailure({
+    failed,
+    error,
+    onGenerate,
+}: Pick<ChapterGenerationStatusProps, 'onGenerate'> & { failed: boolean; error?: string | null }) {
+    if (!failed) return null;
+
+    return (
+        <p className="text-center text-xs text-destructive">
+            {error || 'Generation failed.'}{' '}
+            <button type="button" className="underline" onClick={onGenerate}>
+                Retry
+            </button>{' '}
+            or add chapters manually.
+        </p>
+    );
+}
+
 function ChapterGenerationStatus({ mediaFile, onGenerate }: ChapterGenerationStatusProps) {
     const status = mediaFile?.chapter_generation_status ?? null;
     const duration = mediaFile?.duration ?? 0;
@@ -48,32 +125,11 @@ function ChapterGenerationStatus({ mediaFile, onGenerate }: ChapterGenerationSta
         <>
             <Button type="button" variant="outline" size="sm" className="w-full" onClick={onGenerate} disabled={generation.isGenerating}>
                 <WandSparkles className="mr-2 h-4 w-4" />
-                {generation.label}
+                {generation.label(progress)}
             </Button>
 
-            {generation.isGenerating && (
-                <div className="space-y-1 text-center">
-                    <p className="text-xs text-muted-foreground">{generation.message}</p>
-                    {generation.canRetry && (
-                        <p className="text-xs text-muted-foreground">
-                            Looks stalled?{' '}
-                            <button type="button" className="underline hover:text-foreground" onClick={onGenerate}>
-                                Retry from the last checkpoint
-                            </button>
-                            .
-                        </p>
-                    )}
-                </div>
-            )}
-            {status === 'failed' && (
-                <p className="text-center text-xs text-destructive">
-                    {generationError || 'Generation failed.'}{' '}
-                    <button type="button" className="underline" onClick={onGenerate}>
-                        Retry
-                    </button>{' '}
-                    or add chapters manually.
-                </p>
-            )}
+            <GenerationNotice generation={generation} onGenerate={onGenerate} />
+            <GenerationFailure failed={status === 'failed'} error={generationError} onGenerate={onGenerate} />
         </>
     );
 }
@@ -87,34 +143,7 @@ function ChapterGenerationControls({ libraryItemId, mediaFile }: ChapterGenerati
 }
 
 function getGenerationPresentation(status: NonNullable<LibraryItem['media_file']>['chapter_generation_status'], progress: number) {
-    if (status === 'pending') {
-        return {
-            isGenerating: true,
-            canRetry: false,
-            label: 'Queued…',
-            message: 'Waiting in the queue — starts automatically when a worker is free. You can leave this page.',
-        };
-    }
-
-    if (status === 'processing' && progress >= 100) {
-        return { isGenerating: true, canRetry: false, label: 'Segmenting…', message: 'Segmenting via the language model — you can leave this page.' };
-    }
-
-    if (status === 'processing') {
-        return {
-            isGenerating: true,
-            canRetry: true,
-            label: `Transcribing… ${progress}%`,
-            message: 'You can leave this page; it keeps running even if you navigate away.',
-        };
-    }
-
-    return {
-        isGenerating: false,
-        canRetry: false,
-        label: status === 'completed' ? 'Regenerate from content' : status === 'failed' ? 'Retry generation' : 'Generate from content',
-        message: null,
-    };
+    return (generationPresentations[status ?? 'idle'] ?? generationPresentations.idle)(progress);
 }
 
 interface ChapterRowsProps {

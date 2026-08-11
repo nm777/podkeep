@@ -21,9 +21,10 @@ export function sortFeedItems(items: FeedItemForm[], libraryItems: LibraryItem[]
 function feedItemSortValue(item: FeedItemForm, libraryItemsById: Map<number, LibraryItem>, property: 'title' | 'date') {
     const libraryItem = libraryItemsById.get(item.library_item_id);
 
-    if (property === 'title') {
-        return libraryItem?.title ?? '';
-    }
-
-    return libraryItem?.published_at ?? item.created_at ?? '';
+    return (
+        {
+            title: libraryItem?.title,
+            date: libraryItem?.published_at ?? item.created_at,
+        }[property] ?? ''
+    );
 }
