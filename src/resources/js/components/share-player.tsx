@@ -38,6 +38,7 @@ export default function SharePlayer({ episode }: SharePlayerProps) {
                         <div className="mt-3">
                             <ChapterList
                                 chapters={episode.chapters}
+                                showHours
                                 onSeek={(t) => {
                                     if (audioRef.current) audioRef.current.currentTime = t;
                                 }}

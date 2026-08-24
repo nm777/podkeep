@@ -2,9 +2,10 @@ interface ChapterListProps {
     chapters: { start_time: number; title: string }[];
     onSeek: (seconds: number) => void;
     className?: string;
+    showHours?: boolean;
 }
 
-export default function ChapterList({ chapters, onSeek, className }: ChapterListProps) {
+export default function ChapterList({ chapters, onSeek, className, showHours = false }: ChapterListProps) {
     if (chapters.length === 0) return null;
 
     return (
@@ -17,7 +18,9 @@ export default function ChapterList({ chapters, onSeek, className }: ChapterList
                         className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-muted"
                     >
                         <span className="font-mono text-xs text-muted-foreground">
-                            {Math.floor(chapter.start_time / 60)}:{String(chapter.start_time % 60).padStart(2, '0')}
+                            {showHours
+                                ? `${Math.floor(chapter.start_time / 3600)}:${String(Math.floor((chapter.start_time % 3600) / 60)).padStart(2, '0')}:${String(chapter.start_time % 60).padStart(2, '0')}`
+                                : `${Math.floor(chapter.start_time / 60)}:${String(chapter.start_time % 60).padStart(2, '0')}`}
                         </span>
                         <span className="truncate">{chapter.title}</span>
                     </button>
