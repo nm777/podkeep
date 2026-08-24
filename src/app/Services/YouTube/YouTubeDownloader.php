@@ -30,6 +30,8 @@ class YouTubeDownloader
                 'mp3',
                 '--audio-quality',
                 '0', // best quality
+                '--js-runtimes',
+                'node',
                 '--no-playlist',
                 '--output',
                 Storage::disk('media')->path($tempPath),
@@ -93,6 +95,7 @@ class YouTubeDownloader
             $command = [
                 'yt-dlp',
                 '--format', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4/best',
+                '--js-runtimes', 'node',
                 '--no-playlist',
                 '--output', Storage::disk('media')->path($tempPath),
                 $youtubeUrl,

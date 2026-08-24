@@ -19,6 +19,7 @@ RUN apk add --no-cache \
     libxml2-dev \
     libzip-dev \
     make \
+    nodejs \
     oniguruma-dev \
     postgresql-dev \
     sqlite-dev \
@@ -61,7 +62,6 @@ CMD ["php-fpm"]
 FROM base AS dev
 
 RUN apk add --no-cache \
-    nodejs \
     npm \
     pkgconfig
 
