@@ -142,6 +142,7 @@ test('rss feed includes youtube items with converted audio', function () {
     $content = $response->getContent();
 
     expect($content)->toContain('YouTube Video');
+    expect($content)->toContain('https://youtube.com/watch?v=test123');
     expect($content)->toContain('<enclosure');
     expect($content)->toContain('/files/media/youtube-audio.mp3');
     expect($content)->toContain('type="audio/mpeg"');

@@ -24,6 +24,7 @@
                 $episodeDescription = trim(implode("\n\n", array_filter([
                     $feed->feed_type->isAppend() && $item->display_date ? '[' . $item->display_date->format('M j, Y') . ']' : null,
                     $item->libraryItem->description,
+                    $item->libraryItem->source_type === 'youtube' ? $item->libraryItem->source_url : null,
                     $chapters->isNotEmpty() ? "Chapters:\n" . $chapters->map(fn ($chapter) => "{$chapter->formattedStart()} {$chapter->title}")->implode("\n") : null,
                 ])));
             @endphp
