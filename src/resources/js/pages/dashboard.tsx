@@ -87,7 +87,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
     }, [libraryItems]);
 
     // Prefer the freshly-reloaded library item (so chapter generation status/proposal is current).
-    const editingItem = itemToEdit ? libraryItems.find((i) => i.id === itemToEdit.id) ?? itemToEdit : null;
+    const editingItem = itemToEdit ? (libraryItems.find((i) => i.id === itemToEdit.id) ?? itemToEdit) : null;
 
     const handleUploadSuccess = () => {
         router.reload({ only: ['feeds', 'libraryItems'] });
@@ -246,7 +246,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
 
             {playingItem && (
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                <MediaPlayer libraryItem={playingItem as any} isOpen={true} onClose={() => setPlayingItem(null)} />
+                <MediaPlayer key={playingItem.id} libraryItem={playingItem as any} isOpen={true} onClose={() => setPlayingItem(null)} />
             )}
 
             <SheetPanel
@@ -302,7 +302,9 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                         <Label className="text-sm font-medium">Feeds</Label>
                         <div className="mt-2 flex flex-wrap gap-1">
                             {editingItem.feeds?.map((f) => (
-                                <span key={f.id} className="rounded-full bg-muted px-2 py-0.5 text-xs">{f.title}</span>
+                                <span key={f.id} className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                                    {f.title}
+                                </span>
                             ))}
                             {(!editingItem.feeds || editingItem.feeds.length === 0) && (
                                 <span className="text-xs text-muted-foreground">Not in any feed.</span>
@@ -321,7 +323,9 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                                 >
                                     <option value="">Add to feed…</option>
                                     {available.map((f) => (
-                                        <option key={f.id} value={f.id}>{f.title}</option>
+                                        <option key={f.id} value={f.id}>
+                                            {f.title}
+                                        </option>
                                     ))}
                                 </select>
                             ) : null;

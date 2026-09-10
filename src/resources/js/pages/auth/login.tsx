@@ -97,7 +97,7 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                             id="remember"
                             name="remember"
                             checked={data.remember}
-                            onClick={() => setData('remember', !data.remember)}
+                            onCheckedChange={(checked) => setData('remember', checked === true)}
                             tabIndex={3}
                         />
                         <Label htmlFor="remember">Remember me</Label>

@@ -1,16 +1,14 @@
 'use client';
 
 import ChapterList from '@/components/chapter-list';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ProcessingStatusType } from '@/lib/processing-status';
-import { X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 interface MediaFile {
     id: number;
     file_path: string;
-    file_hash: string;
     mime_type: string;
     filesize: number;
     duration?: number;
@@ -55,65 +53,67 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
     if (!isOpen || !libraryItem.media_file) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-            <Card className="w-full max-w-2xl">
-                <CardContent className="p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h3 className="flex-1 truncate text-lg font-semibold">{libraryItem.title}</h3>
-                        <Button variant="ghost" size="sm" onClick={onClose}>
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-
-                    {error ? (
-                        <div className="py-8 text-center">
-                            <p className="text-red-500">{error}</p>
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent
+                aria-describedby={undefined}
+                className="max-h-[calc(100svh-2rem)] overflow-y-auto border-0 bg-transparent p-0 shadow-none sm:max-w-2xl [&>button]:top-10 [&>button]:right-6"
+            >
+                <Card className="w-full max-w-2xl">
+                    <CardContent className="p-6">
+                        <div className="mb-4 flex items-center justify-between pr-8">
+                            <DialogTitle className="flex-1 truncate text-lg font-semibold">{libraryItem.title}</DialogTitle>
                         </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {/* Media element */}
-                            {isVideo ? (
-                                <video
-                                    ref={mediaRef as React.RefObject<HTMLVideoElement>}
-                                    src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
-                                    className="max-h-[60vh] w-full"
-                                    controls
-                                    autoPlay
-                                    preload="metadata"
-                                    onError={() => setError('Media loading failed')}
-                                    onCanPlay={() => setError(null)}
-                                />
-                            ) : (
-                                <audio
-                                    ref={mediaRef as React.RefObject<HTMLAudioElement>}
-                                    src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
-                                    className="w-full"
-                                    controls
-                                    preload="metadata"
-                                    onError={() => setError('Media loading failed')}
-                                    onCanPlay={() => setError(null)}
-                                />
-                            )}
 
-                            {chapters.length > 0 && (
-                                <ChapterList
-                                    chapters={chapters}
-                                    onSeek={(t) => {
-                                        if (mediaRef.current) mediaRef.current.currentTime = t;
-                                    }}
-                                    className="max-h-48 rounded border p-2"
-                                />
-                            )}
+                        {error ? (
+                            <div className="py-8 text-center">
+                                <p className="text-red-500">{error}</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {/* Media element */}
+                                {isVideo ? (
+                                    <video
+                                        ref={mediaRef as React.RefObject<HTMLVideoElement>}
+                                        src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
+                                        className="max-h-[60vh] w-full"
+                                        controls
+                                        autoPlay
+                                        preload="metadata"
+                                        onError={() => setError('Media loading failed')}
+                                        onCanPlay={() => setError(null)}
+                                    />
+                                ) : (
+                                    <audio
+                                        ref={mediaRef as React.RefObject<HTMLAudioElement>}
+                                        src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
+                                        className="w-full"
+                                        controls
+                                        preload="metadata"
+                                        onError={() => setError('Media loading failed')}
+                                        onCanPlay={() => setError(null)}
+                                    />
+                                )}
 
-                            {libraryItem.description && (
-                                <div className="mt-4 rounded bg-gray-50 p-4 dark:bg-gray-800">
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">{libraryItem.description}</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
+                                {chapters.length > 0 && (
+                                    <ChapterList
+                                        chapters={chapters}
+                                        onSeek={(t) => {
+                                            if (mediaRef.current) mediaRef.current.currentTime = t;
+                                        }}
+                                        className="max-h-48 rounded border p-2"
+                                    />
+                                )}
+
+                                {libraryItem.description && (
+                                    <div className="mt-4 rounded bg-gray-50 p-4 dark:bg-gray-800">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">{libraryItem.description}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </DialogContent>
+        </Dialog>
     );
 }

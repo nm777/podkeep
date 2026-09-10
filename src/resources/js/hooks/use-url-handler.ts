@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 
-export function extractYouTubeVideoId(url: string): string | null {
+function extractYouTubeVideoId(url: string): string | null {
     const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)/;
     const match = url.match(regex);
     return match ? match[1] : null;
@@ -12,8 +12,8 @@ async function fetchYouTubeVideoTitle(videoId: string): Promise<string | null> {
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        const data = await response.json();
-        return data.title || null;
+        const videoData = await response.json();
+        return videoData.title || null;
     } catch (error) {
         console.error('Failed to fetch YouTube video title:', error);
         return null;

@@ -1,7 +1,7 @@
 import FeedSelector from '@/components/feed-selector';
 import SourceInputSection from '@/components/source-input-section';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -135,7 +135,10 @@ export default function MediaUploadButton({
                                     setIsDragOver(true);
                                 }}
                                 onDragLeave={() => setIsDragOver(false)}
-                                onFileSelect={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                                onFileSelect={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file && !handleFileSelect(file)) e.target.value = '';
+                                }}
                                 isFetchingYouTubeTitle={isFetchingYouTubeTitle}
                                 duplicateWarning={duplicateWarning}
                                 errors={errors}
@@ -225,7 +228,7 @@ export default function MediaUploadButton({
                                     checked={data.auto_generate_chapters}
                                     onCheckedChange={(checked) => setData('auto_generate_chapters', checked === true)}
                                 />
-                                <Label htmlFor="auto_generate_chapters" className="text-sm font-normal leading-none">
+                                <Label htmlFor="auto_generate_chapters" className="text-sm leading-none font-normal">
                                     Auto-generate chapters (transcribes & segments in the background)
                                 </Label>
                             </div>

@@ -53,7 +53,7 @@ function EditFeedForm({ feed, userLibraryItems }: EditFeedProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         transform((data) => ({ ...data, display_dates: displayDates.current }));
-        put(`/feeds/${feed.id}`);
+        put(route('feeds.update', feed.id));
     };
 
     return (

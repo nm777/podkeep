@@ -1,8 +1,10 @@
+import { useToast } from '@/hooks/use-toast';
 import { useUrlHandler } from '@/hooks/use-url-handler';
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
 type InputType = 'file' | 'url' | 'youtube';
+const MAX_UPLOAD_BYTES = 512000 * 1024;
 
 interface UseMediaUploadFormOptions {
     onUploadSuccess?: () => void;
@@ -11,6 +13,7 @@ interface UseMediaUploadFormOptions {
 }
 
 export function useMediaUploadForm({ onUploadSuccess, onClose, mediaType = 'audio' }: UseMediaUploadFormOptions) {
+    const { toast } = useToast();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [inputType, setInputType] = useState<InputType>('file');
     const [isDragOver, setIsDragOver] = useState(false);
@@ -28,6 +31,17 @@ export function useMediaUploadForm({ onUploadSuccess, onClose, mediaType = 'audi
     });
 
     const handleFileSelect = (file: File) => {
+        if (file.size > MAX_UPLOAD_BYTES) {
+            setSelectedFile(null);
+            setData('file', null);
+            toast({
+                title: 'File too large',
+                description: 'Files must be 500 MB or smaller.',
+                variant: 'destructive',
+            });
+            return false;
+        }
+
         setSelectedFile(file);
         setData('file', file);
         setData('url', '');
@@ -35,6 +49,7 @@ export function useMediaUploadForm({ onUploadSuccess, onClose, mediaType = 'audi
         if (!data.title) {
             setData('title', file.name.replace(/\.[^/.]+$/, ''));
         }
+        return true;
     };
 
     const handleInputTypeChange = (newType: InputType) => {
