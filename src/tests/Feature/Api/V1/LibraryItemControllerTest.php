@@ -158,6 +158,32 @@ describe('media via URL', function () {
         $response->assertUnprocessable();
         $response->assertJsonValidationErrors('url');
     });
+
+    it('rejects non-HTTP URLs', function (string $field) {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/library', [
+                'title' => 'Invalid URL',
+                $field => 'ftp://example.com/audio.mp3',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors($field);
+    })->with(['url', 'source_url']);
+
+    it('rejects URLs longer than 2048 characters', function (string $field) {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/library', [
+                'title' => 'Oversized URL',
+                $field => 'https://example.com/'.str_repeat('a', 2048).'.mp3',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors($field);
+    })->with(['url', 'source_url']);
 });
 
 describe('media via YouTube URL', function () {
@@ -228,10 +254,13 @@ describe('library listing', function () {
             'data' => [
                 'media_file' => [
                     'id',
-                    'file_hash',
                     'mime_type',
                 ],
             ],
+        ]);
+        expect($response->json('data.media_file'))->not->toHaveKeys([
+            'file_hash',
+            'chapter_generation_error',
         ]);
     });
 

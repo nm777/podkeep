@@ -13,6 +13,7 @@ describe('feed creation', function () {
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/feeds', [
                 'title' => 'My Podcast Feed',
+                'token' => 'client-controlled-token',
             ]);
 
         $response->assertCreated();
@@ -29,6 +30,7 @@ describe('feed creation', function () {
         expect($response->json('data.slug'))->not->toBeEmpty();
         expect($response->json('data.user_guid'))->not->toBeEmpty();
         expect($response->json('data.token'))->not->toBeEmpty();
+        expect($response->json('data.token'))->not->toBe('client-controlled-token');
 
         $this->assertDatabaseHas('feeds', [
             'user_id' => $user->id,

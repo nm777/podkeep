@@ -44,3 +44,13 @@ test('URL duplicate checking works end-to-end', function () {
         'existing_file' => null,
     ]);
 });
+
+it('rejects unsupported and oversized URLs before duplicate checking', function (string $url) {
+    $this->actingAs(User::factory()->create())
+        ->postJson('/check-url-duplicate', ['url' => $url])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('url');
+})->with([
+    'unsupported scheme' => 'ftp://example.com/audio.mp3',
+    'oversized URL' => 'https://example.com/'.str_repeat('a', 2048),
+]);

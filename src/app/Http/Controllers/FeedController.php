@@ -38,17 +38,18 @@ class FeedController extends Controller
 
         $slug = $this->generateUniqueSlug($validated['title']);
 
-        $feed = Auth::user()->feeds()->create([
+        $feed = Auth::user()->feeds()->make([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'website_url' => $validated['website_url'] ?? null,
             'slug' => $slug,
             'user_guid' => Str::uuid(),
-            'token' => Str::random(64),
             'is_public' => $validated['is_public'] ?? false,
             'is_hidden_from_selector' => $validated['is_hidden_from_selector'] ?? false,
             'feed_type' => $validated['feed_type'] ?? 'append',
         ]);
+        $feed->token = Str::random(64);
+        $feed->save();
 
         return redirect()->route('feeds.edit', $feed)->with('success', 'Feed created successfully!');
     }

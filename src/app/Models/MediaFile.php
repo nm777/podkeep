@@ -15,6 +15,7 @@ class MediaFile extends Model
     use HasFactory;
 
     protected $hidden = [
+        'file_hash',
         'source_url',
         'transcript',
         'chapter_proposal',

@@ -80,17 +80,15 @@ describe('API Resources', function () {
         expect($array)->toHaveKey('id');
         expect($array)->not->toHaveKey('file_path');
         expect($array)->toHaveKey('public_url');
-        expect($array)->toHaveKey('file_hash');
         expect($array)->toHaveKey('mime_type');
         expect($array)->toHaveKey('filesize');
         expect($array)->toHaveKey('transcript');
         expect($array)->toHaveKey('chapter_generation_status');
-        expect($array)->toHaveKey('chapter_generation_error');
+        expect($array)->not->toHaveKeys(['file_hash', 'chapter_generation_error']);
         expect($array['mime_type'])->toBe('audio/mpeg');
         expect($array['filesize'])->toBe(1024);
         expect($array['transcript'])->toBe([['start' => 0, 'end' => 60, 'text' => 'Opening prayer']]);
         expect($array['chapter_generation_status'])->toBe('processing');
-        expect($array['chapter_generation_error'])->toBe('An earlier attempt failed');
     });
 
     it('only exposes chapter generation details to the media owner', function () {

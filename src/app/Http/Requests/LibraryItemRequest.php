@@ -34,11 +34,11 @@ class LibraryItemRequest extends FormRequest
             'url' => [
                 'required_without_all:source_url,file',
                 'prohibits:source_url,file',
-                'url',
+                'url:http,https',
                 'max:2048',
                 'regex:/\.(mp3|mp4|m4a|wav|ogg|webm|mkv|mov|avi)(\?.*)?$/i',
             ],
-            'source_url' => ['required_without_all:file,url', 'prohibits:file,url', 'url', 'max:2048'],
+            'source_url' => ['required_without_all:file,url', 'prohibits:file,url', 'url:http,https', 'max:2048'],
             'feed_ids' => ['nullable', 'array'],
             'feed_ids.*' => ['integer', Rule::exists('feeds', 'id')->where('user_id', $this->user()?->id)],
             'published_at' => ['nullable', 'date'],

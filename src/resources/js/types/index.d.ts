@@ -1,3 +1,4 @@
+import type { ProcessingStatusType } from '@/lib/processing-status';
 import type { PageProps } from '@inertiajs/core';
 import { LucideIcon } from 'lucide-react';
 import type { Config } from 'ziggy-js';
@@ -21,7 +22,6 @@ export interface NavItem {
 export interface MediaFile {
     id: number;
     public_url?: string;
-    file_hash: string;
     mime_type: string;
     filesize: number;
     duration?: number;
@@ -55,7 +55,7 @@ export interface LibraryItem {
     source_url?: string;
     is_duplicate: boolean;
     duplicate_detected_at?: string;
-    processing_status: string;
+    processing_status: ProcessingStatusType;
     processing_started_at?: string;
     processing_completed_at?: string;
     processing_error?: string;
@@ -110,9 +110,6 @@ export interface User {
     avatar?: string;
     email_verified_at: string | null;
     is_admin: boolean;
-    approval_status: 'pending' | 'approved' | 'rejected';
-    created_at: string;
-    updated_at: string;
 }
 
 export interface ShareFeed {

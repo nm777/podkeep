@@ -25,7 +25,6 @@ class Feed extends Model
         'feed_type',
         'slug',
         'user_guid',
-        'token',
     ];
 
     protected function casts(): array

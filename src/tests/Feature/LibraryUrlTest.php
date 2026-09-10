@@ -7,9 +7,20 @@ use App\Models\MediaFile;
 use App\Models\User;
 use App\ProcessingStatusType;
 use App\Services\MediaProcessing\MediaProcessingService;
+use App\Services\MediaProcessing\VideoToAudioConverter;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+
+beforeEach(function () {
+    app()->instance(VideoToAudioConverter::class, new class extends VideoToAudioConverter
+    {
+        public function ensureMp3SeekIndex(string $audioPath): bool
+        {
+            return false;
+        }
+    });
+});
 
 it('can add media file from URL', function () {
     Storage::fake('media');
@@ -55,6 +66,24 @@ it('validates URL requirements', function () {
 
     $response->assertSessionHasErrors('url');
 });
+
+it('rejects non-HTTP library URLs', function (string $field) {
+    $response = $this->actingAs(User::factory()->create())->post('/library', [
+        'title' => 'Invalid URL',
+        $field => 'ftp://example.com/audio.mp3',
+    ]);
+
+    $response->assertSessionHasErrors($field);
+})->with(['url', 'source_url']);
+
+it('rejects library URLs longer than 2048 characters', function (string $field) {
+    $response = $this->actingAs(User::factory()->create())->post('/library', [
+        'title' => 'Oversized URL',
+        $field => 'https://example.com/'.str_repeat('a', 2048).'.mp3',
+    ]);
+
+    $response->assertSessionHasErrors($field);
+})->with(['url', 'source_url']);
 
 it('processes media file from URL correctly', function () {
     Storage::fake('media');

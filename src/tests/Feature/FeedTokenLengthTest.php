@@ -13,6 +13,7 @@ it('creates a feed with a 64-character token', function () {
         'title' => 'Test Feed',
         'description' => 'A test feed',
         'is_public' => false,
+        'token' => 'client-controlled-token',
     ]);
 
     $response->assertRedirect();
@@ -20,6 +21,11 @@ it('creates a feed with a 64-character token', function () {
     $feed = Feed::where('user_id', $user->id)->first();
     expect($feed)->not->toBeNull();
     expect(strlen($feed->token))->toBe(64);
+    expect($feed->token)->not->toBe('client-controlled-token');
+});
+
+it('does not mass assign feed tokens', function () {
+    expect((new Feed(['token' => 'client-controlled-token']))->token)->toBeNull();
 });
 
 it('creates unique tokens for different feeds', function () {

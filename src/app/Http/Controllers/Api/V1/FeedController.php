@@ -36,7 +36,7 @@ class FeedController extends Controller
     {
         $validated = $request->validated();
 
-        $feed = Auth::user()->feeds()->create([
+        $feed = Auth::user()->feeds()->make([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'website_url' => $validated['website_url'] ?? null,
@@ -44,8 +44,9 @@ class FeedController extends Controller
             'feed_type' => $validated['feed_type'] ?? 'append',
             'slug' => $this->generateUniqueSlug($validated['title']),
             'user_guid' => Str::uuid(),
-            'token' => Str::random(64),
         ]);
+        $feed->token = Str::random(64);
+        $feed->save();
 
         return (new FeedResource($feed))
             ->response()
