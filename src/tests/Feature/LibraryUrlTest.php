@@ -7,20 +7,9 @@ use App\Models\MediaFile;
 use App\Models\User;
 use App\ProcessingStatusType;
 use App\Services\MediaProcessing\MediaProcessingService;
-use App\Services\MediaProcessing\VideoToAudioConverter;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
-
-beforeEach(function () {
-    app()->instance(VideoToAudioConverter::class, new class extends VideoToAudioConverter
-    {
-        public function ensureMp3SeekIndex(string $audioPath): bool
-        {
-            return false;
-        }
-    });
-});
 
 it('can add media file from URL', function () {
     Storage::fake('media');

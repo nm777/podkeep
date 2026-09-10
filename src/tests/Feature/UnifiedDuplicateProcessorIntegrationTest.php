@@ -26,7 +26,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             new MediaValidator,
             new MediaStorageManager,
             $this->processor,
-            new VideoToAudioConverter
+            app(VideoToAudioConverter::class)
         );
         $this->user = User::factory()->create();
     });
@@ -114,7 +114,7 @@ describe('UnifiedDuplicateProcessor Integration', function () {
                 new MediaValidator,
                 new MediaStorageManager,
                 $this->processor,
-                new VideoToAudioConverter
+                app(VideoToAudioConverter::class)
             );
 
             $result = $mockedService->processFromUrl($libraryItem, 'https://example.com/new-audio.mp3');

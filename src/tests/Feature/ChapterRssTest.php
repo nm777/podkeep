@@ -44,7 +44,10 @@ it('includes chapters in the episode description and iTunes summary', function (
     $user = User::factory()->create();
     $mediaFile = MediaFile::factory()->create(['user_id' => $user->id, 'duration' => 3800]);
     [$feed, $libraryItem] = chapterFeedWithItem($user, $mediaFile);
-    $libraryItem->update(['description' => 'Episode details']);
+    $libraryItem->update([
+        'description' => 'Episode details',
+        'source_url' => null,
+    ]);
 
     Chapter::factory()->create(['media_file_id' => $mediaFile->id, 'start_time' => 0, 'title' => 'Intro']);
     Chapter::factory()->create(['media_file_id' => $mediaFile->id, 'start_time' => 330, 'title' => 'Main Point']);

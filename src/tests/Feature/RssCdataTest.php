@@ -24,6 +24,7 @@ describe('RSS CDATA handling', function () {
             'description' => $itemDescription,
             'media_file_id' => $mediaFile->id,
             'processing_status' => 'completed',
+            'source_url' => null,
         ]);
         $feed->items()->create([
             'library_item_id' => $item->id,

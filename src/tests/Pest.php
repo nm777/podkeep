@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\MediaProcessing\VideoToAudioConverter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,6 +17,15 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(function () {
+        app()->instance(VideoToAudioConverter::class, new class extends VideoToAudioConverter
+        {
+            public function ensureMp3SeekIndex(string $audioPath): bool
+            {
+                return false;
+            }
+        });
+    })
     ->in('Feature');
 
 /*
