@@ -16,14 +16,14 @@ class MediaController extends Controller
         $mediaFile = MediaFile::where('file_path', $file_path)->firstOrFail();
 
         if ($request->hasValidSignature()) {
-            return $this->serveMediaFile($file_path, $mediaFile);
+            return $this->serveMediaFile($request, $file_path, $mediaFile);
         }
 
         // Check if this is for an RSS feed (public or private with token)
         $feedToken = $request->query('feed_token');
 
         if (! $feedToken && $mediaFile->is_public) {
-            return $this->serveMediaFile($file_path, $mediaFile);
+            return $this->serveMediaFile($request, $file_path, $mediaFile);
         }
 
         // For feeds with token (private feeds)
@@ -37,7 +37,7 @@ class MediaController extends Controller
                 ->exists();
 
             if ($hasFeedAccess) {
-                return $this->serveMediaFile($file_path, $mediaFile);
+                return $this->serveMediaFile($request, $file_path, $mediaFile);
             }
         }
 
@@ -47,10 +47,10 @@ class MediaController extends Controller
             abort(403);
         }
 
-        return $this->serveMediaFile($file_path, $mediaFile);
+        return $this->serveMediaFile($request, $file_path, $mediaFile);
     }
 
-    private function serveMediaFile(string $file_path, MediaFile $mediaFile): BinaryFileResponse
+    private function serveMediaFile(Request $request, string $file_path, MediaFile $mediaFile): BinaryFileResponse
     {
         $absolutePath = Storage::disk('media')->path($file_path);
 
@@ -58,8 +58,18 @@ class MediaController extends Controller
             abort(404);
         }
 
-        return response()->file($absolutePath, [
+        $response = response()->file($absolutePath, [
             'Content-Type' => $mediaFile->mime_type ?? 'application/octet-stream',
         ]);
+
+        $response->setAutoEtag()->setMaxAge(3600);
+
+        if (! $mediaFile->is_public) {
+            $response->setPrivate();
+        }
+
+        $response->isNotModified($request);
+
+        return $response;
     }
 }

@@ -32,7 +32,7 @@ class RssController extends Controller
         }
 
         $cacheKey = "rss.{$feed->id}";
-        $cacheDuration = config('constants.cache.rss_feed_duration_seconds');
+        $cacheDuration = config('constants.cache.rss_feed_duration_seconds') ?? 3600;
 
         $xml = Cache::remember($cacheKey, $cacheDuration, function () use ($feed) {
             $rssXml = view('rss', compact('feed'))->render();

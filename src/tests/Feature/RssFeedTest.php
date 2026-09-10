@@ -227,6 +227,21 @@ test('rss feed reflects updated library item title after cache invalidation', fu
         ->and($content)->not->toContain('Original Title');
 });
 
+test('rss feed cache defaults to a finite lifetime when its duration is null', function () {
+    $feed = Feed::factory()->create(['is_public' => true]);
+    config(['constants.cache.rss_feed_duration_seconds' => null]);
+    $cacheKey = "rss.{$feed->id}";
+
+    $this->get("/rss/{$feed->user_guid}/{$feed->slug}")->assertSuccessful();
+    expect(Cache::has($cacheKey))->toBeTrue();
+
+    $this->travel(3599)->seconds();
+    expect(Cache::has($cacheKey))->toBeTrue();
+
+    $this->travel(2)->seconds();
+    expect(Cache::has($cacheKey))->toBeFalse();
+});
+
 test('rss feed excludes items without media files', function () {
     $user = User::factory()->create();
 
