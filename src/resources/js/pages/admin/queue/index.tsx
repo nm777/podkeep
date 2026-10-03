@@ -187,27 +187,53 @@ export default function QueueIndex({
                                 <div className="flex items-center justify-between">
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                         <span className="text-sm font-medium">{shortenClassName(job.type)}</span>
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[job.status]}`}>
+                                        <span
+                                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[job.status]}`}
+                                        >
                                             {job.status}
                                         </span>
                                     </div>
                                     <div className="flex shrink-0 items-center gap-3">
                                         {job.status === 'pending' && job.jobId && (
-                                            <Link href={route('admin.queue.cancel', job.jobId)} method="post" as="button" preserveScroll className="text-xs text-destructive hover:underline">
+                                            <Link
+                                                href={route('admin.queue.cancel', job.jobId)}
+                                                method="post"
+                                                as="button"
+                                                preserveScroll
+                                                className="text-xs text-destructive hover:underline"
+                                            >
                                                 Cancel
                                             </Link>
                                         )}
                                         {job.status === 'executing' && job.jobId && (
-                                            <Link href={route('admin.queue.release', job.jobId)} method="post" as="button" preserveScroll className="text-xs text-muted-foreground hover:text-foreground hover:underline">
+                                            <Link
+                                                href={route('admin.queue.release', job.jobId)}
+                                                method="post"
+                                                as="button"
+                                                preserveScroll
+                                                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                            >
                                                 Release
                                             </Link>
                                         )}
                                         {job.status === 'failed' && job.uuid && (
                                             <>
-                                                <Link href={route('admin.queue.retry', job.uuid)} method="post" as="button" preserveScroll className="text-xs text-muted-foreground hover:text-foreground hover:underline">
+                                                <Link
+                                                    href={route('admin.queue.retry', job.uuid)}
+                                                    method="post"
+                                                    as="button"
+                                                    preserveScroll
+                                                    className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                                >
                                                     Retry
                                                 </Link>
-                                                <Link href={route('admin.queue.delete', job.uuid)} method="post" as="button" preserveScroll className="text-xs text-destructive hover:underline">
+                                                <Link
+                                                    href={route('admin.queue.delete', job.uuid)}
+                                                    method="post"
+                                                    as="button"
+                                                    preserveScroll
+                                                    className="text-xs text-destructive hover:underline"
+                                                >
                                                     Delete
                                                 </Link>
                                             </>
@@ -225,7 +251,7 @@ export default function QueueIndex({
                                         <summary className="flex cursor-pointer list-none items-center gap-2 text-xs text-muted-foreground [&::-webkit-details-marker]:hidden">
                                             Show error
                                         </summary>
-                                        <div className="flex items-center px-4 pb-1 pt-2">
+                                        <div className="flex items-center px-4 pt-2 pb-1">
                                             <button
                                                 type="button"
                                                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
@@ -235,7 +261,7 @@ export default function QueueIndex({
                                                 Copy
                                             </button>
                                         </div>
-                                        <pre className="whitespace-pre-wrap break-all px-4 pb-3 text-xs text-muted-foreground">{job.exception}</pre>
+                                        <pre className="px-4 pb-3 text-xs break-all whitespace-pre-wrap text-muted-foreground">{job.exception}</pre>
                                     </details>
                                 )}
                             </div>

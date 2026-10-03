@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chapter;
 use App\Models\Feed;
+use App\Models\FeedItem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -30,17 +32,17 @@ class ShareController extends Controller
             : $feed->items->sortByDesc('created_at');
 
         $episodes = $items
-            ->filter(fn ($item) => $item->libraryItem
+            ->filter(fn (FeedItem $item) => $item->libraryItem
                 && $item->libraryItem->processing_status?->value === 'completed'
                 && $item->libraryItem->mediaFile)
-            ->map(fn ($item) => [
+            ->map(fn (FeedItem $item) => [
                 'id' => $item->libraryItem->id,
                 'title' => $item->libraryItem->title,
                 'description' => $item->libraryItem->description,
                 'published_at' => $item->libraryItem->published_at?->format('Y-m-d'),
                 'duration' => $item->libraryItem->mediaFile->duration,
                 'media_url' => $this->buildMediaUrl($item->libraryItem->mediaFile->file_path, $token),
-                'chapters' => $item->libraryItem->mediaFile->chapters->map(fn ($chapter) => [
+                'chapters' => $item->libraryItem->mediaFile->chapters->map(fn (Chapter $chapter) => [
                     'start_time' => $chapter->start_time,
                     'title' => $chapter->title,
                 ]),

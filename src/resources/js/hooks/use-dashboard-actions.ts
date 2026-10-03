@@ -138,11 +138,15 @@ export function useDashboardActions() {
     };
 
     const handleAddToFeed = (itemId: number, feedId: number) => {
-        router.post(route('library.feeds.attach', itemId), { feed_id: feedId }, {
-            onSuccess: () => {
-                router.reload({ only: ['libraryItems', 'feeds'] });
+        router.post(
+            route('library.feeds.attach', itemId),
+            { feed_id: feedId },
+            {
+                onSuccess: () => {
+                    router.reload({ only: ['libraryItems', 'feeds'] });
+                },
             },
-        });
+        );
     };
 
     return {

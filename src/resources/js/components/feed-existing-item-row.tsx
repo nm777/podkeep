@@ -1,11 +1,9 @@
-import { type FeedItemForm } from '@/components/feed-item-utils';
 import FeedLibraryItemInfo from '@/components/feed-library-item-info';
 import { Button } from '@/components/ui/button';
 import { type LibraryItem } from '@/types';
 import { GripVertical, Trash2 } from 'lucide-react';
 
 interface FeedExistingItemRowProps {
-    item: FeedItemForm;
     index: number;
     libraryItem: LibraryItem;
     feedType: 'static' | 'append';
@@ -19,7 +17,6 @@ interface FeedExistingItemRowProps {
 }
 
 export default function FeedExistingItemRow({
-    item,
     index,
     libraryItem,
     feedType,

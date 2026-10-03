@@ -13,10 +13,7 @@ interface FeedFormFieldsProps {
         is_hidden_from_selector: boolean;
         feed_type: 'static' | 'append';
     };
-    setData: (
-        key: 'title' | 'description' | 'website_url' | 'is_public' | 'is_hidden_from_selector' | 'feed_type',
-        value: string | boolean,
-    ) => void;
+    setData: (key: 'title' | 'description' | 'website_url' | 'is_public' | 'is_hidden_from_selector' | 'feed_type', value: string | boolean) => void;
     errors: Partial<Record<'title' | 'description' | 'website_url', string>>;
 }
 

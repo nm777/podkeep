@@ -87,7 +87,6 @@ export default function FeedExistingItemsTab({
                         return (
                             <FeedExistingItemRow
                                 key={item.library_item_id}
-                                item={item}
                                 index={index}
                                 libraryItem={libraryItem}
                                 feedType={feedType}

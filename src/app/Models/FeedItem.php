@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FeedItem extends Model
 {
@@ -23,12 +24,18 @@ class FeedItem extends Model
         ];
     }
 
-    public function feed()
+    /**
+     * @return BelongsTo<Feed, $this>
+     */
+    public function feed(): BelongsTo
     {
         return $this->belongsTo(Feed::class);
     }
 
-    public function libraryItem()
+    /**
+     * @return BelongsTo<LibraryItem, $this>
+     */
+    public function libraryItem(): BelongsTo
     {
         return $this->belongsTo(LibraryItem::class);
     }

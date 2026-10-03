@@ -15,10 +15,7 @@ interface FeedCardProps {
 export default function FeedCard({ feed, onCopyUrl, onCopyShareUrl, onDelete }: FeedCardProps) {
     return (
         <div className="px-4 py-3">
-            <Link
-                href={route('feeds.edit', feed.id)}
-                className="font-medium text-foreground hover:underline md:truncate"
-            >
+            <Link href={route('feeds.edit', feed.id)} className="font-medium text-foreground hover:underline md:truncate">
                 {feed.title}
             </Link>
             <div className="mt-1 flex items-center gap-2">

@@ -82,7 +82,9 @@ export default function LibraryItemRow({ item, feeds, onPlay, onEdit, onDelete, 
                     >
                         <option value="">+ Feed</option>
                         {availableFeeds.map((f) => (
-                            <option key={f.id} value={f.id}>{f.title}</option>
+                            <option key={f.id} value={f.id}>
+                                {f.title}
+                            </option>
                         ))}
                     </select>
                 )}
