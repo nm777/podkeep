@@ -11,6 +11,7 @@ AGENTS.md
 LICENSE
 
 node_modules
+src/node_modules
 vendor
 
 .env
@@ -52,4 +53,3 @@ database/
 
 # Runtime directories (created fresh in container)
 src/storage
-
