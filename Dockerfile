@@ -1,4 +1,4 @@
-FROM php:8.4.27-fpm-alpine@sha256:8193f7c711715c88452ebe51d4ee7769172a3fa917446a8820cf84192da2c555 AS base
+FROM php:8.4-fpm-alpine@sha256:c0e41e0c856bf97b2e749f40a804031ce938d0d496c4c7d91ad416d993172826 AS base
 
 WORKDIR /var/www/html
 
@@ -47,7 +47,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     xml \
     zip
 
-COPY --from=composer:2@sha256:5946476338742b200bb9ff88f8be56275ddae4b3949c72305cb0dbf10cfcb760 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2@sha256:5b2137f112f939a92788ceb5e55f54859d9dbf467a44037cf7760bdda949f365 /usr/bin/composer /usr/bin/composer
 
 COPY custom-www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY src/php.ini /usr/local/etc/php/conf.d/custom.ini
@@ -65,7 +65,7 @@ RUN apk add --no-cache \
     npm \
     pkgconfig
 
-FROM node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS frontend
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS frontend
 
 WORKDIR /app
 COPY src/package*.json ./
@@ -123,7 +123,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction \
 
 RUN apk add --no-cache su-exec
 
-FROM nginx:1.31-alpine@sha256:4a73073bd557c65b759505da037898b61f1be6cbcc3c2c3aeac22d2a470c1752 AS web
+FROM nginx:1.31-alpine@sha256:7fc0fb4af7bf006aeb31aea88069976060f8f0a0a86b667126742cc17f4e31ae AS web
 
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=app /var/www/html/public /var/www/html/public
