@@ -21,6 +21,6 @@ test('lint workflow is read-only and pins its actions', function () {
     Assert::assertStringContainsString('npm run types', $workflow);
     Assert::assertStringContainsString('vendor/bin/phpstan analyse --no-progress', $workflow);
     Assert::assertStringContainsString('FALLOW_CACHE_DIR: /tmp/fallow', $workflow);
-    Assert::assertStringContainsString('npx fallow audit --base main', $workflow);
+    Assert::assertStringContainsString('npx fallow audit --base origin/main', $workflow);
     Assert::assertDoesNotMatchRegularExpression('/uses:\s+\S+@(?![a-f0-9]{40}\b)/', $workflow);
 });

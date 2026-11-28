@@ -54,4 +54,4 @@ jobs:
       - name: Run Fallow
         env:
           FALLOW_CACHE_DIR: /tmp/fallow
-        run: npx fallow audit --base main
+        run: npx fallow audit --base origin/main
